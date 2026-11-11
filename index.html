@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>이창환 | Digital Business Card</title>
+  
+  <!-- Pretendard & Inter Web Fonts -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- QRCode.js for generating QR codes on the fly -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-light: #818cf8;
+      --primary-glow: rgba(99, 102, 241, 0.35);
+      --accent: #06b6d4;
+      --bg-gradient: radial-gradient(circle at 20% 20%, #1e1e38 0%, #0f1021 60%, #080914 100%);
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --card-inner: rgba(18, 20, 36, 0.75);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --tag-bg: rgba(255, 255, 255, 0.07);
+      --shadow-color: rgba(0, 0, 0, 0.45);
+      --transition-speed: 0.3s;
+    }
+
+    [data-theme="light"] {
+      --primary: #4338ca;
+      --primary-light: #6366f1;
+      --primary-glow: rgba(79, 70, 229, 0.2);
+      --accent: #0284c7;
+      --bg-gradient: radial-gradient(circle at 20% 20%, #e0e7ff 0%, #f1f5f9 60%, #f8fafc 100%);
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --card-border: rgba(226, 232, 240, 0.8);
+      --card-inner: rgba(255, 255, 255, 0.9);
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-dim: #94a3b8;
+      --tag-bg: rgba(0, 0, 0, 0.05);
+      --shadow-color: rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start; /* Changed from center to prevent top/bottom clipping on smaller screens */
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      padding: 70px 16px 40px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      perspective: 1200px;
+      transition: background 0.5s ease, color 0.3s ease;
+    }
+
+    /* Ambient dynamic glow background */
+    .ambient-sphere {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.5;
+      animation: floatAmbient 12s ease-in-out infinite alternate;
+    }
+    .ambient-1 {
+      width: 450px;
+      height: 450px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      top: 5%;
+      left: 15%;
+    }
+    .ambient-2 {
+      width: 400px;
+      height: 400px;
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      bottom: 5%;
+      right: 15%;
+      animation-delay: -6s;
+    }
+
+    @keyframes floatAmbient {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(60px, 40px) scale(1.15); }
+    }
+
+    /* Top Action Bar */
+    .top-nav {
+      position: fixed;
+      top: 14px;
+      display: flex;
+      gap: 8px;
+      z-index: 30;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 6px 14px;
+      border-radius: 40px;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 10px 30px var(--shadow-color);
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 20px;
+      transition: all 0.2s ease;
+    }
+    .nav-btn:hover {
+      color: var(--text-main);
+      background: var(--tag-bg);
+    }
+    .nav-btn svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    /* Card Container with 3D Flip */
+    .card-scene {
+      width: 100%;
+      max-width: 420px;
+      min-height: 560px;
+      height: fit-content;
+      position: relative;
+      z-index: 10;
+      perspective: 1600px;
+      margin: 10px auto;
+    }
+
+    .business-card {
+      width: 100%;
+      min-height: 560px;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.75s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: default;
+    }
+
+    .business-card.is-flipped {
+      transform: rotateY(180deg);
+    }
+
+    /* Common Card Face */
+    .card-face {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      min-height: 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 24px;
+      background: var(--card-inner);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 20px 50px -10px var(--shadow-color),
+                  0 0 0 1px var(--card-border) inset;
+      padding: 24px 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow-y: auto; /* Allow scrolling inside card if viewport is very short */
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.2) transparent;
+    }
+
+    .card-face::-webkit-scrollbar {
+      width: 4px;
+    }
+    .card-face::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.2);
+      border-radius: 4px;
+    }
+
+    /* Holographic sheen highlight */
+    .card-face::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.12) 0%, transparent 65%);
+      pointer-events: none;
+      transform: rotate(35deg);
+      opacity: 0.7;
+    }
+
+    /* Back Face specific */
+    .card-back {
+      transform: rotateY(180deg);
+    }
+
+    /* Card Header */
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .avatar-wrapper {
+      position: relative;
+      width: 72px;
+      height: 72px;
+    }
+
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      border-radius: 20px;
+      object-fit: cover;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .status-badge {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #10b981;
+      border: 2.5px solid #14172b;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .flip-btn-trigger {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      background: var(--tag-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      border-radius: 100px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .flip-btn-trigger:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      transform: scale(1.04);
+    }
+    .flip-btn-trigger svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Identity Section */
+    .identity {
+      margin-top: 14px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .name-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .full-name {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 40%, var(--primary-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    [data-theme="light"] .full-name {
+      background: linear-gradient(135deg, #0f172a 40%, var(--primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .eng-name {
+      font-size: 13.5px;
+      color: var(--text-dim);
+      font-weight: 500;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .job-title {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--primary-light);
+      margin-top: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .bio-text {
+      margin-top: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+
+    /* Skills & Keywords */
+    .tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .tag {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 9px;
+      border-radius: 6px;
+      background: var(--tag-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+    }
+    .tag:hover {
+      border-color: var(--primary-light);
+      color: var(--text-main);
+      transform: translateY(-2px);
+    }
+
+    /* Contact Details on Front */
+    .contact-list {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: var(--tag-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      text-decoration: none;
+      font-size: 12.5px;
+      transition: all 0.2s ease;
+    }
+
+    .contact-item:hover {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: var(--primary-light);
+      transform: translateX(4px);
+    }
+
+    .contact-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--primary-light);
+      flex-shrink: 0;
+    }
+    .contact-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .contact-val {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    /* Primary Action Buttons (vCard & Share) */
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 16px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      text-decoration: none;
+    }
+
+    .btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #6366f1);
+      color: #ffffff;
+      box-shadow: 0 4px 16px var(--primary-glow);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #4338ca, #4f46e5);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px var(--primary-glow);
+    }
+
+    .btn-secondary {
+      background: var(--tag-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: translateY(-2px);
+    }
+
+    /* Back Face Layout */
+    .back-content {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+      justify-content: space-between;
+      position: relative;
+      z-index: 2;
+    }
+
+    .back-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .timeline-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding-left: 12px;
+      border-left: 2px solid var(--primary-light);
+    }
+
+    .timeline-date {
+      font-size: 10.5px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .timeline-role {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .timeline-desc {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    /* Social Icons Row */
+    .social-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .social-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--tag-bg);
+      border: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-main);
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .social-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      transform: translateY(-2px) scale(1.04);
+      border-color: var(--primary);
+    }
+    .social-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* QR Code Display area */
+    .qr-card-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 10px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+    }
+
+    .qr-box {
+      background: #ffffff;
+      padding: 6px;
+      border-radius: 8px;
+      display: inline-block;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    .qr-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* Compact Viewport Optimization (For small laptop screens or split browser windows) */
+    @media (max-height: 720px) {
+      body {
+        padding-top: 60px;
+      }
+      .card-scene, .business-card {
+        min-height: 500px;
+      }
+      .card-face {
+        padding: 18px 18px;
+      }
+      .avatar-wrapper {
+        width: 60px;
+        height: 60px;
+      }
+      .avatar-img {
+        font-size: 22px;
+      }
+      .full-name {
+        font-size: 22px;
+      }
+      .identity {
+        margin-top: 8px;
+      }
+      .bio-text {
+        font-size: 12px;
+        margin-top: 6px;
+      }
+      .contact-list {
+        margin-top: 10px;
+        gap: 6px;
+      }
+      .action-grid {
+        margin-top: 12px;
+      }
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #10b981;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 13.5px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.35);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 999;
+      pointer-events: none;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    .toast svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Edit Profile Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      padding: 16px;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: var(--card-inner);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+      transform: scale(0.95);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .close-modal-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: var(--tag-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus {
+      border-color: var(--primary-light);
+    }
+
+    .footer-credit {
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--text-dim);
+      text-align: center;
+      z-index: 10;
+    }
+
+    /* Print Style for physical business card printing */
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+      }
+      .top-nav, .ambient-sphere, .flip-btn-trigger, .action-grid, .footer-credit {
+        display: none !important;
+      }
+      .card-scene {
+        perspective: none;
+      }
+      .card-face {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient light orbs -->
+  <div class="ambient-sphere ambient-1"></div>
+  <div class="ambient-sphere ambient-2"></div>
+
+  <!-- Top Utilities Bar -->
+  <div class="top-nav">
+    <a href="savings-simulator.html" class="nav-btn" title="일일 저축 & 복리 시뮬레이터 열기" style="text-decoration: none;">
+      <i data-lucide="calculator"></i>
+      <span>저축 시뮬레이터</span>
+    </a>
+    <button class="nav-btn" id="themeToggleBtn" title="화면 테마 변경">
+      <i data-lucide="moon" id="themeIcon"></i>
+      <span id="themeText">다크</span>
+    </button>
+    <button class="nav-btn" id="editModalBtn" title="명함 정보 수정">
+      <i data-lucide="edit-3"></i>
+      <span>정보 수정</span>
+    </button>
+    <button class="nav-btn" id="flipQuickBtn" title="명함 뒤집기">
+      <i data-lucide="refresh-cw"></i>
+      <span>뒷면 보기</span>
+    </button>
+  </div>
+
+  <!-- 3D Card Scene -->
+  <div class="card-scene" id="cardScene">
+    <div class="business-card" id="businessCard">
+      
+      <!-- CARD FRONT -->
+      <div class="card-face card-front">
+        <div>
+          <!-- Header (Avatar + Flip trigger) -->
+          <div class="card-header">
+            <div class="avatar-wrapper">
+              <div class="avatar-img" id="displayAvatarInitials">창환</div>
+              <div class="status-badge" title="상태: 연락 가능"></div>
+            </div>
+            <button class="flip-btn-trigger" id="flipToBackBtn" title="뒷면 상세 소개 보기">
+              <i data-lucide="arrow-right-left"></i>
+              <span>뒷면 소개</span>
+            </button>
+          </div>
+
+          <!-- Identity & Title -->
+          <div class="identity">
+            <div class="name-row">
+              <h1 class="full-name" id="displayName">이창환</h1>
+              <span class="eng-name" id="displayEngName">Changhwan Lee</span>
+            </div>
+            <div class="job-title" id="displayJobTitle">
+              <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i>
+              <span id="jobTitleText">Software Engineer & Creator</span>
+            </div>
+            <p class="bio-text" id="displayBio">
+              기술을 통해 복잡한 문제를 단순하게 풀고, 사용자에게 영감을 주는 혁신적인 디지털 경험을 만들어갑니다.
+            </p>
+          </div>
+
+          <!-- Tags / Specialties -->
+          <div class="tags-container" id="tagsContainer">
+            <span class="tag">#FullStack</span>
+            <span class="tag">#AI_Engineering</span>
+            <span class="tag">#UI/UX</span>
+            <span class="tag">#ProblemSolver</span>
+          </div>
+
+          <!-- Quick Contacts -->
+          <div class="contact-list">
+            <a href="mailto:changhwan@example.com" class="contact-item" id="displayEmailLink">
+              <div class="contact-icon"><i data-lucide="mail"></i></div>
+              <span class="contact-val" id="displayEmail">changhwan@example.com</span>
+            </a>
+            <a href="tel:010-1234-5678" class="contact-item" id="displayPhoneLink">
+              <div class="contact-icon"><i data-lucide="phone"></i></div>
+              <span class="contact-val" id="displayPhone">010-1234-5678</span>
+            </a>
+            <div class="contact-item">
+              <div class="contact-icon"><i data-lucide="map-pin"></i></div>
+              <span class="contact-val" id="displayLocation">Seoul, Republic of Korea</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-grid">
+          <button class="btn btn-primary" id="saveContactBtn">
+            <i data-lucide="user-plus"></i>
+            <span>연락처 저장</span>
+          </button>
+          <button class="btn btn-secondary" id="shareCardBtn">
+            <i data-lucide="share-2"></i>
+            <span>명함 공유</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- CARD BACK -->
+      <div class="card-face card-back">
+        <div class="back-content">
+          <div>
+            <!-- Header for back -->
+            <div class="card-header">
+              <h2 class="back-title">
+                <i data-lucide="briefcase" style="width: 20px; height: 20px; color: var(--primary-light);"></i>
+                이력 및 활동
+              </h2>
+              <button class="flip-btn-trigger" id="flipToFrontBtn" title="앞면으로 돌아가기">
+                <i data-lucide="arrow-right-left"></i>
+                <span>앞면 보기</span>
+              </button>
+            </div>
+
+            <!-- Career / Milestone Timeline -->
+            <div class="timeline" id="timelineList">
+              <div class="timeline-item">
+                <span class="timeline-date">2024 - PRESENT</span>
+                <span class="timeline-role">Tech Lead / AI Service Architect</span>
+                <p class="timeline-desc">차세대 웹 & 생성형 AI 솔루션 아키텍처 설계 및 프로덕트 개발 총괄</p>
+              </div>
+              <div class="timeline-item">
+                <span class="timeline-date">2021 - 2023</span>
+                <span class="timeline-role">Senior Full-Stack Developer</span>
+                <p class="timeline-desc">고성능 클라우드 웹 애플리케이션 및 디자인 시스템 구축</p>
+              </div>
+              <div class="timeline-item">
+                <span class="timeline-date">PASSION</span>
+                <span class="timeline-role">Open Source & Tech Community</span>
+                <p class="timeline-desc">오픈소스 컨트리뷰션 및 지속 가능한 개발 문화 탐구</p>
+              </div>
+            </div>
+
+            <!-- QR Code Section -->
+            <div class="qr-card-section">
+              <div class="qr-box" id="qrcode"></div>
+              <p class="qr-desc">스마트폰 카메라로 스캔하여 명함 열기</p>
+            </div>
+          </div>
+
+          <!-- Social Links -->
+          <div>
+            <div class="social-row">
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="social-btn" title="GitHub">
+                <i data-lucide="github"></i>
+              </a>
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-btn" title="LinkedIn">
+                <i data-lucide="linkedin"></i>
+              </a>
+              <a href="https://velog.io" target="_blank" rel="noopener noreferrer" class="social-btn" title="Tech Blog">
+                <i data-lucide="book-open"></i>
+              </a>
+              <a href="mailto:changhwan@example.com" class="social-btn" title="Send Email">
+                <i data-lucide="send"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <p class="footer-credit">© 2026 Digital Business Card • Tap card or use buttons to interact</p>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toastMessage">
+    <i data-lucide="check-circle-2"></i>
+    <span id="toastText">링크가 클립보드에 복사되었습니다!</span>
+  </div>
+
+  <!-- Information Edit Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">내 명함 정보 수정하기</h3>
+        <button class="close-modal-btn" id="closeModalBtn">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="form-group">
+        <label>한글 이름</label>
+        <input type="text" class="form-control" id="inputName" value="이창환">
+      </div>
+      <div class="form-group">
+        <label>영문 이름</label>
+        <input type="text" class="form-control" id="inputEngName" value="Changhwan Lee">
+      </div>
+      <div class="form-group">
+        <label>직함 / 한 줄 역할</label>
+        <input type="text" class="form-control" id="inputJobTitle" value="Software Engineer & Creator">
+      </div>
+      <div class="form-group">
+        <label>자기소개 요약</label>
+        <textarea class="form-control" id="inputBio" rows="3">기술을 통해 복잡한 문제를 단순하게 풀고, 사용자에게 영감을 주는 혁신적인 디지털 경험을 만들어갑니다.</textarea>
+      </div>
+      <div class="form-group">
+        <label>이메일</label>
+        <input type="email" class="form-control" id="inputEmail" value="changhwan@example.com">
+      </div>
+      <div class="form-group">
+        <label>전화번호</label>
+        <input type="tel" class="form-control" id="inputPhone" value="010-1234-5678">
+      </div>
+      <div class="form-group">
+        <label>위치 / 지역</label>
+        <input type="text" class="form-control" id="inputLocation" value="Seoul, Republic of Korea">
+      </div>
+      <div class="form-group">
+        <label>키워드 태그 (쉼표로 구분)</label>
+        <input type="text" class="form-control" id="inputTags" value="FullStack, AI_Engineering, UI/UX, ProblemSolver">
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button class="btn btn-primary" id="saveInfoBtn" style="flex: 1;">저장 및 적용</button>
+        <button class="btn btn-secondary" id="resetInfoBtn">초기화</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Default Profile Data
+    const defaultData = {
+      name: "이창환",
+      engName: "Changhwan Lee",
+      jobTitle: "Software Engineer & Creator",
+      bio: "기술을 통해 복잡한 문제를 단순하게 풀고, 사용자에게 영감을 주는 혁신적인 디지털 경험을 만들어갑니다.",
+      email: "changhwan@example.com",
+      phone: "010-1234-5678",
+      location: "Seoul, Republic of Korea",
+      tags: ["FullStack", "AI_Engineering", "UI/UX", "ProblemSolver"]
+    };
+
+    // Load Profile Data from LocalStorage or default
+    function getStoredData() {
+      const stored = localStorage.getItem("user_biz_card_data");
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch (e) {
+          return defaultData;
+        }
+      }
+      return defaultData;
+    }
+
+    function applyDataToUI(data) {
+      document.getElementById('displayName').innerText = data.name;
+      document.getElementById('displayEngName').innerText = data.engName;
+      document.getElementById('jobTitleText').innerText = data.jobTitle;
+      document.getElementById('displayBio').innerText = data.bio;
+      document.getElementById('displayEmail').innerText = data.email;
+      document.getElementById('displayEmailLink').href = `mailto:${data.email}`;
+      document.getElementById('displayPhone').innerText = data.phone;
+      document.getElementById('displayPhoneLink').href = `tel:${data.phone.replace(/[^0-9+]/g, '')}`;
+      document.getElementById('displayLocation').innerText = data.location;
+      
+      // Avatar Initials (e.g., '창환' or first letters)
+      const initials = data.name.length >= 2 ? data.name.slice(-2) : data.name;
+      document.getElementById('displayAvatarInitials').innerText = initials;
+
+      // Tags
+      const tagsContainer = document.getElementById('tagsContainer');
+      tagsContainer.innerHTML = '';
+      data.tags.forEach(t => {
+        const span = document.createElement('span');
+        span.className = 'tag';
+        span.innerText = '#' + t.trim();
+        tagsContainer.appendChild(span);
+      });
+
+      // Update Form Inputs
+      document.getElementById('inputName').value = data.name;
+      document.getElementById('inputEngName').value = data.engName;
+      document.getElementById('inputJobTitle').value = data.jobTitle;
+      document.getElementById('inputBio').value = data.bio;
+      document.getElementById('inputEmail').value = data.email;
+      document.getElementById('inputPhone').value = data.phone;
+      document.getElementById('inputLocation').value = data.location;
+      document.getElementById('inputTags').value = data.tags.join(', ');
+    }
+
+    let currentProfile = getStoredData();
+    applyDataToUI(currentProfile);
+
+    // 3D Card Flip Logic
+    const businessCard = document.getElementById('businessCard');
+    const flipQuickBtn = document.getElementById('flipQuickBtn');
+    const flipToBackBtn = document.getElementById('flipToBackBtn');
+    const flipToFrontBtn = document.getElementById('flipToFrontBtn');
+
+    function toggleFlip() {
+      businessCard.classList.toggle('is-flipped');
+      const isFlipped = businessCard.classList.contains('is-flipped');
+      flipQuickBtn.querySelector('span').innerText = isFlipped ? '앞면 보기' : '뒷면 보기';
+    }
+
+    flipQuickBtn.addEventListener('click', toggleFlip);
+    flipToBackBtn.addEventListener('click', toggleFlip);
+    flipToFrontBtn.addEventListener('click', toggleFlip);
+
+    // Mouse Tilt 3D Effect for Card
+    const cardScene = document.getElementById('cardScene');
+    let isHovered = false;
+
+    cardScene.addEventListener('mouseenter', () => { isHovered = true; });
+    cardScene.addEventListener('mouseleave', () => {
+      isHovered = false;
+      const isFlipped = businessCard.classList.contains('is-flipped');
+      businessCard.style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
+    });
+
+    cardScene.addEventListener('mousemove', (e) => {
+      if (!isHovered) return;
+      const rect = cardScene.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+
+      const rotateX = -(y / rect.height) * 16;
+      const rotateY = (x / rect.width) * 16;
+
+      const isFlipped = businessCard.classList.contains('is-flipped');
+      if (isFlipped) {
+        businessCard.style.transform = `rotateY(${180 + rotateY}deg) rotateX(${rotateX}deg)`;
+      } else {
+        businessCard.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      }
+    });
+
+    // Theme Toggle (Dark / Light)
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeText = document.getElementById('themeText');
+
+    let isLight = localStorage.getItem("biz_card_theme") === "light";
+    function applyTheme() {
+      if (isLight) {
+        document.body.setAttribute('data-theme', 'light');
+        themeIcon.setAttribute('data-lucide', 'sun');
+        themeText.innerText = '라이트';
+      } else {
+        document.body.removeAttribute('data-theme');
+        themeIcon.setAttribute('data-lucide', 'moon');
+        themeText.innerText = '다크';
+      }
+      lucide.createIcons();
+    }
+    applyTheme();
+
+    themeToggleBtn.addEventListener('click', () => {
+      isLight = !isLight;
+      localStorage.setItem("biz_card_theme", isLight ? "light" : "dark");
+      applyTheme();
+    });
+
+    // Toast Notification helper
+    const toast = document.getElementById('toastMessage');
+    const toastText = document.getElementById('toastText');
+    let toastTimer;
+    function showToast(msg) {
+      toastText.innerText = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Share Card (Web Share API or Clipboard Copy)
+    const shareCardBtn = document.getElementById('shareCardBtn');
+    shareCardBtn.addEventListener('click', async () => {
+      const shareData = {
+        title: `${currentProfile.name} | 디지털 명함`,
+        text: `${currentProfile.name} (${currentProfile.jobTitle}) - 웹 명함입니다.`,
+        url: window.location.href
+      };
+
+      if (navigator.share && window.isSecureContext) {
+        try {
+          await navigator.share(shareData);
+          showToast('명함이 공유되었습니다!');
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            copyCurrentUrl();
+          }
+        }
+      } else {
+        copyCurrentUrl();
+      }
+    });
+
+    function copyCurrentUrl() {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        showToast('명함 주소가 클립보드에 복사되었습니다!');
+      }).catch(() => {
+        showToast('주소 복사에 실패했습니다.');
+      });
+    }
+
+    // Download vCard (.vcf)
+    const saveContactBtn = document.getElementById('saveContactBtn');
+    saveContactBtn.addEventListener('click', () => {
+      const vcard = 
+`BEGIN:VCARD
+VERSION:3.0
+N:${currentProfile.name};;;;
+FN:${currentProfile.name}
+TITLE:${currentProfile.jobTitle}
+EMAIL;TYPE=PREF,INTERNET:${currentProfile.email}
+TEL;TYPE=CELL:${currentProfile.phone}
+ADR;TYPE=HOME:;;${currentProfile.location};;;;
+NOTE:${currentProfile.bio}
+URL:${window.location.href}
+END:VCARD`;
+
+      const blob = new Blob([vcard], { type: "text/vcard;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${currentProfile.name}_연락처.vcf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast('연락처 파일(.vcf)이 다운로드되었습니다.');
+    });
+
+    // Dynamic QR Code Generation
+    const qrcodeContainer = document.getElementById("qrcode");
+    new QRCode(qrcodeContainer, {
+      text: window.location.href,
+      width: 84,
+      height: 84,
+      colorDark : "#0f172a",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.M
+    });
+
+    // Modal Interaction
+    const editModal = document.getElementById('editModal');
+    const editModalBtn = document.getElementById('editModalBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const saveInfoBtn = document.getElementById('saveInfoBtn');
+    const resetInfoBtn = document.getElementById('resetInfoBtn');
+
+    editModalBtn.addEventListener('click', () => {
+      editModal.classList.add('active');
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+      editModal.classList.remove('active');
+    });
+
+    editModal.addEventListener('click', (e) => {
+      if (e.target === editModal) {
+        editModal.classList.remove('active');
+      }
+    });
+
+    saveInfoBtn.addEventListener('click', () => {
+      const updatedData = {
+        name: document.getElementById('inputName').value.trim() || defaultData.name,
+        engName: document.getElementById('inputEngName').value.trim() || defaultData.engName,
+        jobTitle: document.getElementById('inputJobTitle').value.trim() || defaultData.jobTitle,
+        bio: document.getElementById('inputBio').value.trim() || defaultData.bio,
+        email: document.getElementById('inputEmail').value.trim() || defaultData.email,
+        phone: document.getElementById('inputPhone').value.trim() || defaultData.phone,
+        location: document.getElementById('inputLocation').value.trim() || defaultData.location,
+        tags: document.getElementById('inputTags').value.split(',').map(s => s.trim()).filter(Boolean)
+      };
+
+      currentProfile = updatedData;
+      localStorage.setItem("user_biz_card_data", JSON.stringify(updatedData));
+      applyDataToUI(updatedData);
+      editModal.classList.remove('active');
+      showToast('명함 정보가 성공적으로 저장되었습니다!');
+    });
+
+    resetInfoBtn.addEventListener('click', () => {
+      if (confirm('기본 정보로 초기화하시겠습니까?')) {
+        currentProfile = defaultData;
+        localStorage.removeItem("user_biz_card_data");
+        applyDataToUI(defaultData);
+        editModal.classList.remove('active');
+        showToast('기본 정보로 초기화되었습니다.');
+      }
+    });
+  </script>
+</body>
+</html>
