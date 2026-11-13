@@ -1,19 +1,21 @@
 """
 reconcile_engine.py — 병원부 미결 통합 관리 및 리포트 엔진
 1. 생성 기준월 선택
-2. 원본데이터 (Sample.xls) 로드 (4대 섹션 구조 파싱)
+2. 원본데이터 로드 (4대 항목 구조 파싱: 사후미결, 사후미결(바슈), 저가미결, 약가미결)
 3. 수정 및 신규데이터 3종 로드:
-   - 2-1. 사후미결 (미결_병원경로_202511-202610.xlsx)
-   - 2-2. 저가미결 (병원사후_미결_관리_26년_9월.xlsx)
-   - 2-3. 약가미결 (약가인하_미결_관리(병원부)S.xls)
-4. 비교·수정·신규 통합 및 매입처별 요약 리포트 생성
-5. 업데이트된 엑셀파일 생성 (Sample.xls의 4섹션 구조 유지 + Clinical Ledger Precision 디자인 재구성)
+   - 3-1. 사후미결
+   - 3-2. 저가미결
+   - 3-3. 약가미결
+4. 생성데이터 목표:
+   - (1) 기준월 이전건: 스텝2 원본을 스텝 3-1 ~ 3-3 값으로 업데이트하되, 수정된 사항을 정리하여 항목별 리포트
+   - (2) 기준월 해당건: 스텝2 원본에 스텝 3-1 ~ 3-3의 기준월 해당건 값을 추가
+   - (3) 최종검증 방법: 스텝 3-1 ~ 3-3 각 항의 합계와 통합자료 각 항의 합계 일치 여부를 점검·검증
+5. 업데이트된 엑셀파일 생성 (각 항목 타이틀 초기화 및 명칭 부여: 사후미결, 사후미결(바슈), 저가미결, 약가미결)
 """
 from __future__ import annotations
 
 import datetime
 import math
-import os
 import re
 from pathlib import Path
 from typing import Any
@@ -71,7 +73,7 @@ def parse_date_str(val: Any) -> str:
             return dt.strftime("%Y-%m-%d")
         return ""
     s = str(val).strip()
-    if not s or s == "0" or s == "0.0":
+    if not s or s in ("0", "0.0"):
         return ""
     # '26/08' 형태
     m = re.match(r"^(\d{2})/(\d{2})$", s)
@@ -141,67 +143,106 @@ def get_sheet_names(filepath: str | Path) -> list[str]:
 
 
 # ──────────────────────────────────────────────────────────────
-# 섹션별 표준 컬럼 정의 (Sample.xls 4대 섹션 완벽 호환)
+# 섹션별 표준 명칭 및 컬럼 정의
+# (최좌측 '코드' 삭제, 최우측 '자료비고' 삭제 반영)
 # ──────────────────────────────────────────────────────────────
-COMMON_20_COLS = [
-    "코드", "매입월", "매입처", "매입처명", "조건",
+SECTION_TITLES = {
+    "sec1": "사후미결",
+    "sec2": "사후미결(바슈)",
+    "sec3": "저가미결",
+    "sec4": "약가미결",
+}
+
+COMMON_COLS = [
+    "매입월", "매입처", "매입처명", "조건",
     "사전%", "매입%", "수금%", "년%", "일자",
     "적요", "예정금액", "발행일자", "내용", "금액",
     "미결금액", "거래처", "비고", "거래코드", "거래처명"
 ]
 
-SEC1_COLS = COMMON_20_COLS + ["자료비고"]
-SEC2_COLS = COMMON_20_COLS
-SEC3_COLS = COMMON_20_COLS + ["참조", "참조-현 내역", "예정 차", "미결 차", "잡행일", "완결"]
-SEC4_COLS = COMMON_20_COLS + ["공란1", "공란2", "공란3", "오차분", "잡행일"]
+SEC1_COLS = COMMON_COLS
+SEC2_COLS = COMMON_COLS
+SEC3_COLS = COMMON_COLS + ["참조", "참조-현 내역", "예정 차", "미결 차", "잡행일", "완결"]
+SEC4_COLS = COMMON_COLS + ["공란1", "공란2", "공란3", "오차분", "잡행일"]
 
 
 # ──────────────────────────────────────────────────────────────
-# 1. 원본 데이터 (Sample.xls) 파서
+# 1. 스텝 2 원본 데이터 파서 (기존 양식 및 신규 생성 양식 모두 호환)
 # ──────────────────────────────────────────────────────────────
 def parse_original_sample(filepath: str | Path) -> dict[str, Any]:
     rows = read_sheet_rows(filepath, 0)
     sections: dict[str, list[dict[str, Any]]] = {
-        "sec1": [],  # 사후/수금/매입할인 미결
-        "sec2": [],  # 바슈헬스코리아(솔타) 예상 매출할인
-        "sec3": [],  # 저가보상 미결건
-        "sec4": [],  # 약가인하 미결건
+        "sec1": [],  # 사후미결
+        "sec2": [],  # 사후미결(바슈)
+        "sec3": [],  # 저가미결
+        "sec4": [],  # 약가미결
     }
     hospital_map: dict[str, tuple[str, str]] = {}  # 거래코드 -> (거래처약칭, 거래처정식명)
     vendor_map: dict[str, str] = {}                # 매입처코드 -> 매입처명
     months_found: set[str] = set()
 
     current_sec = "sec1"
+    has_code_col = True  # 기존 Sample.xls는 0열이 '코드', 신규 생성 통합파일은 0열이 '매입월'
+
     for r_idx, row in enumerate(rows):
-        # 섹션 구분자 탐색
-        joined = " ".join(str(x) for x in row if x is not None and str(x).strip() != "")
-        if not joined:
+        non_empty = [str(x).strip() for x in row if x is not None and str(x).strip() != ""]
+        if not non_empty:
             continue
-        if "바슈헬스코리아" in joined and "※" in joined:
+        joined = " ".join(non_empty)
+
+        # 섹션 타이틀 행 판별 (신규 타이틀 및 기존 타이틀 모두 인식)
+        first_cell = str(row[0] or "").strip() if len(row) > 0 else ""
+        if len(non_empty) == 1 and first_cell in ("사후미결", "사후미결(바슈)", "저가미결", "약가미결"):
+            if first_cell == "사후미결":
+                current_sec = "sec1"
+            elif first_cell == "사후미결(바슈)":
+                current_sec = "sec2"
+            elif first_cell == "저가미결":
+                current_sec = "sec3"
+            elif first_cell == "약가미결":
+                current_sec = "sec4"
+            continue
+
+        if "사후미결(바슈)" in joined or ("바슈헬스코리아" in joined and "※" in joined):
             current_sec = "sec2"
             continue
-        elif "저가보상 미결건" in joined and "※" in joined:
+        elif ("저가보상 미결건" in joined and "※" in joined) or (len(non_empty) <= 2 and first_cell == "저가미결"):
             current_sec = "sec3"
             continue
-        elif "약가인하 미결건" in joined and "※" in joined:
+        elif ("약가인하 미결건" in joined and "※" in joined) or (len(non_empty) <= 2 and first_cell == "약가미결"):
             current_sec = "sec4"
             continue
-
-        c0 = clean_code(row[0] if len(row) > 0 else "")
-        c2 = clean_code(row[2] if len(row) > 2 else "")
-        if c0 == "코드" or "Q필터" in joined:
-            continue
-        if not c0 and not c2:
+        elif len(non_empty) <= 2 and first_cell == "사후미결":
+            current_sec = "sec1"
             continue
 
-        # 패딩
-        padded = list(row) + [""] * (26 - len(row))
+        # 상단 요약줄 / 헤더 행 판별
+        if "Q필터" in joined or "수금할인&할인조정" in joined:
+            continue
+
+        c0_str = str(row[0] or "").strip() if len(row) > 0 else ""
+        c1_str = str(row[1] or "").strip() if len(row) > 1 else ""
+        if c0_str == "코드" and c1_str == "매입월":
+            has_code_col = True
+            continue
+        if c0_str == "매입월" and c1_str == "매입처":
+            has_code_col = False
+            continue
+
+        # 컬럼 위치 정렬 (코드 컬럼이 없는 신규 양식이면 앞에 빈 요소를 붙여 인덱스 통일)
+        aligned_row = list(row) if has_code_col else ([""] + list(row))
+        padded = aligned_row + [""] * (26 - len(aligned_row))
+
+        c0 = clean_code(padded[0])
         v_cd = clean_code(padded[2])
+        if not c0 and not v_cd:
+            continue
+
         v_nm = str(padded[3] or "").strip()
         c_cd = clean_code(padded[18])
         c_short = str(padded[16] or "").strip()
         c_full = str(padded[19] or "").strip()
-        code = clean_code(padded[0]) or (v_cd + c_cd)
+        code = c0 or f"{v_cd}{c_cd}"
 
         if v_cd and v_nm:
             vendor_map[v_cd] = v_nm
@@ -218,7 +259,7 @@ def parse_original_sample(filepath: str | Path) -> dict[str, Any]:
                 m_date = f"{ym}-01"
         else:
             ilja_disp = parse_date_str(ilja_raw)
-            ym = parse_ym(ilja_disp)
+            ym = parse_ym(ilja_disp) or parse_ym(m_date)
 
         if ym:
             months_found.add(ym)
@@ -227,9 +268,6 @@ def parse_original_sample(filepath: str | Path) -> dict[str, Any]:
         yejeong = clean_num(padded[11])
         geumaek = clean_num(padded[14])
         migyeol = clean_num(padded[15])
-        # Sample.xls R42 처럼 수식/오타(23)로 들어간 미결금액 보정: 예정금액 - 금액
-        if abs(migyeol - 23.0) < 1e-6 and yejeong > 1000:
-            migyeol = yejeong - geumaek
 
         item: dict[str, Any] = {
             "_orig_row": r_idx + 1,
@@ -259,9 +297,7 @@ def parse_original_sample(filepath: str | Path) -> dict[str, Any]:
             "거래처명": c_full,
         }
 
-        if current_sec == "sec1":
-            item["자료비고"] = clean_num(padded[20]) if padded[20] not in (None, "") else ""
-        elif current_sec == "sec3":
+        if current_sec == "sec3":
             item["참조"] = clean_num(padded[20]) if padded[20] not in (None, "") else yejeong
             item["참조-현 내역"] = clean_num(padded[21]) if padded[21] not in (None, "") else (migyeol if migyeol != 0 else -yejeong)
             item["예정 차"] = clean_num(padded[22]) if padded[22] not in (None, "") else (yejeong - geumaek * 2 if geumaek else -yejeong)
@@ -290,7 +326,7 @@ def parse_original_sample(filepath: str | Path) -> dict[str, Any]:
 
 
 # ──────────────────────────────────────────────────────────────
-# 2-1. 사후미결 (미결_병원경로_202511-202610.xlsx) 파서
+# 3-1. 사후미결 파서
 # ──────────────────────────────────────────────────────────────
 def parse_sahu_file(filepath: str | Path) -> dict[str, Any]:
     names = get_sheet_names(filepath)
@@ -342,7 +378,7 @@ def parse_sahu_file(filepath: str | Path) -> dict[str, Any]:
         sugeum = "O" if (str(padded[5] or "").strip() in ("○", "O", "o") or "수금할인" in naeyong_raw) else ""
         nyeon = "O" if str(padded[6] or "").strip() in ("○", "O", "o") else ""
 
-        # Sample.xls 규칙: 집행(발행일자 또는 금액)이 없는 미결 상태에서는 집행 '내용' 칸을 비워둠
+        # 집행(발행일자 또는 금액)이 없는 미결 상태에서는 집행 '내용' 칸을 비워둠
         naeyong = naeyong_raw if (bal_date or geumaek != 0) else ""
 
         records.append({
@@ -369,7 +405,6 @@ def parse_sahu_file(filepath: str | Path) -> dict[str, Any]:
             "비고": str(padded[15] or "").strip(),
             "거래코드": c_cd,
             "거래처명": c_full,
-            "자료비고": yejeong * 2 if yejeong else "",
         })
 
     return {
@@ -382,14 +417,13 @@ def parse_sahu_file(filepath: str | Path) -> dict[str, Any]:
 
 
 # ──────────────────────────────────────────────────────────────
-# 2-2. 저가미결 (병원사후_미결_관리_26년_9월.xlsx) 파서
+# 3-2. 저가미결 파서
 # ──────────────────────────────────────────────────────────────
 def parse_jeoga_file(filepath: str | Path) -> dict[str, Any]:
     names = get_sheet_names(filepath)
     hospital_map: dict[str, tuple[str, str]] = {}
     vendor_map: dict[str, str] = {}
 
-    # Sheet2 매핑 테이블 먼저 로드 (경로코드 -> 병원 정식명/약칭)
     if "Sheet2" in names:
         s2_rows = read_sheet_rows(filepath, "Sheet2")
         for r in s2_rows[1:]:
@@ -443,7 +477,6 @@ def parse_jeoga_file(filepath: str | Path) -> dict[str, Any]:
         naeyong = str(padded[6] or "").strip()
         geumaek = clean_num(padded[7])
         migyeol = clean_num(padded[8])
-        # 미결금액이 비어있거나 수식 미계산인 경우 보정
         if padded[8] is None and (yejeong != 0 or geumaek != 0):
             migyeol = yejeong - geumaek
 
@@ -451,7 +484,6 @@ def parse_jeoga_file(filepath: str | Path) -> dict[str, Any]:
         is_settled = (bigo_raw == "완") or (yejeong != 0 and abs(migyeol) < 1e-4 and geumaek != 0)
         wan_flag = "완" if is_settled else ""
 
-        # Sample.xls 의 저가보상 일자 표기는 해당월 1일 (예: 2026-08-01, 2026-09-01), 비고는 'YY.MM.01 보상신청'
         ilja_norm = f"{ym}-01" if ym else ilja_str
         bigo_disp = f"{ym[2:4]}.{ym[5:7]}.01 보상신청" if ym else bigo_raw
 
@@ -497,14 +529,13 @@ def parse_jeoga_file(filepath: str | Path) -> dict[str, Any]:
 
 
 # ──────────────────────────────────────────────────────────────
-# 2-3. 약가미결 (약가인하_미결_관리(병원부)S.xls) 파서
+# 3-3. 약가미결 파서
 # ──────────────────────────────────────────────────────────────
 def parse_yakga_file(filepath: str | Path) -> dict[str, Any]:
     names = get_sheet_names(filepath)
     hospital_map: dict[str, tuple[str, str]] = {}
     vendor_map: dict[str, str] = {}
 
-    # Sheet1 에 매입경로 코드 및 매입경로명 매핑이 존재함
     if "Sheet1" in names:
         s1_rows = read_sheet_rows(filepath, "Sheet1")
         for r in s1_rows[1:]:
@@ -540,7 +571,6 @@ def parse_yakga_file(filepath: str | Path) -> dict[str, Any]:
         if not v_cd or v_cd == "매입처":
             continue
 
-        # 거래코드는 18번 컬럼 또는 20번 컬럼, 없으면 코드에서 매입처코드 뒤쪽 추출
         c_cd = clean_code(padded[18]) or clean_code(padded[20])
         if not c_cd and code_raw.startswith(v_cd) and len(code_raw) > len(v_cd):
             c_cd = code_raw[len(v_cd):]
@@ -607,7 +637,7 @@ def parse_yakga_file(filepath: str | Path) -> dict[str, Any]:
 
 
 # ──────────────────────────────────────────────────────────────
-# 4. 비교·수정·신규 통합 및 매입처별 요약 리포트 엔진
+# 4. 생성데이터 통합 · 수정 리포트 · 최종검증 엔진
 # ──────────────────────────────────────────────────────────────
 def analyze_and_merge(
     orig_data: dict[str, Any],
@@ -615,16 +645,19 @@ def analyze_and_merge(
     jeoga_data: dict[str, Any],
     yakga_data: dict[str, Any],
     base_month: str = "2026-09",
-    vendor_scope: str = "all",          # "all" (전체 매입처) | "sample_only" (원본 매입처만)
-    include_prior_unsettled: bool = False,  # True 면 기준월 이전 미결건도 신규로 모두 포함
+    vendor_scope: str = "all",
+    include_prior_unsettled: bool = False,
 ) -> dict[str, Any]:
     """
-    2번(원본 Sample.xls)과 3번(3종 데이터)을 비교하여:
-    - 기존 행: 3종의 최신 상태(발행일자, 내용, 금액, 미결금액, 완결여부 등)로 업데이트 (완결된 건도 유지)
-    - 신규 행: 선택한 생성 기준월(base_month)에 해당하는 신규 데이터를 추가
-    - 매입처별 요약 리포트(vendor_summary) 및 4대 섹션 통합 결과 반환
+    생성데이터 목표:
+    1. 기준월 이전건 (ym < base_month):
+       - 스텝2 원본을 스텝 3-1 ~ 3-3 값으로 업데이트하되, 수정된 사항을 정리하여 항목별 리포트한다.
+    2. 기준월 해당건 (ym == base_month):
+       - 스텝2 원본에 스텝 3-1 ~ 3-3의 기준월 해당건 값을 추가한다.
+       (스텝2 원본에 이미 기준월 해당건이 일부 존재하는 경우 중복 없이 업데이트 후 나머지 기준월 해당건을 추가)
+    3. 최종검증 방법:
+       - 스텝 3-1 ~ 3-3 각 항의 합계는 통합자료의 각 항의 합과 일치 여부를 점검하여 검증한다.
     """
-    # 통합 병원명/매입처명 사전 구축
     hosp_map: dict[str, tuple[str, str]] = {}
     for d in (yakga_data, jeoga_data, sahu_data, orig_data):
         hosp_map.update(d.get("hospital_map", {}))
@@ -632,8 +665,6 @@ def analyze_and_merge(
     vend_map: dict[str, str] = {}
     for d in (yakga_data, jeoga_data, sahu_data, orig_data):
         vend_map.update(d.get("vendor_map", {}))
-
-    orig_vendors = set(orig_data.get("vendor_map", {}).keys())
 
     def enrich_names(row: dict[str, Any]) -> dict[str, Any]:
         c_cd = row.get("거래코드", "")
@@ -648,15 +679,27 @@ def analyze_and_merge(
             row["매입처명"] = vend_map[v_cd]
         return row
 
+    modified_by_section: dict[str, list[dict[str, Any]]] = {
+        "sec1": [],
+        "sec2": [],
+        "sec3": [],
+        "sec4": [],
+    }
+    modified_all: list[dict[str, Any]] = []
+    verification_report: list[dict[str, Any]] = []
+
     def merge_section(
         sec_key: str,
+        step_label: str,
         orig_rows: list[dict[str, Any]],
         new_rows: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
         merged: list[dict[str, Any]] = []
         used_src_rows: set[int] = set()
+        matched_step3_rows: list[dict[str, Any]] = []
+        unmatched_orig_rows: list[dict[str, Any]] = []
 
-        # 1) 기존 원본 행 매칭 및 수정 반영
+        # ── 1) 스텝2 원본 행(기준월 이전건 포함)을 스텝 3-1~3-3 값으로 업데이트
         for orig in orig_rows:
             item = dict(orig)
             item["_changes"] = {}
@@ -668,22 +711,33 @@ def analyze_and_merge(
             ym = item["ym"]
             yejeong = clean_num(item["예정금액"])
 
-            # 후보 탐색: (매입처, 거래코드, 년월) 또는 (코드, 년월)
+            # 후보 탐색: 동일 년월 + ((매입처 & 거래코드 일치) 또는 (코드 일치))
             candidates = [
                 r for r in new_rows
                 if r["_src_row"] not in used_src_rows
                 and r["ym"] == ym
                 and ((r["매입처"] == v_cd and r["거래코드"] == c_cd) or r["코드"] == code)
             ]
-            # 후보가 여러 개면 예정금액이 가장 가까운 행 우선
+            #もし 거래코드가 약칭/타코드로 되어 있어 못 찾은 경우 동일 년월 + 동일 매입처 + 동일 예정금액으로 2차 탐색
+            if not candidates:
+                candidates = [
+                    r for r in new_rows
+                    if r["_src_row"] not in used_src_rows
+                    and r["ym"] == ym
+                    and r["매입처"] == v_cd
+                    and abs(clean_num(r["예정금액"]) - yejeong) < 1.0
+                ]
+
             match = None
             if candidates:
                 candidates.sort(key=lambda r: abs(clean_num(r["예정금액"]) - yejeong))
                 match = candidates[0]
                 used_src_rows.add(match["_src_row"])
+                matched_step3_rows.append(match)
+            else:
+                unmatched_orig_rows.append(item)
 
             if match:
-                # 변경 비교 대상 필드
                 compare_fields = ["예정금액", "발행일자", "내용", "금액", "미결금액"]
                 if sec_key == "sec3":
                     compare_fields.append("완결")
@@ -693,19 +747,21 @@ def analyze_and_merge(
                     old_val = item.get(f, "")
                     new_val = match.get(f, "")
                     if f in ("예정금액", "금액", "미결금액"):
-                        if abs(clean_num(old_val) - clean_num(new_val)) >= 1.0:
+                        if abs(clean_num(old_val) - clean_num(new_val)) >= 0.05:
                             item["_changes"][f] = {"old": clean_num(old_val), "new": clean_num(new_val)}
                             item[f] = new_val
                             changed = True
+                        else:
+                            # 미세 소수점 동기화
+                            item[f] = new_val
                     else:
                         s_old = str(old_val or "").strip()
                         s_new = str(new_val or "").strip()
-                        if s_new and s_old != s_new:
+                        if s_new != s_old and (s_new or s_old):
                             item["_changes"][f] = {"old": s_old, "new": s_new}
                             item[f] = s_new
                             changed = True
 
-                # 부가 파생 컬럼 동기화
                 if sec_key == "sec3":
                     for aux in ("참조", "참조-현 내역", "예정 차", "미결 차", "잡행일", "완결"):
                         if match.get(aux) not in (None, ""):
@@ -720,6 +776,26 @@ def analyze_and_merge(
                 )
                 if changed:
                     item["_status"] = "완결" if is_now_settled else "수정"
+                    mod_entry = {
+                        "sec_key": sec_key,
+                        "sec_title": SECTION_TITLES[sec_key],
+                        "orig_row": item.get("_orig_row"),
+                        "src_row": match.get("_src_row"),
+                        "ym": ym,
+                        "일자": item.get("일자", ""),
+                        "매입처": item.get("매입처", ""),
+                        "매입처명": item.get("매입처명", ""),
+                        "거래코드": item.get("거래코드", ""),
+                        "거래처": item.get("거래처", ""),
+                        "거래처명": item.get("거래처명", ""),
+                        "status": item["_status"],
+                        "changes": item["_changes"],
+                        "예정금액": clean_num(item.get("예정금액")),
+                        "금액": clean_num(item.get("금액")),
+                        "미결금액": clean_num(item.get("미결금액")),
+                    }
+                    modified_by_section[sec_key].append(mod_entry)
+                    modified_all.append(mod_entry)
                 else:
                     item["_status"] = "완결" if is_now_settled else "기존"
             else:
@@ -731,56 +807,138 @@ def analyze_and_merge(
 
             merged.append(item)
 
-        # 2) 3종 파일에서 신규 행 추가
-        base_year = base_month[:4] if len(base_month) >= 4 else "2026"
+        # ── 2) 기준월 해당건 (ym == base_month): 스텝2 원본에 스텝 3-1~3-3 기준월 값 추가
+        added_base_month_rows: list[dict[str, Any]] = []
         for r in new_rows:
             if r["_src_row"] in used_src_rows:
                 continue
-            if vendor_scope == "sample_only" and r["매입처"] not in orig_vendors:
-                continue
-
             r_ym = r["ym"]
-            migyeol = clean_num(r["미결금액"])
             yejeong = clean_num(r["예정금액"])
+            migyeol = clean_num(r["미결금액"])
+            geumaek = clean_num(r["금액"])
 
-            should_add = False
-            if sec_key in ("sec1", "sec3"):
-                if r_ym == base_month:
-                    # 기초금액(25/10)이 아닌 실제 발생/집행 건이거나 미결이 있는 건
-                    if yejeong != 0 or migyeol != 0 or clean_num(r["금액"]) != 0:
-                        should_add = True
-                elif include_prior_unsettled and r_ym and r_ym <= base_month:
-                    if sec_key == "sec3":
-                        if r.get("완결") != "완" and abs(migyeol) >= 1.0:
-                            should_add = True
-                    else:
-                        if abs(migyeol) >= 1.0 and "기초" not in str(r.get("내용", "")):
-                            should_add = True
-            elif sec_key == "sec4":
-                # 약가인하는 연초/특정월(예: 2026-01 '26.01.01 인하분' 124건) 일괄 발생하므로:
-                # 1) 기준년도(예: 2026년) 내 기준월 이하의 약가인하 내역 전체 반영 (완결 포함 유지 규칙과 일관)
-                # 2) 또는 이전 연도 중 미결잔액(abs(migyeol) >= 1) 보유 건 반영
-                if r_ym and r_ym <= base_month:
-                    if r_ym.startswith(base_year) or abs(migyeol) >= 1.0:
-                        should_add = True
-
-            if should_add:
+            if r_ym == base_month and (yejeong != 0 or migyeol != 0 or geumaek != 0):
                 new_item = dict(r)
                 enrich_names(new_item)
                 is_settled = (
                     (sec_key == "sec3" and new_item.get("완결") == "완")
-                    or (yejeong != 0 and abs(migyeol) < 1.0 and clean_num(new_item.get("금액")) != 0)
+                    or (yejeong != 0 and abs(migyeol) < 1.0 and geumaek != 0)
                 )
                 new_item["_status"] = "완결" if is_settled else "신규"
                 new_item["_changes"] = {}
                 merged.append(new_item)
+                added_base_month_rows.append(r)
+
+        # ── 3) 최종검증 집계 (스텝 3-1~3-3 합계 vs 통합자료 합계 일치 검증)
+        # (A) 기준월 해당건(ym == base_month) 합계 대조: 스텝 3 기준월 전체 vs 통합자료 기준월 전체
+        step3_bm_rows = [
+            r for r in new_rows
+            if r["ym"] == base_month
+            and (clean_num(r["예정금액"]) != 0 or clean_num(r["미결금액"]) != 0 or clean_num(r["금액"]) != 0)
+        ]
+        integ_bm_rows = [r for r in merged if r["ym"] == base_month]
+
+        s3_bm_yj = sum(clean_num(r.get("예정금액")) for r in step3_bm_rows)
+        s3_bm_gm = sum(clean_num(r.get("금액")) for r in step3_bm_rows)
+        s3_bm_mg = sum(clean_num(r.get("미결금액")) for r in step3_bm_rows)
+
+        in_bm_yj = sum(clean_num(r.get("예정금액")) for r in integ_bm_rows)
+        in_bm_gm = sum(clean_num(r.get("금액")) for r in integ_bm_rows)
+        in_bm_mg = sum(clean_num(r.get("미결금액")) for r in integ_bm_rows)
+
+        # (B) 통합 반영 대상 전체(기준월 이전 업데이트분 + 기준월 추가분) 합계 대조:
+        # 스텝 3에서 매칭·추가된 대상 행 합계(+ 원본 단독 행) vs 통합자료 각 항 합계
+        step3_target_rows = matched_step3_rows + added_base_month_rows
+        s3_tot_yj = sum(clean_num(r.get("예정금액")) for r in step3_target_rows) + sum(clean_num(r.get("예정금액")) for r in unmatched_orig_rows)
+        s3_tot_gm = sum(clean_num(r.get("금액")) for r in step3_target_rows) + sum(clean_num(r.get("금액")) for r in unmatched_orig_rows)
+        s3_tot_mg = sum(clean_num(r.get("미결금액")) for r in step3_target_rows) + sum(clean_num(r.get("미결금액")) for r in unmatched_orig_rows)
+        s3_tot_cnt = len(step3_target_rows) + len(unmatched_orig_rows)
+
+        in_tot_yj = sum(clean_num(r.get("예정금액")) for r in merged)
+        in_tot_gm = sum(clean_num(r.get("금액")) for r in merged)
+        in_tot_mg = sum(clean_num(r.get("미결금액")) for r in merged)
+        in_tot_cnt = len(merged)
+
+        # (C) 스텝 3 파일 전체 누적 합계 (참고용)
+        s3_raw_yj = sum(clean_num(r.get("예정금액")) for r in new_rows)
+        s3_raw_gm = sum(clean_num(r.get("금액")) for r in new_rows)
+        s3_raw_mg = sum(clean_num(r.get("미결금액")) for r in new_rows)
+
+        diff_tot_yj = in_tot_yj - s3_tot_yj
+        diff_tot_gm = in_tot_gm - s3_tot_gm
+        diff_tot_mg = in_tot_mg - s3_tot_mg
+
+        diff_bm_yj = in_bm_yj - s3_bm_yj
+        diff_bm_gm = in_bm_gm - s3_bm_gm
+        diff_bm_mg = in_bm_mg - s3_bm_mg
+
+        is_valid = (
+            abs(diff_tot_yj) < 1.0
+            and abs(diff_tot_gm) < 1.0
+            and abs(diff_tot_mg) < 1.0
+            and abs(diff_bm_mg) < 1.0
+        )
+
+        verification_report.append({
+            "sec_key": sec_key,
+            "step_label": step_label,
+            "sec_title": SECTION_TITLES[sec_key],
+            "prior_orig_count": sum(1 for r in orig_rows if r["ym"] != base_month),
+            "prior_matched_count": sum(1 for r in matched_step3_rows if r["ym"] != base_month),
+            "prior_modified_count": len(modified_by_section[sec_key]),
+            "base_month_added_count": len(added_base_month_rows),
+            "base_month_total_count": len(integ_bm_rows),
+            "step3_target": {
+                "count": s3_tot_cnt,
+                "예정금액": s3_tot_yj,
+                "집행금액": s3_tot_gm,
+                "미결금액": s3_tot_mg,
+            },
+            "integrated": {
+                "count": in_tot_cnt,
+                "예정금액": in_tot_yj,
+                "집행금액": in_tot_gm,
+                "미결금액": in_tot_mg,
+            },
+            "diff_total": {
+                "count": in_tot_cnt - s3_tot_cnt,
+                "예정금액": diff_tot_yj,
+                "집행금액": diff_tot_gm,
+                "미결금액": diff_tot_mg,
+            },
+            "step3_base_month": {
+                "count": len(step3_bm_rows),
+                "예정금액": s3_bm_yj,
+                "집행금액": s3_bm_gm,
+                "미결금액": s3_bm_mg,
+            },
+            "integrated_base_month": {
+                "count": len(integ_bm_rows),
+                "예정금액": in_bm_yj,
+                "집행금액": in_bm_gm,
+                "미결금액": in_bm_mg,
+            },
+            "diff_base_month": {
+                "count": len(integ_bm_rows) - len(step3_bm_rows),
+                "예정금액": diff_bm_yj,
+                "집행금액": diff_bm_gm,
+                "미결금액": diff_bm_mg,
+            },
+            "step3_raw_file": {
+                "count": len(new_rows),
+                "예정금액": s3_raw_yj,
+                "집행금액": s3_raw_gm,
+                "미결금액": s3_raw_mg,
+            },
+            "is_valid": is_valid,
+        })
 
         return merged
 
-    sec1_merged = merge_section("sec1", orig_data["sections"]["sec1"], sahu_data["records"])
+    sec1_merged = merge_section("sec1", "Step 3-1 (사후미결)", orig_data["sections"]["sec1"], sahu_data["records"])
     sec2_merged = [enrich_names(dict(r, _status="기존", _changes={})) for r in orig_data["sections"]["sec2"]]
-    sec3_merged = merge_section("sec3", orig_data["sections"]["sec3"], jeoga_data["records"])
-    sec4_merged = merge_section("sec4", orig_data["sections"]["sec4"], yakga_data["records"])
+    sec3_merged = merge_section("sec3", "Step 3-2 (저가미결)", orig_data["sections"]["sec3"], jeoga_data["records"])
+    sec4_merged = merge_section("sec4", "Step 3-3 (약가미결)", orig_data["sections"]["sec4"], yakga_data["records"])
 
     sections_merged = {
         "sec1": sec1_merged,
@@ -789,15 +947,8 @@ def analyze_and_merge(
         "sec4": sec4_merged,
     }
 
-    # 3) 매입처별 요약 리포트 집계
+    # 매입처별 요약 리포트 집계
     vendor_agg: dict[str, dict[str, Any]] = {}
-    section_labels = {
-        "sec1": "사후미결",
-        "sec2": "바슈헬스",
-        "sec3": "저가미결",
-        "sec4": "약가미결",
-    }
-
     total_yejeong = 0.0
     total_geumaek = 0.0
     total_migyeol = 0.0
@@ -858,7 +1009,7 @@ def analyze_and_merge(
     section_summary = {}
     for sec_key, rows in sections_merged.items():
         section_summary[sec_key] = {
-            "label": section_labels[sec_key],
+            "label": SECTION_TITLES[sec_key],
             "count": len(rows),
             "예정금액": sum(clean_num(r.get("예정금액")) for r in rows),
             "집행금액": sum(clean_num(r.get("금액")) for r in rows),
@@ -871,8 +1022,6 @@ def analyze_and_merge(
 
     return {
         "base_month": base_month,
-        "vendor_scope": vendor_scope,
-        "include_prior_unsettled": include_prior_unsettled,
         "kpis": {
             "총_예정금액": total_yejeong,
             "총_집행금액": total_geumaek,
@@ -880,7 +1029,12 @@ def analyze_and_merge(
             "총_건수": sum(len(v) for v in sections_merged.values()),
             "매입처_수": len(vendor_summary),
             "상태별_건수": status_counts,
+            "수정_리포트_건수": len(modified_all),
+            "검증_모두_일치": all(v["is_valid"] for v in verification_report),
         },
+        "verification_report": verification_report,
+        "modified_by_section": modified_by_section,
+        "modified_all": modified_all,
         "section_summary": section_summary,
         "vendor_summary": vendor_summary,
         "sections": sections_merged,
@@ -888,7 +1042,7 @@ def analyze_and_merge(
 
 
 # ──────────────────────────────────────────────────────────────
-# 5. 엑셀 생성 엔진 (2번 Sample.xls 4섹션 구조 유지 + 디자인 재구성)
+# 5. 엑셀 생성 엔진 (타이틀 초기화 및 사후미결 / 사후미결(바슈) / 저가미결 / 약가미결 명칭 부여)
 # ──────────────────────────────────────────────────────────────
 def generate_integrated_excel(analysis_result: dict[str, Any], output_path: str | Path) -> str:
     wb = openpyxl.Workbook()
@@ -896,9 +1050,7 @@ def generate_integrated_excel(analysis_result: dict[str, Any], output_path: str 
     ws.title = "미결(병원부)"
     ws.views.sheetView[0].showGridLines = True
 
-    # Clinical Ledger Precision 디자인 토큰
     f_title = Font(name="맑은 고딕", size=11, bold=True, color="FFFFFF")
-    f_sec_banner = Font(name="맑은 고딕", size=10, bold=True, color="1E3A8A")
     f_th = Font(name="맑은 고딕", size=9, bold=True, color="1E293B")
     f_td = Font(name="맑은 고딕", size=9, color="0F172A")
     f_td_num = Font(name="맑은 고딕", size=9, color="0F172A")
@@ -906,14 +1058,13 @@ def generate_integrated_excel(analysis_result: dict[str, Any], output_path: str 
     f_td_settled = Font(name="맑은 고딕", size=9, bold=True, color="059669")
     f_td_mod = Font(name="맑은 고딕", size=9, bold=True, color="B45309")
 
-    fill_top_bar = PatternFill("solid", fgColor="1E3A8A")      # Deep Cobalt Navy
-    fill_sec_banner = PatternFill("solid", fgColor="EFF6FF")   # Soft Cobalt Wash
-    fill_th = PatternFill("solid", fgColor="F1F5F9")           # Slate 100 Header
-    fill_zebra = PatternFill("solid", fgColor="F8FAFC")        # Slate 50 Zebra
+    fill_top_bar = PatternFill("solid", fgColor="1E3A8A")
+    fill_th = PatternFill("solid", fgColor="F1F5F9")
+    fill_zebra = PatternFill("solid", fgColor="F8FAFC")
     fill_white = PatternFill("solid", fgColor="FFFFFF")
-    fill_new = PatternFill("solid", fgColor="EFF6FF")          # 신규 행 하이라이트
-    fill_mod = PatternFill("solid", fgColor="FFFBEB")          # 수정 행 하이라이트
-    fill_settled = PatternFill("solid", fgColor="ECFDF5")      # 완결 행 하이라이트
+    fill_new = PatternFill("solid", fgColor="EFF6FF")
+    fill_mod = PatternFill("solid", fgColor="FFFBEB")
+    fill_settled = PatternFill("solid", fgColor="ECFDF5")
 
     thin_border_side = Side(style="thin", color="CBD5E1")
     med_navy_side = Side(style="medium", color="1E3A8A")
@@ -921,7 +1072,6 @@ def generate_integrated_excel(analysis_result: dict[str, Any], output_path: str 
 
     b_data = Border(left=thin_border_side, right=thin_border_side, top=thin_border_side, bottom=thin_border_side)
     b_th = Border(left=thin_border_side, right=thin_border_side, top=med_navy_side, bottom=double_bottom_side)
-    b_banner = Border(left=med_navy_side, right=thin_border_side, top=thin_border_side, bottom=thin_border_side)
 
     align_center = Alignment(horizontal="center", vertical="center", wrap_text=False)
     align_left = Alignment(horizontal="left", vertical="center", wrap_text=False)
@@ -932,24 +1082,34 @@ def generate_integrated_excel(analysis_result: dict[str, Any], output_path: str 
     sections = analysis_result["sections"]
     base_month = analysis_result.get("base_month", "")
 
-    # ── Row 1: 상단 요약 컨트롤 바 (Sample.xls R1 구조 호환 + 디자인 재구성)
-    ws.row_dimensions[1].height = 28
-    for c in range(1, 27):
+    # ── Row 1: 상단 요약 컨트롤 바
+    ws.row_dimensions[1].height = 26
+    for c in range(1, 26):
         cell = ws.cell(1, c, "")
         cell.fill = fill_top_bar
         cell.font = f_title
         cell.alignment = align_center
 
-    ws.cell(1, 3, f"Q필터 : 기준월 [{base_month}]")
-    ws.cell(1, 6, "정")
-    ws.cell(1, 8, "책")
-    ws.cell(1, 11, "범례: 확정 / 예외추가% / 신규(청색) / 수정(황색) / 완결(녹색)")
-    ws.cell(1, 13, "집   행        미결금액:")
-    # P1(16열)에 전체 미결금액 SUBTOTAL 수식 배치 (Sample.xls 동일 위치)
-    ws.cell(1, 18, "※ 수금할인&할인조정 미결누적 관리 (통합 리포트)")
-    ws.cell(1, 18).alignment = align_left
+    ws.cell(1, 2, f"Q필터 : 기준월 [{base_month}]")
+    ws.cell(1, 5, "정")
+    ws.cell(1, 7, "책")
+    ws.cell(1, 9, "범례: 확정 / 예외추가% / 신규(청색) / 수정(황색) / 완결(녹색)")
+    ws.cell(1, 12, "집   행        미결금액:")
+    ws.cell(1, 17, "※ 수금할인&할인조정 미결누적 관리 (통합 리포트)")
+    ws.cell(1, 17).alignment = align_left
 
     curr_row = 2
+
+    def write_section_banner(row_idx: int, title: str, max_cols: int):
+        ws.row_dimensions[row_idx].height = 22
+        # 항목 타이틀 행: 초기화 후 문자는 좌측 첫열(A열)에 배치하고 채우기, 테두리 삭제
+        for c in range(1, max_cols + 1):
+            cell = ws.cell(row_idx, c, None)
+            cell.fill = PatternFill(fill_type=None)
+            cell.border = Border()
+        title_cell = ws.cell(row_idx, 1, title)
+        title_cell.font = Font(name="맑은 고딕", size=10, bold=True, color="0F172A")
+        title_cell.alignment = align_left
 
     def write_header_row(row_idx: int, cols: list[str]):
         ws.row_dimensions[row_idx].height = 24
@@ -983,7 +1143,7 @@ def generate_integrated_excel(analysis_result: dict[str, Any], output_path: str 
                 cell.fill = row_fill
                 cell.border = b_data
 
-                if col_name in ("예정금액", "금액", "미결금액", "자료비고", "참조", "참조-현 내역", "예정 차", "미결 차", "오차분"):
+                if col_name in ("예정금액", "금액", "미결금액", "참조", "참조-현 내역", "예정 차", "미결 차", "오차분"):
                     if val == "" or val is None:
                         cell.value = None
                     else:
@@ -1000,7 +1160,7 @@ def generate_integrated_excel(analysis_result: dict[str, Any], output_path: str 
                         cell.value = str(val or "")
                     cell.font = f_td
                     cell.alignment = align_center
-                elif col_name in ("코드", "매입월", "매입처", "사전%", "매입%", "수금%", "년%", "일자", "발행일자", "거래코드", "잡행일", "완결"):
+                elif col_name in ("매입월", "매입처", "사전%", "매입%", "수금%", "년%", "일자", "발행일자", "거래코드", "잡행일", "완결"):
                     cell.value = str(val or "")
                     cell.font = f_td_settled if (col_name == "완결" and val == "완") else f_td
                     cell.alignment = align_center
@@ -1012,26 +1172,17 @@ def generate_integrated_excel(analysis_result: dict[str, Any], output_path: str 
             r_cursor += 1
         return r_cursor
 
-    def write_section_banner(row_idx: int, title: str, max_cols: int):
-        ws.row_dimensions[row_idx].height = 24
-        for c in range(1, max_cols + 1):
-            cell = ws.cell(row_idx, c, "")
-            cell.fill = fill_sec_banner
-            cell.border = b_banner
-        title_cell = ws.cell(row_idx, 3, title)
-        title_cell.font = f_sec_banner
-        title_cell.alignment = align_left
-
-    # ── 섹션 1: 정책 / 사후·수금할인 미결
+    # ── 항목 1: 사후미결
+    write_section_banner(curr_row, SECTION_TITLES["sec1"], len(SEC1_COLS))
+    curr_row += 1
     write_header_row(curr_row, SEC1_COLS)
     curr_row += 1
     curr_row = write_data_rows(curr_row, sections["sec1"], SEC1_COLS)
 
-    # 빈 줄 (Sample.xls 구조와 동일하게 1행 공백)
     curr_row += 1
 
-    # ── 섹션 2: ※ 바슈헬스코리아(솔타) 예상 매출할인
-    write_section_banner(curr_row, "※ 바슈헬스코리아(솔타) 예상 매출할인", len(SEC2_COLS))
+    # ── 항목 2: 사후미결(바슈)
+    write_section_banner(curr_row, SECTION_TITLES["sec2"], len(SEC2_COLS))
     curr_row += 1
     write_header_row(curr_row, SEC2_COLS)
     curr_row += 1
@@ -1039,8 +1190,8 @@ def generate_integrated_excel(analysis_result: dict[str, Any], output_path: str 
 
     curr_row += 1
 
-    # ── 섹션 3: ※ 저가보상 미결건
-    write_section_banner(curr_row, "※ 저가보상 미결건", len(SEC3_COLS))
+    # ── 항목 3: 저가미결
+    write_section_banner(curr_row, SECTION_TITLES["sec3"], len(SEC3_COLS))
     curr_row += 1
     write_header_row(curr_row, SEC3_COLS)
     curr_row += 1
@@ -1048,41 +1199,61 @@ def generate_integrated_excel(analysis_result: dict[str, Any], output_path: str 
 
     curr_row += 1
 
-    # ── 섹션 4: ※ 약가인하 미결건
-    write_section_banner(curr_row, "※ 약가인하 미결건", len(SEC4_COLS))
+    # ── 항목 4: 약가미결
+    write_section_banner(curr_row, SECTION_TITLES["sec4"], len(SEC4_COLS))
     curr_row += 1
     write_header_row(curr_row, SEC4_COLS)
     curr_row += 1
     curr_row = write_data_rows(curr_row, sections["sec4"], SEC4_COLS)
 
-    # 상단 P1(16열)에 전체 미결금액 SUBTOTAL 수식 입력
-    last_row = max(curr_row - 1, 3)
-    p1 = ws.cell(1, 16, f"=SUBTOTAL(9,P3:P{last_row})")
+    # 상단 O1(15열)에 전체 미결금액 SUBTOTAL 수식 입력
+    last_row = max(curr_row - 1, 4)
+    p1 = ws.cell(1, 15, f"=SUBTOTAL(9,O4:O{last_row})")
     p1.font = Font(name="맑은 고딕", size=11, bold=True, color="FDE047")
     p1.fill = fill_top_bar
     p1.number_format = num_fmt_krw
     p1.alignment = align_right
 
-    # 컬럼 너비 최적화
+    # 한 화면에 볼 수 있도록 열너비 적정 축소 조정 (1~25열)
     col_widths = {
-        1: 14, 2: 12, 3: 10, 4: 22, 5: 8,
-        6: 7, 7: 7, 8: 7, 9: 7, 10: 12,
-        11: 24, 12: 15, 13: 12, 14: 16, 15: 15,
-        16: 16, 17: 16, 18: 20, 19: 10, 20: 28,
-        21: 14, 22: 14, 23: 14, 24: 12, 25: 12, 26: 8,
+        1: 9,   # 매입월
+        2: 7,   # 매입처
+        3: 15,  # 매입처명
+        4: 6,   # 조건
+        5: 5,   # 사전%
+        6: 5,   # 매입%
+        7: 5,   # 수금%
+        8: 5,   # 년%
+        9: 8,   # 일자
+        10: 16, # 적요
+        11: 12, # 예정금액
+        12: 10, # 발행일자
+        13: 10, # 내용
+        14: 12, # 금액
+        15: 12, # 미결금액
+        16: 10, # 거래처
+        17: 14, # 비고
+        18: 8,  # 거래코드
+        19: 18, # 거래처명
+        20: 11, # 참조
+        21: 11, # 참조-현 내역
+        22: 11, # 예정 차
+        23: 10, # 미결 차
+        24: 10, # 잡행일
+        25: 6,  # 완결
     }
     for c_idx, w in col_widths.items():
         ws.column_dimensions[get_column_letter(c_idx)].width = w
 
-    ws.freeze_panes = "A3"
+    ws.freeze_panes = "A4"
 
     # ══════════════════════════════════════════════════════════
-    # Sheet 2: 매입처별 요약 리포트 (부속 요약 시트)
+    # Sheet 2: 매입처별 요약 리포트 (각 필드 합계 포함)
     # ══════════════════════════════════════════════════════════
     ws_sum = wb.create_sheet(title="매입처별 요약 리포트")
     ws_sum.views.sheetView[0].showGridLines = True
 
-    ws_sum.row_dimensions[1].height = 30
+    ws_sum.row_dimensions[1].height = 28
     for c in range(1, 16):
         cell = ws_sum.cell(1, c, "")
         cell.fill = fill_top_bar
@@ -1105,7 +1276,8 @@ def generate_integrated_excel(analysis_result: dict[str, Any], output_path: str 
         c.border = b_th
         c.alignment = align_center
 
-    for i, v in enumerate(analysis_result["vendor_summary"], start=3):
+    v_list = analysis_result["vendor_summary"]
+    for i, v in enumerate(v_list, start=3):
         ws_sum.row_dimensions[i].height = 20
         r_fill = fill_zebra if i % 2 == 1 else fill_white
         row_vals = [
@@ -1131,10 +1303,149 @@ def generate_integrated_excel(analysis_result: dict[str, Any], output_path: str 
                 c.alignment = align_left
                 c.font = f_td
 
-    sum_widths = [12, 24, 15, 15, 15, 15, 15, 15, 15, 15, 15, 16, 16, 16, 22]
+    # 매입처별 요약 리포트 하단 합계 행
+    tot_row_idx = len(v_list) + 3
+    ws_sum.row_dimensions[tot_row_idx].height = 22
+    totals = [
+        "합계", f"총 {len(v_list)}개 매입처",
+        sum(v["사후_예정"] for v in v_list),
+        sum(v["사후_집행"] for v in v_list),
+        sum(v["사후_미결"] for v in v_list),
+        sum(v["저가_예정"] for v in v_list),
+        sum(v["저가_집행"] for v in v_list),
+        sum(v["저가_미결"] for v in v_list),
+        sum(v["약가_예정"] for v in v_list),
+        sum(v["약가_집행"] for v in v_list),
+        sum(v["약가_미결"] for v in v_list),
+        sum(v["총_예정금액"] for v in v_list),
+        sum(v["총_집행금액"] for v in v_list),
+        sum(v["총_미결금액"] for v in v_list),
+        f"신규 {sum(v['신규_건수'] for v in v_list)} / 수정 {sum(v['수정_건수'] for v in v_list)} / 완결 {sum(v['완결_건수'] for v in v_list)}",
+    ]
+    for c_idx, val in enumerate(totals, start=1):
+        c = ws_sum.cell(tot_row_idx, c_idx, val)
+        c.fill = fill_th
+        c.border = b_th
+        if 3 <= c_idx <= 14:
+            c.number_format = num_fmt_krw
+            c.alignment = align_right
+            c.font = f_td_neg if clean_num(val) < 0 else f_th
+        else:
+            c.alignment = align_center
+            c.font = f_th
+
+    sum_widths = [11, 20, 13, 13, 13, 13, 13, 13, 13, 13, 13, 14, 14, 14, 20]
     for c_idx, w in enumerate(sum_widths, start=1):
         ws_sum.column_dimensions[get_column_letter(c_idx)].width = w
     ws_sum.freeze_panes = "C3"
+
+    # ══════════════════════════════════════════════════════════
+    # Sheet 3: 최종검증 및 수정사항 리포트
+    # ══════════════════════════════════════════════════════════
+    ws_ver = wb.create_sheet(title="최종검증 및 수정리포트")
+    ws_ver.views.sheetView[0].showGridLines = True
+
+    ws_ver.row_dimensions[1].height = 28
+    for c in range(1, 13):
+        cell = ws_ver.cell(1, c, "")
+        cell.fill = fill_top_bar
+        cell.font = f_title
+    ws_ver.cell(1, 1, f"✅ 최종검증(Step 3 합계 vs 통합자료 합계) 및 기준월 이전건 수정 리포트 (기준월: {base_month})").alignment = align_left
+
+    ver_headers = [
+        "항목명", "대조 대상(Step)",
+        "Step 3 반영건수", "통합자료 건수",
+        "Step 3 예정금액 합계", "통합자료 예정금액 합계",
+        "Step 3 집행금액 합계", "통합자료 집행금액 합계",
+        "Step 3 미결금액 합계", "통합자료 미결금액 합계",
+        "미결 차액(검증)", "일치 여부"
+    ]
+    ws_ver.row_dimensions[2].height = 24
+    for c_idx, h_text in enumerate(ver_headers, start=1):
+        c = ws_ver.cell(2, c_idx, h_text)
+        c.font = f_th
+        c.fill = fill_th
+        c.border = b_th
+        c.alignment = align_center
+
+    v_row = 3
+    for vr in analysis_result.get("verification_report", []):
+        ws_ver.row_dimensions[v_row].height = 20
+        vals = [
+            vr["sec_title"],
+            vr["step_label"],
+            vr["step3_target"]["count"],
+            vr["integrated"]["count"],
+            vr["step3_target"]["예정금액"],
+            vr["integrated"]["예정금액"],
+            vr["step3_target"]["집행금액"],
+            vr["integrated"]["집행금액"],
+            vr["step3_target"]["미결금액"],
+            vr["integrated"]["미결금액"],
+            vr["diff_total"]["미결금액"],
+            "일치 (검증완료)" if vr["is_valid"] else "불일치 확인필요",
+        ]
+        for c_idx, val in enumerate(vals, start=1):
+            c = ws_ver.cell(v_row, c_idx, val)
+            c.fill = fill_settled if vr["is_valid"] else fill_mod
+            c.border = b_data
+            if 5 <= c_idx <= 11:
+                c.number_format = num_fmt_krw
+                c.alignment = align_right
+                c.font = f_td_neg if clean_num(val) < 0 else f_td_num
+            elif c_idx in (3, 4, 12):
+                c.alignment = align_center
+                c.font = f_td_settled if (c_idx == 12 and vr["is_valid"]) else f_td
+            else:
+                c.alignment = align_left
+                c.font = f_th if c_idx == 1 else f_td
+        v_row += 1
+
+    # 기준월 이전건 항목별 수정사항 테이블
+    v_row += 2
+    ws_ver.cell(v_row, 1, "📝 기준월 이전건 업데이트(수정) 상세 리포트").font = Font(name="맑은 고딕", size=10, bold=True, color="0F172A")
+    v_row += 1
+
+    mod_headers = ["항목", "년월", "매입처코드", "매입처명", "거래처명", "상태", "수정 필드 및 변경 내역 (변경 전 → 변경 후)"]
+    ws_ver.row_dimensions[v_row].height = 22
+    for c_idx, h_text in enumerate(mod_headers, start=1):
+        c = ws_ver.cell(v_row, c_idx, h_text)
+        c.font = f_th
+        c.fill = fill_th
+        c.border = b_th
+        c.alignment = align_center
+    v_row += 1
+
+    for m in analysis_result.get("modified_all", []):
+        ws_ver.row_dimensions[v_row].height = 20
+        ch_parts = []
+        for f_name, ch_val in m.get("changes", {}).items():
+            old_v = ch_val.get("old", "")
+            new_v = ch_val.get("new", "")
+            if isinstance(old_v, (int, float)) or isinstance(new_v, (int, float)):
+                ch_parts.append(f"{f_name}: {clean_num(old_v):,.0f} → {clean_num(new_v):,.0f}")
+            else:
+                ch_parts.append(f"{f_name}: '{old_v or '공란'}' → '{new_v or '공란'}'")
+        vals = [
+            m["sec_title"],
+            m["ym"],
+            m["매입처"],
+            m["매입처명"],
+            m["거래처명"] or m["거래처"],
+            m["status"],
+            " / ".join(ch_parts),
+        ]
+        for c_idx, val in enumerate(vals, start=1):
+            c = ws_ver.cell(v_row, c_idx, val)
+            c.fill = fill_mod
+            c.border = b_data
+            c.font = f_td
+            c.alignment = align_center if c_idx in (1, 2, 3, 6) else align_left
+        v_row += 1
+
+    ver_widths = [14, 18, 13, 13, 16, 16, 16, 16, 16, 16, 14, 16]
+    for c_idx, w in enumerate(ver_widths, start=1):
+        ws_ver.column_dimensions[get_column_letter(c_idx)].width = w
 
     out_p = Path(output_path)
     out_p.parent.mkdir(parents=True, exist_ok=True)

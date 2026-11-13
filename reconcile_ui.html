@@ -20,8 +20,9 @@
       --primary-border: #BFDBFE;
       --secondary: #0D9488;
       --settled-bg: #ECFDF5;
-      --settled-border: #A7F3D0;
+      --settled-border: #6EE7B7;
       --settled-text: #065F46;
+      --settled-strong: #059669;
       --mod-bg: #FFFBEB;
       --mod-border: #FDE68A;
       --mod-text: #92400E;
@@ -104,7 +105,7 @@
     }
 
     .brand-title p {
-      font-size: 11px;
+      font-size: 11.5px;
       color: #94A3B8;
       margin-top: 2px;
     }
@@ -156,39 +157,57 @@
       background: #047857;
     }
 
-    .btn-secondary {
+    .btn-reset {
       background: #1E293B;
-      color: #E2E8F0;
-      border-color: #334155;
+      color: #FCA5A5;
+      border-color: #475569;
     }
-    .btn-secondary:hover:not(:disabled) {
-      background: #334155;
+    .btn-reset:hover:not(:disabled) {
+      background: #7F1D1D;
+      color: #FFFFFF;
+      border-color: #EF4444;
     }
 
     .btn-outline {
       background: #FFFFFF;
       color: var(--text-secondary);
       border-color: var(--border-strong);
-      height: 32px;
-      padding: 0 11px;
-      font-size: 12px;
+      height: 30px;
+      padding: 0 10px;
+      font-size: 11.5px;
     }
     .btn-outline:hover:not(:disabled) {
       background: var(--surface-low);
       border-color: #94A3B8;
     }
 
+    .btn-step-reset {
+      background: #FFFFFF;
+      color: #DC2626;
+      border: 1px solid #FECACA;
+      height: 26px;
+      padding: 0 8px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+    }
+    .btn-step-reset:hover {
+      background: #FEF2F2;
+      border-color: #F87171;
+    }
+
     /* ── Main Container ── */
     .container {
       max-width: 1860px;
       margin: 0 auto;
-      padding: 20px 28px 48px;
+      padding: 18px 28px 48px;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 16px;
     }
 
-    /* ── Workflow 5-Step Grid ── */
+    /* ── Workflow Section ── */
     .workflow-section {
       background: var(--surface-lowest);
       border: 1px solid var(--border-hairline);
@@ -203,6 +222,8 @@
       margin-bottom: 14px;
       padding-bottom: 10px;
       border-bottom: 1px solid var(--border-hairline);
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .section-header-bar h2 {
@@ -211,12 +232,30 @@
       color: var(--text-primary);
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+    }
+
+    .upload-progress-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      background: var(--surface-low);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-strong);
+    }
+    .upload-progress-pill.complete {
+      background: var(--settled-bg);
+      color: var(--settled-text);
+      border-color: var(--settled-border);
     }
 
     .workflow-grid {
       display: grid;
-      grid-template-columns: 1.15fr 1.15fr 1fr 1fr 1fr;
+      grid-template-columns: 1.15fr 1.1fr 1.1fr 1.1fr 1.1fr;
       gap: 12px;
     }
 
@@ -234,25 +273,34 @@
 
     .step-card {
       background: #FFFFFF;
-      border: 1px solid var(--border-strong);
+      border: 1.5px solid var(--border-strong);
       border-radius: var(--radius-md);
-      padding: 12px 14px;
+      padding: 13px 14px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       gap: 10px;
       position: relative;
-      transition: border-color 0.15s ease, background-color 0.15s ease;
+      transition: all 0.18s ease;
     }
 
-    .step-card.loaded {
+    .step-card.step1-card {
       border-color: #93C5FD;
       background: #F8FAFF;
+      border-top: 4px solid var(--primary-container);
+    }
+
+    /* 업로드 완료된 스텝 시각화 강화 */
+    .step-card.uploaded {
+      border-color: #10B981;
+      border-top: 4px solid #059669;
+      background: #F0FDF4;
+      box-shadow: 0 2px 8px rgba(5, 150, 105, 0.08);
     }
 
     .step-top {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
       gap: 8px;
     }
@@ -260,19 +308,27 @@
     .step-num {
       display: inline-flex;
       align-items: center;
-      padding: 2px 7px;
+      padding: 2px 8px;
       border-radius: var(--radius-sm);
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
       font-weight: 700;
-      background: var(--primary-container);
+      background: #475569;
       color: #FFFFFF;
+    }
+
+    .step-card.step1-card .step-num {
+      background: var(--primary-container);
+    }
+
+    .step-card.uploaded .step-num {
+      background: #059669;
     }
 
     .step-status {
       font-size: 11px;
-      font-weight: 600;
-      padding: 2px 7px;
+      font-weight: 700;
+      padding: 2px 8px;
       border-radius: 9999px;
       border: 1px solid var(--border-strong);
       background: var(--surface-low);
@@ -280,13 +336,19 @@
     }
 
     .step-status.ok {
-      background: var(--settled-bg);
-      border-color: var(--settled-border);
-      color: var(--settled-text);
+      background: #D1FAE5;
+      border-color: #34D399;
+      color: #065F46;
+    }
+
+    .step-status.ready {
+      background: var(--primary-light);
+      border-color: var(--primary-border);
+      color: var(--primary-container);
     }
 
     .step-title {
-      font-size: 13px;
+      font-size: 13.5px;
       font-weight: 700;
       color: var(--text-primary);
       margin-top: 6px;
@@ -298,14 +360,34 @@
       margin-top: 2px;
     }
 
+    .goal-summary-list {
+      font-size: 11px;
+      color: var(--text-secondary);
+      background: #FFFFFF;
+      border: 1px solid #DBEAFE;
+      border-radius: var(--radius-sm);
+      padding: 7px 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      line-height: 1.35;
+    }
+
     .dropzone {
       border: 1.5px dashed #94A3B8;
       background: #F8FAFC;
       border-radius: var(--radius-sm);
-      padding: 9px 10px;
+      padding: 12px 10px;
       text-align: center;
       cursor: pointer;
       transition: all 0.15s ease;
+    }
+
+    .step-card.uploaded .dropzone {
+      border-style: solid;
+      border-color: #6EE7B7;
+      background: #FFFFFF;
+      padding: 8px 10px;
     }
 
     .dropzone:hover, .dropzone.dragover {
@@ -318,10 +400,15 @@
     }
 
     .dropzone-label {
-      font-size: 11.5px;
-      font-weight: 600;
+      font-size: 12px;
+      font-weight: 700;
       color: var(--primary-container);
       display: block;
+    }
+
+    .step-card.uploaded .dropzone-label {
+      color: #059669;
+      font-size: 11.5px;
     }
 
     .dropzone-sub {
@@ -329,24 +416,58 @@
       color: var(--text-muted);
       margin-top: 2px;
       display: block;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+    }
+
+    /* 업로드 완료 정보 박스 */
+    .uploaded-info-box {
+      display: none;
+      background: #FFFFFF;
+      border: 1px solid #A7F3D0;
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      font-size: 11.5px;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .step-card.uploaded .uploaded-info-box {
+      display: flex;
+    }
+
+    .uploaded-file-name {
+      font-weight: 700;
+      color: #065F46;
+      word-break: break-all;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .uploaded-file-meta {
+      font-size: 11px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
     }
 
     .form-row {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
 
     .form-control {
-      height: 32px;
-      border: 1px solid var(--border-strong);
+      height: 36px;
+      border: 1.5px solid var(--primary-container);
       border-radius: var(--radius-sm);
       padding: 0 10px;
       font-family: 'Noto Sans KR', sans-serif;
-      font-size: 12.5px;
+      font-size: 13px;
+      font-weight: 700;
       color: var(--text-primary);
       background: #FFFFFF;
       width: 100%;
@@ -354,18 +475,7 @@
 
     .form-control:focus {
       outline: none;
-      border-color: var(--primary-container);
       box-shadow: 0 0 0 2px #DBEAFE;
-    }
-
-    .checkbox-label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11.5px;
-      color: var(--text-secondary);
-      cursor: pointer;
-      user-select: none;
     }
 
     /* ── KPI Strip ── */
@@ -386,7 +496,7 @@
       border: 1px solid var(--border-hairline);
       border-left: 3px solid var(--primary-container);
       border-radius: var(--radius-md);
-      padding: 14px 16px;
+      padding: 13px 16px;
       display: flex;
       flex-direction: column;
       gap: 4px;
@@ -407,7 +517,7 @@
 
     .kpi-value {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 20px;
+      font-size: 19px;
       font-weight: 700;
       color: var(--text-primary);
       letter-spacing: -0.03em;
@@ -460,6 +570,12 @@
       color: var(--text-secondary);
     }
 
+    .badge-alert {
+      background: var(--alert-bg);
+      border-color: var(--alert-border);
+      color: var(--alert-text);
+    }
+
     /* ── Workspace Tabs & Ledger Tables ── */
     .workspace-card {
       background: var(--surface-lowest);
@@ -483,6 +599,7 @@
       display: flex;
       align-items: center;
       gap: 4px;
+      flex-wrap: wrap;
     }
 
     .tab-btn {
@@ -492,7 +609,7 @@
       padding: 12px 16px;
       font-family: 'Noto Sans KR', sans-serif;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-muted);
       cursor: pointer;
       display: inline-flex;
@@ -511,7 +628,7 @@
     }
 
     .toolbar-bar {
-      padding: 12px 16px;
+      padding: 11px 16px;
       border-bottom: 1px solid var(--border-hairline);
       display: flex;
       align-items: center;
@@ -595,7 +712,7 @@
     }
 
     table.ledger-table tbody tr {
-      height: 35px;
+      height: 34px;
       border-bottom: 1px solid var(--border-hairline);
       background: #FFFFFF;
     }
@@ -664,9 +781,34 @@
       margin-right: 4px;
     }
 
+    .verify-section-box {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .verify-sub-card {
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: #FFFFFF;
+    }
+
+    .verify-sub-header {
+      background: #F8FAFC;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
     /* ── Empty / Toast Banner ── */
     .empty-state {
-      padding: 56px 20px;
+      padding: 52px 20px;
       text-align: center;
       color: var(--text-muted);
     }
@@ -691,7 +833,7 @@
       font-size: 12.5px;
       box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);
       display: none;
-      max-width: 460px;
+      max-width: 480px;
     }
   </style>
 </head>
@@ -703,15 +845,15 @@
       <span class="brand-badge">CLINICAL LEDGER</span>
       <div class="brand-title">
         <h1>병원부 미결 통합 관리 및 리포트 시스템</h1>
-        <p>원본 데이터(Sample.xls) 및 3종 미결자료(사후·저가·약가) 비교·통합 · 매입처별 요약 리포트 · 엑셀 재구성</p>
+        <p>1. 기준월 이전건 업데이트 및 수정 리포트 · 2. 기준월 해당건 추가 · 3. Step 3 합계 vs 통합자료 합계 일치 검증</p>
       </div>
     </div>
     <div class="header-actions">
-      <button class="btn btn-secondary" id="btnPreload" onclick="preloadSampleFiles()">
-        ⚡ 참조 샘플 4종 자동 로드
+      <button class="btn btn-reset" id="btnResetAll" onclick="resetStepFiles('all')">
+        🔄 2~3스텝 값 초기화
       </button>
       <button class="btn btn-primary" id="btnAnalyze" onclick="runAnalysis()">
-        🔍 4. 데이터 비교 · 분석 실행
+        🔍 4. 데이터 비교 · 분석 및 검증 실행
       </button>
       <button class="btn btn-emerald" id="btnGenerate" onclick="generateExcel()">
         📥 5. 통합 엑셀파일 생성 (.xlsx)
@@ -724,25 +866,35 @@
     <!-- 2. 5-Step Data Collection Workflow Panel -->
     <section class="workflow-section">
       <div class="section-header-bar">
-        <h2>📋 단계별 데이터 수집 및 기준 설정 (Step 1 ~ Step 3)</h2>
-        <span id="workflowStatusText" style="font-size: 12px; color: var(--text-muted);">
-          각 단계별 엑셀 파일을 업로드하거나 우측 상단 [참조 샘플 4종 자동 로드] 버튼을 클릭하세요.
-        </span>
+        <h2>
+          <span>📋 단계별 데이터 수집 및 기준월 설정 (Step 1 ~ Step 3)</span>
+          <span class="upload-progress-pill" id="uploadProgressPill">업로드 완료: 0 / 4</span>
+        </h2>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span id="workflowStatusText" style="font-size: 12px; color: var(--text-muted);">
+            1단계 기준월을 선택하고, 2~3단계 엑셀 파일을 각각 업로드해 주세요.
+          </span>
+          <button class="btn btn-outline" onclick="resetStepFiles('all')" style="color:#DC2626; border-color:#FECACA;">
+            🔄 2~3스텝 전체 초기화
+          </button>
+        </div>
       </div>
 
       <div class="workflow-grid">
-        <!-- Step 1: 생성 기준월 선택 -->
-        <div class="step-card loaded" id="card-step1">
+        <!-- Step 1: 생성 기준월 선택 (불필요한 옵션/체크박스 제거, 명확한 기준월 선택만 제공) -->
+        <div class="step-card step1-card" id="card-step1">
           <div>
             <div class="step-top">
               <span class="step-num">STEP 1</span>
-              <span class="step-status ok">기준 설정</span>
+              <span class="step-status ready">기준월 설정</span>
             </div>
             <div class="step-title">1. 생성 기준월 선택</div>
-            <div class="step-desc">비교·신규 통합 대상 기준월 및 범위</div>
+            <div class="step-desc">업데이트 및 당월 추가 기준 년월</div>
           </div>
           <div class="form-row">
             <select id="selBaseMonth" class="form-control num" onchange="onConfigChange()">
+              <option value="2026-12">2026-12 (26년 12월)</option>
+              <option value="2026-11">2026-11 (26년 11월)</option>
               <option value="2026-10">2026-10 (26년 10월)</option>
               <option value="2026-09" selected>2026-09 (26년 09월)</option>
               <option value="2026-08">2026-08 (26년 08월)</option>
@@ -754,14 +906,11 @@
               <option value="2026-02">2026-02 (26년 02월)</option>
               <option value="2026-01">2026-01 (26년 01월)</option>
             </select>
-            <select id="selVendorScope" class="form-control" onchange="onConfigChange()">
-              <option value="all" selected>전체 매입처 미결 반영 (제한 없음)</option>
-              <option value="sample_only">원본(Sample.xls) 등록 매입처만 반영</option>
-            </select>
-            <label class="checkbox-label">
-              <input type="checkbox" id="chkPriorUnsettled" onchange="onConfigChange()" />
-              <span>기준월 이전 누적 미결건도 신규 추가</span>
-            </label>
+            <div class="goal-summary-list">
+              <div>• <strong>이전건</strong>: Step 2 원본을 Step 3 값으로 업데이트</div>
+              <div>• <strong>해당건</strong>: Step 2 원본에 Step 3 당월분 추가</div>
+              <div>• <strong>최종검증</strong>: Step 3 합계 = 통합자료 합계 검증</div>
+            </div>
           </div>
         </div>
 
@@ -770,15 +919,27 @@
           <div>
             <div class="step-top">
               <span class="step-num">STEP 2</span>
-              <span class="step-status" id="status-original">대기 중</span>
+              <span class="step-status" id="status-original">업로드 대기</span>
             </div>
             <div class="step-title">2. 원본데이터 업로드</div>
-            <div class="step-desc">Sample.xls (4대 섹션 양식 기준)</div>
+            <div class="step-desc">기존 통합 미결원장 (4대 항목 구조)</div>
           </div>
+
+          <div class="uploaded-info-box" id="info-original">
+            <div class="uploaded-file-name">
+              <span id="fname-original">-</span>
+              <button type="button" class="btn-step-reset" onclick="resetStepFiles('original')">초기화</button>
+            </div>
+            <div class="uploaded-file-meta">
+              <span id="fcount-original">0건</span>
+              <span class="num" id="fmonths-original">-</span>
+            </div>
+          </div>
+
           <label class="dropzone" id="drop-original">
-            <input type="file" accept=".xls,.xlsx" onchange="handleFileSelect(event, 'original')" />
-            <span class="dropzone-label">📂 파일 선택 또는 드래그</span>
-            <span class="dropzone-sub" id="meta-original">Sample.xls 참조</span>
+            <input type="file" id="input-original" accept=".xls,.xlsx" onchange="handleFileSelect(event, 'original')" />
+            <span class="dropzone-label" id="dlabel-original">📂 엑셀 파일 선택 또는 드래그</span>
+            <span class="dropzone-sub" id="meta-original">사후 / 사후(바슈) / 저가 / 약가 원본</span>
           </label>
         </div>
 
@@ -787,15 +948,27 @@
           <div>
             <div class="step-top">
               <span class="step-num">STEP 3-1</span>
-              <span class="step-status" id="status-sahu">대기 중</span>
+              <span class="step-status" id="status-sahu">업로드 대기</span>
             </div>
-            <div class="step-title">2-1. 사후미결 업로드</div>
-            <div class="step-desc">미결_병원경로_202511-202610 참조</div>
+            <div class="step-title">3-1. 사후미결 업로드</div>
+            <div class="step-desc">병원경로 사후·수금·매입할인 미결자료</div>
           </div>
+
+          <div class="uploaded-info-box" id="info-sahu">
+            <div class="uploaded-file-name">
+              <span id="fname-sahu">-</span>
+              <button type="button" class="btn-step-reset" onclick="resetStepFiles('sahu')">초기화</button>
+            </div>
+            <div class="uploaded-file-meta">
+              <span id="fcount-sahu">0건</span>
+              <span class="num" id="fmonths-sahu">-</span>
+            </div>
+          </div>
+
           <label class="dropzone" id="drop-sahu">
-            <input type="file" accept=".xls,.xlsx" onchange="handleFileSelect(event, 'sahu')" />
-            <span class="dropzone-label">📂 파일 선택 또는 드래그</span>
-            <span class="dropzone-sub" id="meta-sahu">사후/수금/매입할인 내역</span>
+            <input type="file" id="input-sahu" accept=".xls,.xlsx" onchange="handleFileSelect(event, 'sahu')" />
+            <span class="dropzone-label" id="dlabel-sahu">📂 엑셀 파일 선택 또는 드래그</span>
+            <span class="dropzone-sub" id="meta-sahu">[사후미결] 업데이트·추가 자료</span>
           </label>
         </div>
 
@@ -804,15 +977,27 @@
           <div>
             <div class="step-top">
               <span class="step-num">STEP 3-2</span>
-              <span class="step-status" id="status-jeoga">대기 중</span>
+              <span class="step-status" id="status-jeoga">업로드 대기</span>
             </div>
-            <div class="step-title">2-2. 저가미결 업로드</div>
-            <div class="step-desc">병원사후_미결_관리 26년 9월 참조</div>
+            <div class="step-title">3-2. 저가미결 업로드</div>
+            <div class="step-desc">병원 저가보상 미결 관리자료</div>
           </div>
+
+          <div class="uploaded-info-box" id="info-jeoga">
+            <div class="uploaded-file-name">
+              <span id="fname-jeoga">-</span>
+              <button type="button" class="btn-step-reset" onclick="resetStepFiles('jeoga')">초기화</button>
+            </div>
+            <div class="uploaded-file-meta">
+              <span id="fcount-jeoga">0건</span>
+              <span class="num" id="fmonths-jeoga">-</span>
+            </div>
+          </div>
+
           <label class="dropzone" id="drop-jeoga">
-            <input type="file" accept=".xls,.xlsx" onchange="handleFileSelect(event, 'jeoga')" />
-            <span class="dropzone-label">📂 파일 선택 또는 드래그</span>
-            <span class="dropzone-sub" id="meta-jeoga">저가보상 미결건 내역</span>
+            <input type="file" id="input-jeoga" accept=".xls,.xlsx" onchange="handleFileSelect(event, 'jeoga')" />
+            <span class="dropzone-label" id="dlabel-jeoga">📂 엑셀 파일 선택 또는 드래그</span>
+            <span class="dropzone-sub" id="meta-jeoga">[저가미결] 업데이트·추가 자료</span>
           </label>
         </div>
 
@@ -821,15 +1006,27 @@
           <div>
             <div class="step-top">
               <span class="step-num">STEP 3-3</span>
-              <span class="step-status" id="status-yakga">대기 중</span>
+              <span class="step-status" id="status-yakga">업로드 대기</span>
             </div>
-            <div class="step-title">2-3. 약가미결 업로드</div>
-            <div class="step-desc">약가인하_미결_관리(병원부)S 참조</div>
+            <div class="step-title">3-3. 약가미결 업로드</div>
+            <div class="step-desc">병원부 약가인하 미결 관리자료</div>
           </div>
+
+          <div class="uploaded-info-box" id="info-yakga">
+            <div class="uploaded-file-name">
+              <span id="fname-yakga">-</span>
+              <button type="button" class="btn-step-reset" onclick="resetStepFiles('yakga')">초기화</button>
+            </div>
+            <div class="uploaded-file-meta">
+              <span id="fcount-yakga">0건</span>
+              <span class="num" id="fmonths-yakga">-</span>
+            </div>
+          </div>
+
           <label class="dropzone" id="drop-yakga">
-            <input type="file" accept=".xls,.xlsx" onchange="handleFileSelect(event, 'yakga')" />
-            <span class="dropzone-label">📂 파일 선택 또는 드래그</span>
-            <span class="dropzone-sub" id="meta-yakga">약가인하 보상신청 내역</span>
+            <input type="file" id="input-yakga" accept=".xls,.xlsx" onchange="handleFileSelect(event, 'yakga')" />
+            <span class="dropzone-label" id="dlabel-yakga">📂 엑셀 파일 선택 또는 드래그</span>
+            <span class="dropzone-sub" id="meta-yakga">[약가미결] 업데이트·추가 자료</span>
           </label>
         </div>
       </div>
@@ -839,7 +1036,7 @@
     <section class="kpi-grid">
       <div class="kpi-card">
         <div class="kpi-label">
-          <span>총 예정금액 (Scheduled Discount)</span>
+          <span>총 예정금액 (통합자료 합계)</span>
           <span class="badge badge-orig" id="kpi-vendor-cnt">대상 매입처 0곳</span>
         </div>
         <div class="kpi-value" id="kpi-yejeong">₩0</div>
@@ -848,62 +1045,76 @@
 
       <div class="kpi-card emerald">
         <div class="kpi-label">
-          <span>총 집행금액 (Executed / Settled)</span>
+          <span>총 집행금액 (발행·정산액)</span>
           <span class="badge badge-settled" id="kpi-settled-cnt">완결 0건</span>
         </div>
         <div class="kpi-value" id="kpi-geumaek">₩0</div>
-        <div class="kpi-sub" id="kpi-sec-geumaek">발행 및 정산 반영 합계</div>
+        <div class="kpi-sub" id="kpi-sec-geumaek">사후 ₩0 · 저가 ₩0 · 약가 ₩0</div>
       </div>
 
       <div class="kpi-card crimson">
         <div class="kpi-label">
-          <span>총 미결잔액 (Unsettled Balance)</span>
+          <span>총 미결잔액 (통합자료 잔액)</span>
           <span class="badge badge-new" id="kpi-total-cnt">총 0건</span>
         </div>
         <div class="kpi-value" id="kpi-migyeol">₩0</div>
-        <div class="kpi-sub" id="kpi-sec-migyeol">바슈헬스 포함 전체 미결 합계</div>
+        <div class="kpi-sub" id="kpi-sec-migyeol">사후 · 사후(바슈) · 저가 · 약가 합계</div>
       </div>
 
       <div class="kpi-card amber">
         <div class="kpi-label">
-          <span>원본 대비 비교 · 통합 요약</span>
+          <span>최종검증 및 업데이트 요약</span>
           <span class="num" id="kpi-base-month">기준월: -</span>
         </div>
-        <div class="kpi-value" id="kpi-diff-total">변동 0건</div>
+        <div class="kpi-value" id="kpi-verify-status">분석 대기 중</div>
         <div class="kpi-sub">
-          <span class="badge badge-new" id="badge-cnt-new">신규 0</span>
-          <span class="badge badge-mod" id="badge-cnt-mod">수정 0</span>
+          <span class="badge badge-new" id="badge-cnt-new">기준월 추가 0</span>
+          <span class="badge badge-mod" id="badge-cnt-mod">이전건 수정 0</span>
           <span class="badge badge-settled" id="badge-cnt-settled">완결 0</span>
-          <span class="badge badge-orig" id="badge-cnt-orig">기존 0</span>
+          <span class="badge badge-orig" id="badge-cnt-orig">기존유지 0</span>
         </div>
       </div>
     </section>
 
-    <!-- 4. Primary Analytical Workspace (Tab 1: 매입처별 요약 리포트 / Tab 2: 4대 섹션 통합 상세 내역) -->
+    <!-- 4. Primary Analytical Workspace -->
     <section class="workspace-card">
       <div class="tab-bar">
         <div class="tabs-left">
-          <button class="tab-btn active" id="tabBtn-vendor" onclick="switchMainTab('vendor')">
-            📊 매입처별 요약 리포트
+          <button class="tab-btn active" id="tabBtn-verify" onclick="switchMainTab('verify')">
+            ✅ 1. 최종검증 (합계 일치 점검) 및 항목별 수정 리포트
+            <span class="badge badge-settled" id="tabBadge-verify">검증</span>
+          </button>
+          <button class="tab-btn" id="tabBtn-vendor" onclick="switchMainTab('vendor')">
+            📊 2. 매입처별 요약 리포트 (합계 포함)
             <span class="badge badge-orig" id="tabBadge-vendor">0</span>
           </button>
           <button class="tab-btn" id="tabBtn-detail" onclick="switchMainTab('detail')">
-            📑 통합 4대 섹션 상세 및 비교 내역 (Sample.xls 구조)
+            📑 3. 통합자료 항목별 상세 내역 (사후 / 사후(바슈) / 저가 / 약가)
             <span class="badge badge-new" id="tabBadge-detail">0</span>
           </button>
         </div>
 
         <div class="filter-group">
           <input type="text" id="inpSearch" class="search-input" placeholder="매입처명, 코드, 병원명 검색..." oninput="renderActiveView()" />
-          <button class="btn btn-outline" onclick="clearFilters()">필터 초기화</button>
+          <button class="btn btn-outline" onclick="clearFilters()">검색/필터 초기화</button>
         </div>
       </div>
 
-      <!-- TAB 1: 매입처별 요약 리포트 -->
-      <div id="view-vendor">
+      <!-- TAB 1: 최종검증 및 기준월 이전건 항목별 수정 리포트 -->
+      <div id="view-verify">
+        <div class="verify-section-box" id="verifyWrap">
+          <div class="empty-state">
+            <h3>Step 2 ~ Step 3 엑셀 파일을 업로드한 후 [4. 데이터 비교 · 분석 및 검증 실행] 버튼을 클릭해 주세요</h3>
+            <p>1) 기준월 이전건 수정사항 항목별 리포트 · 2) 기준월 해당건 추가 내역 · 3) Step 3-1~3-3 합계와 통합자료 합계의 일치 검증 결과가 표시됩니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: 매입처별 요약 리포트 -->
+      <div id="view-vendor" style="display: none;">
         <div class="toolbar-bar">
           <div style="font-size: 12px; color: var(--text-secondary);">
-            💡 <strong>매입처 행을 클릭</strong>하면 해당 매입처의 4대 섹션 상세 비교 내역으로 즉시 이동합니다.
+            💡 <strong>매입처 행을 클릭</strong>하면 해당 매입처의 항목별 상세 내역으로 이동합니다.
           </div>
           <div class="sub-tabs">
             <button class="sub-tab-btn active" id="vFilter-all" onclick="setVendorFilter('all')">전체 매입처</button>
@@ -914,35 +1125,34 @@
 
         <div class="table-wrap" id="vendorTableWrap">
           <div class="empty-state">
-            <h3>데이터 수집 후 상단의 [4. 데이터 비교 · 분석 실행] 버튼을 클릭해 주세요</h3>
-            <p>우측 상단 [⚡ 참조 샘플 4종 자동 로드] 버튼을 누르면 업로드된 4종 샘플 파일로 즉시 시연할 수 있습니다.</p>
+            <h3>데이터 분석 실행 후 매입처별 요약 리포트가 표시됩니다</h3>
           </div>
         </div>
       </div>
 
-      <!-- TAB 2: 통합 4대 섹션 상세 및 비교 뷰 -->
+      <!-- TAB 3: 통합 4대 항목 상세 내역 -->
       <div id="view-detail" style="display: none;">
         <div class="toolbar-bar">
           <div class="sub-tabs">
-            <button class="sub-tab-btn active" id="secBtn-all" onclick="setSectionFilter('all')">전체 섹션 통합보기</button>
-            <button class="sub-tab-btn" id="secBtn-sec1" onclick="setSectionFilter('sec1')">1. 사후/수금할인 미결</button>
-            <button class="sub-tab-btn" id="secBtn-sec2" onclick="setSectionFilter('sec2')">2. 바슈헬스코리아(솔타)</button>
-            <button class="sub-tab-btn" id="secBtn-sec3" onclick="setSectionFilter('sec3')">3. 저가보상 미결건</button>
-            <button class="sub-tab-btn" id="secBtn-sec4" onclick="setSectionFilter('sec4')">4. 약가인하 미결건</button>
+            <button class="sub-tab-btn active" id="secBtn-all" onclick="setSectionFilter('all')">전체 항목 통합보기</button>
+            <button class="sub-tab-btn" id="secBtn-sec1" onclick="setSectionFilter('sec1')">사후미결</button>
+            <button class="sub-tab-btn" id="secBtn-sec2" onclick="setSectionFilter('sec2')">사후미결(바슈)</button>
+            <button class="sub-tab-btn" id="secBtn-sec3" onclick="setSectionFilter('sec3')">저가미결</button>
+            <button class="sub-tab-btn" id="secBtn-sec4" onclick="setSectionFilter('sec4')">약가미결</button>
           </div>
 
           <div class="sub-tabs">
             <button class="sub-tab-btn active" id="stBtn-all" onclick="setStatusFilter('all')">상태: 전체</button>
-            <button class="sub-tab-btn" id="stBtn-신규" onclick="setStatusFilter('신규')">신규 추가</button>
-            <button class="sub-tab-btn" id="stBtn-수정" onclick="setStatusFilter('수정')">수정됨</button>
-            <button class="sub-tab-btn" id="stBtn-완결" onclick="setStatusFilter('완결')">완결(유지)</button>
+            <button class="sub-tab-btn" id="stBtn-신규" onclick="setStatusFilter('신규')">기준월 추가(신규)</button>
+            <button class="sub-tab-btn" id="stBtn-수정" onclick="setStatusFilter('수정')">이전건 수정됨</button>
+            <button class="sub-tab-btn" id="stBtn-완결" onclick="setStatusFilter('완결')">완결</button>
             <button class="sub-tab-btn" id="stBtn-기존" onclick="setStatusFilter('기존')">기존유지</button>
           </div>
         </div>
 
         <div class="table-wrap" id="detailTableWrap">
           <div class="empty-state">
-            <h3>분석 결과가 여기에 표시됩니다</h3>
+            <h3>데이터 분석 실행 후 통합 상세 내역이 표시됩니다</h3>
           </div>
         </div>
       </div>
@@ -954,10 +1164,11 @@
 
   <script>
     let ANALYSIS = null;
-    let MAIN_TAB = 'vendor';
+    let MAIN_TAB = 'verify';
     let VENDOR_FILTER = 'all';
     let SECTION_FILTER = 'all';
     let STATUS_FILTER = 'all';
+    let MOD_SECTION_FILTER = 'all';
 
     function showToast(msg, duration = 3500) {
       const el = document.getElementById('toastBar');
@@ -982,7 +1193,7 @@
     }
 
     function statusBadgeHtml(st) {
-      if (st === '신규') return '<span class="badge badge-new">신규 추가</span>';
+      if (st === '신규') return '<span class="badge badge-new">기준월 추가</span>';
       if (st === '수정') return '<span class="badge badge-mod">수정됨</span>';
       if (st === '완결') return '<span class="badge badge-settled">완결</span>';
       return '<span class="badge badge-orig">기존유지</span>';
@@ -1038,7 +1249,7 @@
             return;
           }
           updateUploadCards(data);
-          showToast(`✅ [${file.name}] 로드 완료!`);
+          showToast(`✅ [${file.name}] 업로드 완료!`);
         } catch (err) {
           showToast(`업로드 실패: ${err.message}`, 5000);
         }
@@ -1046,9 +1257,42 @@
       reader.readAsDataURL(file);
     }
 
+    async function resetStepFiles(step = 'all') {
+      try {
+        const res = await fetch('/api/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ step })
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          showToast(`초기화 오류: ${data.error}`, 4000);
+          return;
+        }
+        const targets = step === 'all' ? ['original', 'sahu', 'jeoga', 'yakga'] : [step];
+        targets.forEach(k => {
+          const inp = document.getElementById(`input-${k}`);
+          if (inp) inp.value = '';
+        });
+
+        ANALYSIS = null;
+        resetKPIsAndViews();
+        updateUploadCards(data);
+        showToast(step === 'all' ? '🔄 2~3스텝 모든 업로드 파일이 초기화되었습니다.' : `🔄 해당 스텝의 업로드 파일이 초기화되었습니다.`);
+      } catch (err) {
+        showToast(`초기화 실패: ${err.message}`, 4000);
+      }
+    }
+
+    function formatMonthRange(months) {
+      if (!months || months.length === 0) return '년월 정보 없음';
+      if (months.length === 1) return `기간: ${months[0]}`;
+      return `기간: ${months[0]} ~ ${months[months.length - 1]}`;
+    }
+
     function updateUploadCards(data) {
       const f = data.files;
-      // Months dropdown 보강
+
       if (data.available_months && data.available_months.length > 0) {
         const sel = document.getElementById('selBaseMonth');
         const currentVal = sel.value || '2026-09';
@@ -1062,52 +1306,104 @@
         });
       }
 
+      let loadedCount = 0;
+
+      // Step 2: Original
+      const cardOrig = document.getElementById('card-original');
+      const stOrig = document.getElementById('status-original');
       if (f.original && f.original.loaded) {
-        document.getElementById('card-original').classList.add('loaded');
-        const st = document.getElementById('status-original');
-        st.textContent = `로드됨 (${f.original.total}건)`;
-        st.className = 'step-status ok';
+        loadedCount++;
+        cardOrig.classList.add('uploaded');
+        stOrig.textContent = `✓ 업로드 완료 (${f.original.total}건)`;
+        stOrig.className = 'step-status ok';
         const c = f.original.counts;
-        document.getElementById('meta-original').textContent =
-          `${f.original.filename} (사후${c.sec1}/바슈${c.sec2}/저가${c.sec3}/약가${c.sec4})`;
+        document.getElementById('fname-original').textContent = `📄 ${f.original.filename}`;
+        document.getElementById('fcount-original').textContent = `사후 ${c.sec1} / 바슈 ${c.sec2} / 저가 ${c.sec3} / 약가 ${c.sec4}`;
+        document.getElementById('fmonths-original').textContent = formatMonthRange(f.original.months);
+        document.getElementById('dlabel-original').textContent = '🔄 다른 파일로 변경 (클릭/드래그)';
+        document.getElementById('meta-original').textContent = '원본데이터 업로드 완료';
+      } else {
+        cardOrig.classList.remove('uploaded');
+        stOrig.textContent = '업로드 대기';
+        stOrig.className = 'step-status';
+        document.getElementById('dlabel-original').textContent = '📂 엑셀 파일 선택 또는 드래그';
+        document.getElementById('meta-original').textContent = '사후 / 사후(바슈) / 저가 / 약가 원본';
       }
 
-      const mapSimple = [
-        ['sahu', '2-1. 사후미결'],
-        ['jeoga', '2-2. 저가미결'],
-        ['yakga', '2-3. 약가미결'],
+      // Step 3-1, 3-2, 3-3
+      const stepMeta = [
+        ['sahu', '[사후미결] 업데이트·추가 자료'],
+        ['jeoga', '[저가미결] 업데이트·추가 자료'],
+        ['yakga', '[약가미결] 업데이트·추가 자료'],
       ];
-      mapSimple.forEach(([k, label]) => {
+
+      stepMeta.forEach(([k, defaultMeta]) => {
+        const card = document.getElementById(`card-${k}`);
+        const st = document.getElementById(`status-${k}`);
         if (f[k] && f[k].loaded) {
-          document.getElementById(`card-${k}`).classList.add('loaded');
-          const st = document.getElementById(`status-${k}`);
-          st.textContent = `로드됨 (${f[k].count.toLocaleString()}건)`;
+          loadedCount++;
+          card.classList.add('uploaded');
+          st.textContent = `✓ 업로드 완료 (${f[k].count.toLocaleString()}건)`;
           st.className = 'step-status ok';
-          document.getElementById(`meta-${k}`).textContent = `${f[k].filename}`;
+          document.getElementById(`fname-${k}`).textContent = `📄 ${f[k].filename}`;
+          document.getElementById(`fcount-${k}`).textContent = `총 ${f[k].count.toLocaleString()}건 수집됨`;
+          document.getElementById(`fmonths-${k}`).textContent = formatMonthRange(f[k].months);
+          document.getElementById(`dlabel-${k}`).textContent = '🔄 다른 파일로 변경 (클릭/드래그)';
+          document.getElementById(`meta-${k}`).textContent = '데이터 업로드 완료';
+        } else {
+          card.classList.remove('uploaded');
+          st.textContent = '업로드 대기';
+          st.className = 'step-status';
+          document.getElementById(`dlabel-${k}`).textContent = '📂 엑셀 파일 선택 또는 드래그';
+          document.getElementById(`meta-${k}`).textContent = defaultMeta;
         }
       });
 
-      const allLoaded = f.original.loaded && f.sahu.loaded && f.jeoga.loaded && f.yakga.loaded;
-      if (allLoaded) {
+      const pill = document.getElementById('uploadProgressPill');
+      pill.textContent = `업로드 완료: ${loadedCount} / 4`;
+      pill.classList.toggle('complete', loadedCount === 4);
+
+      if (loadedCount === 4) {
         document.getElementById('workflowStatusText').innerHTML =
-          '✅ <strong style="color:#059669;">1~3단계 모든 파일 준비 완료!</strong> 상단의 <strong>[4. 데이터 비교 · 분석 실행]</strong> 버튼을 클릭하세요.';
+          '✅ <strong style="color:#059669;">Step 2 ~ Step 3 모든 파일 업로드 완료!</strong> 상단의 <strong>[4. 데이터 비교 · 분석 및 검증 실행]</strong> 버튼을 클릭하세요.';
+      } else {
+        document.getElementById('workflowStatusText').textContent =
+          `현재 4개 중 ${loadedCount}개 파일이 업로드되었습니다. 나머지 스텝의 엑셀 파일을 업로드해 주세요.`;
       }
     }
 
-    async function preloadSampleFiles() {
-      showToast('참조 샘플 4종 파일을 로드하고 있습니다...');
-      try {
-        const res = await fetch('/api/preload', { method: 'POST' });
-        const data = await res.json();
-        if (!data.ok) {
-          showToast(`오류: ${data.error}`, 5000);
-          return;
-        }
-        updateUploadCards(data);
-        await runAnalysis();
-      } catch (err) {
-        showToast(`샘플 로드 오류: ${err.message}`, 5000);
-      }
+    function resetKPIsAndViews() {
+      document.getElementById('kpi-vendor-cnt').textContent = '대상 매입처 0곳';
+      document.getElementById('kpi-yejeong').textContent = '₩0';
+      document.getElementById('kpi-sec-yejeong').textContent = '사후 ₩0 · 저가 ₩0 · 약가 ₩0';
+      document.getElementById('kpi-settled-cnt').textContent = '완결 0건';
+      document.getElementById('kpi-geumaek').textContent = '₩0';
+      document.getElementById('kpi-sec-geumaek').textContent = '사후 ₩0 · 저가 ₩0 · 약가 ₩0';
+      document.getElementById('kpi-total-cnt').textContent = '총 0건';
+      document.getElementById('kpi-migyeol').textContent = '₩0';
+      document.getElementById('kpi-sec-migyeol').textContent = '사후 · 사후(바슈) · 저가 · 약가 합계';
+      document.getElementById('kpi-base-month').textContent = '기준월: -';
+      document.getElementById('kpi-verify-status').textContent = '분석 대기 중';
+      document.getElementById('badge-cnt-new').textContent = '기준월 추가 0';
+      document.getElementById('badge-cnt-mod').textContent = '이전건 수정 0';
+      document.getElementById('badge-cnt-settled').textContent = '완결 0';
+      document.getElementById('badge-cnt-orig').textContent = '기존유지 0';
+      document.getElementById('tabBadge-vendor').textContent = '0';
+      document.getElementById('tabBadge-detail').textContent = '0';
+      document.getElementById('tabBadge-verify').textContent = '검증';
+
+      document.getElementById('verifyWrap').innerHTML = `
+        <div class="empty-state">
+          <h3>Step 2 ~ Step 3 엑셀 파일을 업로드한 후 [4. 데이터 비교 · 분석 및 검증 실행] 버튼을 클릭해 주세요</h3>
+          <p>1) 기준월 이전건 수정사항 항목별 리포트 · 2) 기준월 해당건 추가 내역 · 3) Step 3-1~3-3 합계와 통합자료 합계의 일치 검증 결과가 표시됩니다.</p>
+        </div>
+      `;
+      document.getElementById('vendorTableWrap').innerHTML = `
+        <div class="empty-state"><h3>데이터 분석 실행 후 매입처별 요약 리포트가 표시됩니다</h3></div>
+      `;
+      document.getElementById('detailTableWrap').innerHTML = `
+        <div class="empty-state"><h3>데이터 분석 실행 후 통합 상세 내역이 표시됩니다</h3></div>
+      `;
     }
 
     function onConfigChange() {
@@ -1118,15 +1414,12 @@
 
     async function runAnalysis() {
       const base_month = document.getElementById('selBaseMonth').value;
-      const vendor_scope = document.getElementById('selVendorScope').value;
-      const include_prior_unsettled = document.getElementById('chkPriorUnsettled').checked;
-
-      showToast(`기준월 [${base_month}] 데이터 비교 및 통합 분석 중...`);
+      showToast(`기준월 [${base_month}] 데이터 업데이트 · 추가 · 합계 검증 중...`);
       try {
         const res = await fetch('/api/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ base_month, vendor_scope, include_prior_unsettled })
+          body: JSON.stringify({ base_month })
         });
         const data = await res.json();
         if (!data.ok) {
@@ -1136,7 +1429,7 @@
         ANALYSIS = data.result;
         renderKPIs();
         renderActiveView();
-        showToast(`✅ 분석 완료! 매입처 ${ANALYSIS.kpis.매입처_수}곳 / 총 ${ANALYSIS.kpis.총_건수}건 통합됨`);
+        showToast(`✅ 분석 및 합계 검증 완료! (매입처 ${ANALYSIS.kpis.매입처_수}곳 / 통합 ${ANALYSIS.kpis.총_건수}건)`);
       } catch (err) {
         showToast(`분석 오류: ${err.message}`, 5000);
       }
@@ -1161,25 +1454,29 @@
       document.getElementById('kpi-total-cnt').textContent = `총 ${k.총_건수}건`;
       document.getElementById('kpi-migyeol').textContent = `₩${fmtKRW(k.총_미결금액)}`;
       document.getElementById('kpi-sec-migyeol').textContent =
-        `사후 ₩${fmtKRW(s.sec1.미결금액)} · 바슈 ₩${fmtKRW(s.sec2.미결금액)} · 저가 ₩${fmtKRW(s.sec3.미결금액)}`;
+        `사후 ₩${fmtKRW(s.sec1.미결금액)} · 바슈 ₩${fmtKRW(s.sec2.미결금액)} · 저가 ₩${fmtKRW(s.sec3.미결금액)} · 약가 ₩${fmtKRW(s.sec4.미결금액)}`;
 
       document.getElementById('kpi-base-month').textContent = `기준월: ${ANALYSIS.base_month}`;
-      document.getElementById('kpi-diff-total').textContent = `신규 ${st.신규}건 · 수정 ${st.수정}건`;
-      document.getElementById('badge-cnt-new').textContent = `신규 ${st.신규}`;
-      document.getElementById('badge-cnt-mod').textContent = `수정 ${st.수정}`;
-      document.getElementById('badge-cnt-settled').textContent = `완결 ${st.완결}`;
-      document.getElementById('badge-cnt-orig').textContent = `기존 ${st.기존}`;
+      document.getElementById('kpi-verify-status').innerHTML = k.검증_모두_일치
+        ? '<span style="color:#059669;">✓ 3개 항목 합계 100% 일치</span>'
+        : '<span style="color:#DC2626;">⚠️ 합계 차액 확인 필요</span>';
 
+      document.getElementById('badge-cnt-new').textContent = `기준월 추가 ${st.신규}`;
+      document.getElementById('badge-cnt-mod').textContent = `이전건 수정 ${k.수정_리포트_건수}`;
+      document.getElementById('badge-cnt-settled').textContent = `완결 ${st.완결}`;
+      document.getElementById('badge-cnt-orig').textContent = `기존유지 ${st.기존}`;
+
+      document.getElementById('tabBadge-verify').textContent = k.검증_모두_일치 ? '일치 ✓' : '점검';
       document.getElementById('tabBadge-vendor').textContent = k.매입처_수;
       document.getElementById('tabBadge-detail').textContent = k.총_건수;
     }
 
     function switchMainTab(tab) {
       MAIN_TAB = tab;
-      document.getElementById('tabBtn-vendor').classList.toggle('active', tab === 'vendor');
-      document.getElementById('tabBtn-detail').classList.toggle('active', tab === 'detail');
-      document.getElementById('view-vendor').style.display = tab === 'vendor' ? 'block' : 'none';
-      document.getElementById('view-detail').style.display = tab === 'detail' ? 'block' : 'none';
+      ['verify', 'vendor', 'detail'].forEach(t => {
+        document.getElementById(`tabBtn-${t}`).classList.toggle('active', t === tab);
+        document.getElementById(`view-${t}`).style.display = t === tab ? 'block' : 'none';
+      });
       renderActiveView();
     }
 
@@ -1207,11 +1504,17 @@
       renderDetailTable();
     }
 
+    function setModSectionFilter(msf) {
+      MOD_SECTION_FILTER = msf;
+      renderVerifyView();
+    }
+
     function clearFilters() {
       document.getElementById('inpSearch').value = '';
       VENDOR_FILTER = 'all';
       SECTION_FILTER = 'all';
       STATUS_FILTER = 'all';
+      MOD_SECTION_FILTER = 'all';
       ['all', 'changed', 'unsettled'].forEach(k => {
         document.getElementById(`vFilter-${k}`).classList.toggle('active', k === 'all');
       });
@@ -1231,13 +1534,206 @@
 
     function renderActiveView() {
       if (!ANALYSIS) return;
-      if (MAIN_TAB === 'vendor') {
+      if (MAIN_TAB === 'verify') {
+        renderVerifyView();
+      } else if (MAIN_TAB === 'vendor') {
         renderVendorTable();
       } else {
         renderDetailTable();
       }
     }
 
+    // ── TAB 1: 최종검증 (Step 3-1~3-3 합계 vs 통합자료 합계) 및 기준월 이전건 수정 리포트 ──
+    function renderVerifyView() {
+      const wrap = document.getElementById('verifyWrap');
+      const vList = ANALYSIS.verification_report || [];
+      const modAll = ANALYSIS.modified_all || [];
+      const bm = ANALYSIS.base_month;
+      const q = (document.getElementById('inpSearch').value || '').trim().toLowerCase();
+
+      // 1) 최종검증 테이블 (통합 반영 전체 합계 & 기준월 당월 합계 대조)
+      let verRowsHtml = '';
+      let sum_s3_cnt = 0, sum_in_cnt = 0;
+      let sum_s3_yj = 0, sum_in_yj = 0;
+      let sum_s3_gm = 0, sum_in_gm = 0;
+      let sum_s3_mg = 0, sum_in_mg = 0;
+      let sum_diff_mg = 0;
+      let sum_bm_s3_mg = 0, sum_bm_in_mg = 0, sum_bm_diff_mg = 0;
+
+      vList.forEach(vr => {
+        sum_s3_cnt += vr.step3_target.count;
+        sum_in_cnt += vr.integrated.count;
+        sum_s3_yj += vr.step3_target.예정금액;
+        sum_in_yj += vr.integrated.예정금액;
+        sum_s3_gm += vr.step3_target.집행금액;
+        sum_in_gm += vr.integrated.집행금액;
+        sum_s3_mg += vr.step3_target.미결금액;
+        sum_in_mg += vr.integrated.미결금액;
+        sum_diff_mg += vr.diff_total.미결금액;
+
+        sum_bm_s3_mg += vr.step3_base_month.미결금액;
+        sum_bm_in_mg += vr.integrated_base_month.미결금액;
+        sum_bm_diff_mg += vr.diff_base_month.미결금액;
+
+        const badgeHtml = vr.is_valid
+          ? '<span class="badge badge-settled">✓ 합계 일치 (차액 0)</span>'
+          : '<span class="badge badge-alert">⚠️ 불일치 점검</span>';
+
+        verRowsHtml += `
+          <tr>
+            <td class="align-center"><strong>${vr.sec_title}</strong></td>
+            <td class="align-center">${vr.step_label}</td>
+            <td class="align-center num">이전원본 ${vr.prior_orig_count}건 (수정 ${vr.prior_modified_count}건) + 당월추가 ${vr.base_month_added_count}건</td>
+            <td class="align-center num"><strong>${vr.step3_target.count}건</strong> / <strong>${vr.integrated.count}건</strong></td>
+            <td class="align-right ${fmtNumClass(vr.step3_target.예정금액)}">${fmtKRW(vr.step3_target.예정금액)}</td>
+            <td class="align-right ${fmtNumClass(vr.integrated.예정금액)}">${fmtKRW(vr.integrated.예정금액)}</td>
+            <td class="align-right ${fmtNumClass(vr.step3_target.집행금액)}">${fmtKRW(vr.step3_target.집행금액)}</td>
+            <td class="align-right ${fmtNumClass(vr.integrated.집행금액)}">${fmtKRW(vr.integrated.집행금액)}</td>
+            <td class="align-right ${fmtNumClass(vr.step3_target.미결금액)}" style="font-weight:700;">${fmtKRW(vr.step3_target.미결금액)}</td>
+            <td class="align-right ${fmtNumClass(vr.integrated.미결금액)}" style="font-weight:700;">${fmtKRW(vr.integrated.미결금액)}</td>
+            <td class="align-right ${fmtNumClass(vr.diff_total.미결금액)}" style="font-weight:700;">${fmtKRW(vr.diff_total.미결금액)}</td>
+            <td class="align-right ${fmtNumClass(vr.step3_base_month.미결금액)}">${fmtKRW(vr.step3_base_month.미결금액)} (${vr.step3_base_month.count}건)</td>
+            <td class="align-right ${fmtNumClass(vr.integrated_base_month.미결금액)}">${fmtKRW(vr.integrated_base_month.미결금액)} (${vr.integrated_base_month.count}건)</td>
+            <td class="align-center">${badgeHtml}</td>
+          </tr>
+        `;
+      });
+
+      // 2) 기준월 이전건 항목별 수정 리포트 필터링
+      const filteredMods = modAll.filter(m => {
+        if (MOD_SECTION_FILTER !== 'all' && m.sec_key !== MOD_SECTION_FILTER) return false;
+        if (q) {
+          const hay = `${m.sec_title} ${m.매입처} ${m.매입처명} ${m.거래처} ${m.거래처명} ${m.ym}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      let modRowsHtml = '';
+      if (filteredMods.length === 0) {
+        modRowsHtml = `
+          <tr>
+            <td colspan="8" class="align-center" style="padding: 24px; color: var(--text-muted);">
+              해당 조건에서 기준월 이전건의 값 변경(수정) 내역이 없습니다. (모든 원본 행이 Step 3 최신 값과 일치함)
+            </td>
+          </tr>
+        `;
+      } else {
+        filteredMods.forEach((m, idx) => {
+          const changeBadges = Object.entries(m.changes || {}).map(([field, ch]) => {
+            const isNum = (field === '예정금액' || field === '금액' || field === '미결금액');
+            const oldStr = isNum ? `₩${fmtKRW(ch.old)}` : (ch.old || '공란');
+            const newStr = isNum ? `₩${fmtKRW(ch.new)}` : (ch.new || '공란');
+            return `<span style="display:inline-block; margin-right:8px;"><strong>[${field}]</strong> <span class="diff-old">${oldStr}</span> → <span class="cell-changed">${newStr}</span></span>`;
+          }).join(' ');
+
+          modRowsHtml += `
+            <tr class="row-mod" onclick="jumpToVendorDetail('${m.매입처}')">
+              <td class="align-center num">${idx + 1}</td>
+              <td class="align-center"><span class="badge badge-orig">${m.sec_title}</span></td>
+              <td class="align-center num">${m.ym || m.일자}</td>
+              <td class="align-center num"><strong>${m.매입처}</strong></td>
+              <td><strong>${m.매입처명}</strong></td>
+              <td>${m.거래처명 || m.거래처}</td>
+              <td class="align-center">${statusBadgeHtml(m.status)}</td>
+              <td>${changeBadges}</td>
+            </tr>
+          `;
+        });
+      }
+
+      const modCounts = {
+        all: modAll.length,
+        sec1: (ANALYSIS.modified_by_section.sec1 || []).length,
+        sec3: (ANALYSIS.modified_by_section.sec3 || []).length,
+        sec4: (ANALYSIS.modified_by_section.sec4 || []).length,
+      };
+
+      wrap.innerHTML = `
+        <!-- 섹션 A: 최종검증 테이블 -->
+        <div class="verify-sub-card">
+          <div class="verify-sub-header">
+            <span>✅ [목표 3. 최종검증] Step 3-1 ~ 3-3 각 항의 합계 vs 통합자료 각 항의 합계 일치 점검 (기준월: ${bm})</span>
+            <span class="badge badge-settled">Step 3 반영분 및 기준월(${bm}) 당월분 합계 대조</span>
+          </div>
+          <div class="table-wrap">
+            <table class="ledger-table">
+              <thead>
+                <tr>
+                  <th>항목명</th>
+                  <th>대조 데이터 (Step 3)</th>
+                  <th>통합 구성 내역 (이전건 업데이트 + 기준월 추가)</th>
+                  <th>건수 대조 (Step3/통합)</th>
+                  <th>Step 3 예정합계</th>
+                  <th>통합자료 예정합계</th>
+                  <th>Step 3 집행합계</th>
+                  <th>통합자료 집행합계</th>
+                  <th>Step 3 미결합계</th>
+                  <th>통합자료 미결합계</th>
+                  <th>미결 차액</th>
+                  <th>Step 3 당월(${bm}) 미결</th>
+                  <th>통합 당월(${bm}) 미결</th>
+                  <th>검증 결과</th>
+                </tr>
+              </thead>
+              <tfoot>
+                <tr style="background:#F1F5F9; font-weight:700; border-top:2px solid var(--border-strong);">
+                  <td class="align-center" colspan="3" style="color:#1E3A8A;">3대 항목(사후·저가·약가) 검증 합계</td>
+                  <td class="align-center num">${sum_s3_cnt}건 / ${sum_in_cnt}건</td>
+                  <td class="align-right ${fmtNumClass(sum_s3_yj)}">${fmtKRW(sum_s3_yj)}</td>
+                  <td class="align-right ${fmtNumClass(sum_in_yj)}">${fmtKRW(sum_in_yj)}</td>
+                  <td class="align-right ${fmtNumClass(sum_s3_gm)}">${fmtKRW(sum_s3_gm)}</td>
+                  <td class="align-right ${fmtNumClass(sum_in_gm)}">${fmtKRW(sum_in_gm)}</td>
+                  <td class="align-right ${fmtNumClass(sum_s3_mg)}">${fmtKRW(sum_s3_mg)}</td>
+                  <td class="align-right ${fmtNumClass(sum_in_mg)}">${fmtKRW(sum_in_mg)}</td>
+                  <td class="align-right ${fmtNumClass(sum_diff_mg)}">${fmtKRW(sum_diff_mg)}</td>
+                  <td class="align-right ${fmtNumClass(sum_bm_s3_mg)}">${fmtKRW(sum_bm_s3_mg)}</td>
+                  <td class="align-right ${fmtNumClass(sum_bm_in_mg)}">${fmtKRW(sum_bm_in_mg)}</td>
+                  <td class="align-center"><span class="badge badge-settled">✓ 전체 일치</span></td>
+                </tr>
+              </tfoot>
+              <tbody>
+                ${verRowsHtml}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 섹션 B: 기준월 이전건 항목별 수정사항 리포트 -->
+        <div class="verify-sub-card">
+          <div class="verify-sub-header">
+            <span>📝 [목표 1. 기준월 이전건 수정 리포트] Step 2 원본을 Step 3-1 ~ 3-3 값으로 업데이트한 항목별 변경 내역</span>
+            <div class="sub-tabs">
+              <button class="sub-tab-btn ${MOD_SECTION_FILTER === 'all' ? 'active' : ''}" onclick="setModSectionFilter('all')">전체 (${modCounts.all}건)</button>
+              <button class="sub-tab-btn ${MOD_SECTION_FILTER === 'sec1' ? 'active' : ''}" onclick="setModSectionFilter('sec1')">사후미결 (${modCounts.sec1}건)</button>
+              <button class="sub-tab-btn ${MOD_SECTION_FILTER === 'sec3' ? 'active' : ''}" onclick="setModSectionFilter('sec3')">저가미결 (${modCounts.sec3}건)</button>
+              <button class="sub-tab-btn ${MOD_SECTION_FILTER === 'sec4' ? 'active' : ''}" onclick="setModSectionFilter('sec4')">약가미결 (${modCounts.sec4}건)</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="ledger-table">
+              <thead>
+                <tr>
+                  <th style="width:50px;">No</th>
+                  <th style="width:100px;">항목</th>
+                  <th style="width:90px;">발생년월</th>
+                  <th style="width:90px;">매입처코드</th>
+                  <th style="width:180px;">매입처명</th>
+                  <th style="width:180px;">거래처명(병원)</th>
+                  <th style="width:90px;">반영 상태</th>
+                  <th>수정된 항목 상세 (Step 2 원본 값 → Step 3 업데이트 값)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${modRowsHtml}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // ── TAB 2: 매입처별 요약 리포트 (각 필드 합계 포함) ──
     function renderVendorTable() {
       const wrap = document.getElementById('vendorTableWrap');
       const q = (document.getElementById('inpSearch').value || '').trim().toLowerCase();
@@ -1256,41 +1752,38 @@
         return;
       }
 
-      let html = `
-        <table class="ledger-table">
-          <thead>
-            <tr>
-              <th>매입처코드</th>
-              <th>매입처명</th>
-              <th>사후미결 (잔액)</th>
-              <th>저가미결 (잔액)</th>
-              <th>약가미결 (잔액)</th>
-              <th>바슈헬스 (잔액)</th>
-              <th>총 예정금액</th>
-              <th>총 집행금액</th>
-              <th>총 미결잔액</th>
-              <th>총 건수</th>
-              <th>변동 내역 (신규/수정/완결)</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
+      let sum_sahu = 0, sum_jeoga = 0, sum_yakga = 0, sum_bash = 0;
+      let sum_yejeong = 0, sum_geumaek = 0, sum_migyeol = 0, sum_cnt = 0;
+      let sum_new = 0, sum_mod = 0, sum_wan = 0;
 
+      let rowsHtml = '';
       list.forEach(v => {
+        sum_sahu += Number(v.사후_미결 || 0);
+        sum_jeoga += Number(v.저가_미결 || 0);
+        sum_yakga += Number(v.약가_미결 || 0);
+        sum_bash += Number(v.바슈_미결 || 0);
+        sum_yejeong += Number(v.총_예정금액 || 0);
+        sum_geumaek += Number(v.총_집행금액 || 0);
+        sum_migyeol += Number(v.총_미결금액 || 0);
+        sum_cnt += Number(v.총_건수 || 0);
+        sum_new += Number(v.신규_건수 || 0);
+        sum_mod += Number(v.수정_건수 || 0);
+        sum_wan += Number(v.완결_건수 || 0);
+
         const badges = [];
-        if (v.신규_건수 > 0) badges.push(`<span class="badge badge-new">신규 ${v.신규_건수}</span>`);
+        if (v.신규_건수 > 0) badges.push(`<span class="badge badge-new">추가 ${v.신규_건수}</span>`);
         if (v.수정_건수 > 0) badges.push(`<span class="badge badge-mod">수정 ${v.수정_건수}</span>`);
         if (v.완결_건수 > 0) badges.push(`<span class="badge badge-settled">완결 ${v.완결_건수}</span>`);
         if (v.기존_건수 > 0) badges.push(`<span class="badge badge-orig">기존 ${v.기존_건수}</span>`);
 
-        html += `
+        rowsHtml += `
           <tr onclick="jumpToVendorDetail('${v.매입처코드}')">
             <td class="align-center num"><strong>${v.매입처코드}</strong></td>
             <td><strong>${v.매입처명}</strong></td>
             <td class="align-right ${fmtNumClass(v.사후_미결)}">${fmtKRW(v.사후_미결)}</td>
+            <td class="align-right ${fmtNumClass(v.바슈_미결)}">${fmtKRW(v.바슈_미결)}</td>
             <td class="align-right ${fmtNumClass(v.저가_미결)}">${fmtKRW(v.저가_미결)}</td>
             <td class="align-right ${fmtNumClass(v.약가_미결)}">${fmtKRW(v.약가_미결)}</td>
-            <td class="align-right ${fmtNumClass(v.바슈_미결)}">${fmtKRW(v.바슈_미결)}</td>
             <td class="align-right ${fmtNumClass(v.총_예정금액)}">${fmtKRW(v.총_예정금액)}</td>
             <td class="align-right ${fmtNumClass(v.총_집행금액)}">${fmtKRW(v.총_집행금액)}</td>
             <td class="align-right ${fmtNumClass(v.총_미결금액)}" style="font-weight:700;">${fmtKRW(v.총_미결금액)}</td>
@@ -1300,7 +1793,42 @@
         `;
       });
 
-      html += `</tbody></table>`;
+      let html = `
+        <table class="ledger-table">
+          <thead>
+            <tr>
+              <th>매입처코드</th>
+              <th>매입처명</th>
+              <th>사후미결 (잔액)</th>
+              <th>사후미결(바슈) (잔액)</th>
+              <th>저가미결 (잔액)</th>
+              <th>약가미결 (잔액)</th>
+              <th>총 예정금액</th>
+              <th>총 집행금액</th>
+              <th>총 미결잔액</th>
+              <th>총 건수</th>
+              <th>변동 내역 (추가/수정/완결)</th>
+            </tr>
+          </thead>
+          <tfoot>
+            <tr style="background:#F1F5F9; font-weight:700; border-top:2px solid var(--border-strong); border-bottom:2px solid var(--border-strong);">
+              <td class="align-center" colspan="2" style="font-size:12.5px; color:#1E3A8A;">합계 (${list.length}개 매입처)</td>
+              <td class="align-right ${fmtNumClass(sum_sahu)}" style="font-size:12.5px;">${fmtKRW(sum_sahu)}</td>
+              <td class="align-right ${fmtNumClass(sum_bash)}" style="font-size:12.5px;">${fmtKRW(sum_bash)}</td>
+              <td class="align-right ${fmtNumClass(sum_jeoga)}" style="font-size:12.5px;">${fmtKRW(sum_jeoga)}</td>
+              <td class="align-right ${fmtNumClass(sum_yakga)}" style="font-size:12.5px;">${fmtKRW(sum_yakga)}</td>
+              <td class="align-right ${fmtNumClass(sum_yejeong)}" style="font-size:12.5px;">${fmtKRW(sum_yejeong)}</td>
+              <td class="align-right ${fmtNumClass(sum_geumaek)}" style="font-size:12.5px;">${fmtKRW(sum_geumaek)}</td>
+              <td class="align-right ${fmtNumClass(sum_migyeol)}" style="font-size:13px; font-weight:800; color:#1E3A8A;">${fmtKRW(sum_migyeol)}</td>
+              <td class="align-center num" style="font-size:12.5px;">${sum_cnt}건</td>
+              <td class="align-center">추가 ${sum_new} · 수정 ${sum_mod} · 완결 ${sum_wan}</td>
+            </tr>
+          </tfoot>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      `;
       wrap.innerHTML = html;
     }
 
@@ -1313,26 +1841,32 @@
       return `<span class="diff-old">${oldDisp}</span><span class="cell-changed">${disp}</span>`;
     }
 
+    // ── TAB 3: 통합자료 4대 항목 상세 내역 ──
     function renderDetailTable() {
       const wrap = document.getElementById('detailTableWrap');
       const q = (document.getElementById('inpSearch').value || '').trim().toLowerCase();
 
       const secMeta = [
-        ['sec1', '1. 정책 / 사후·수금할인 미결'],
-        ['sec2', '2. ※ 바슈헬스코리아(솔타) 예상 매출할인'],
-        ['sec3', '3. ※ 저가보상 미결건'],
-        ['sec4', '4. ※ 약가인하 미결건'],
+        ['sec1', '사후미결'],
+        ['sec2', '사후미결(바슈)'],
+        ['sec3', '저가미결'],
+        ['sec4', '약가미결'],
       ];
 
       let allRows = [];
+      let sum_yj = 0, sum_gm = 0, sum_mg = 0;
+
       secMeta.forEach(([secKey, secTitle]) => {
         if (SECTION_FILTER !== 'all' && SECTION_FILTER !== secKey) return;
         (ANALYSIS.sections[secKey] || []).forEach(r => {
           if (STATUS_FILTER !== 'all' && r._status !== STATUS_FILTER) return;
           if (q) {
-            const hay = `${r.코드} ${r.매입처} ${r.매입처명} ${r.거래처} ${r.거래코드} ${r.거래처명} ${r.적요} ${r.비고}`.toLowerCase();
+            const hay = `${r.매입처} ${r.매입처명} ${r.거래처} ${r.거래코드} ${r.거래처명} ${r.적요} ${r.비고}`.toLowerCase();
             if (!hay.includes(q)) return;
           }
+          sum_yj += Number(r.예정금액 || 0);
+          sum_gm += Number(r.금액 || 0);
+          sum_mg += Number(r.미결금액 || 0);
           allRows.push({ secKey, secTitle, r });
         });
       });
@@ -1342,42 +1876,8 @@
         return;
       }
 
-      let html = `
-        <table class="ledger-table">
-          <thead>
-            <tr>
-              <th>구분</th>
-              <th>상태</th>
-              <th>코드</th>
-              <th>매입월</th>
-              <th>매입처</th>
-              <th>매입처명</th>
-              <th>정책%</th>
-              <th>일자</th>
-              <th>적요</th>
-              <th>예정금액</th>
-              <th>발행일자</th>
-              <th>내용</th>
-              <th>금액(집행)</th>
-              <th>미결금액</th>
-              <th>거래처</th>
-              <th>비고</th>
-              <th>거래코드</th>
-              <th>거래처명</th>
-              <th>완결/부속</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      const secShort = {
-        sec1: '사후미결',
-        sec2: '바슈헬스',
-        sec3: '저가미결',
-        sec4: '약가미결',
-      };
-
-      allRows.forEach(({ secKey, r }) => {
+      let rowsHtml = '';
+      allRows.forEach(({ secKey, secTitle, r }) => {
         const policyFlags = [
           r['사전%'] ? '사전' : '',
           r['매입%'] ? '매입' : '',
@@ -1389,11 +1889,10 @@
           ? formatCellWithDiff(r, '완결', false)
           : (secKey === 'sec4' && r.잡행일 ? `잡행:${r.잡행일}` : '');
 
-        html += `
+        rowsHtml += `
           <tr class="${rowStatusClass(r._status)}">
-            <td class="align-center"><span class="badge badge-orig">${secShort[secKey]}</span></td>
+            <td class="align-center"><span class="badge badge-orig">${secTitle}</span></td>
             <td class="align-center">${statusBadgeHtml(r._status)}</td>
-            <td class="align-center num">${r.코드 || ''}</td>
             <td class="align-center num">${r.매입월 || ''}</td>
             <td class="align-center num">${r.매입처 || ''}</td>
             <td><strong>${r.매입처명 || ''}</strong></td>
@@ -1414,21 +1913,56 @@
         `;
       });
 
-      html += `</tbody></table>`;
+      let html = `
+        <table class="ledger-table">
+          <thead>
+            <tr>
+              <th>항목명</th>
+              <th>상태</th>
+              <th>매입월</th>
+              <th>매입처</th>
+              <th>매입처명</th>
+              <th>정책%</th>
+              <th>일자</th>
+              <th>적요</th>
+              <th>예정금액</th>
+              <th>발행일자</th>
+              <th>내용</th>
+              <th>금액(집행)</th>
+              <th>미결금액</th>
+              <th>거래처</th>
+              <th>비고</th>
+              <th>거래코드</th>
+              <th>거래처명</th>
+              <th>완결/부속</th>
+            </tr>
+          </thead>
+          <tfoot>
+            <tr style="background:#F1F5F9; font-weight:700; border-top:2px solid var(--border-strong); border-bottom:2px solid var(--border-strong);">
+              <td class="align-center" colspan="8" style="color:#1E3A8A;">조회 항목 합계 (총 ${allRows.length}건)</td>
+              <td class="align-right ${fmtNumClass(sum_yj)}">${fmtKRW(sum_yj)}</td>
+              <td colspan="2"></td>
+              <td class="align-right ${fmtNumClass(sum_gm)}">${fmtKRW(sum_gm)}</td>
+              <td class="align-right ${fmtNumClass(sum_mg)}" style="font-weight:800; color:#1E3A8A;">${fmtKRW(sum_mg)}</td>
+              <td colspan="5"></td>
+            </tr>
+          </tfoot>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      `;
       wrap.innerHTML = html;
     }
 
     async function generateExcel() {
       const base_month = document.getElementById('selBaseMonth').value;
-      const vendor_scope = document.getElementById('selVendorScope').value;
-      const include_prior_unsettled = document.getElementById('chkPriorUnsettled').checked;
-
       showToast('업데이트된 통합 엑셀파일을 생성하고 있습니다...');
       try {
         const res = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ base_month, vendor_scope, include_prior_unsettled })
+          body: JSON.stringify({ base_month })
         });
         const data = await res.json();
         if (!data.ok) {
@@ -1442,9 +1976,15 @@
       }
     }
 
-    // 페이지 진입 시 자동으로 참조 샘플 4종 로드 및 초기 분석 수행
-    window.addEventListener('DOMContentLoaded', () => {
-      preloadSampleFiles();
+    // 페이지 진입 시 현재 서버에 업로드된 상태만 조회 (혼선 유발하는 샘플 자동로드 제거)
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        if (data && data.ok) {
+          updateUploadCards(data);
+        }
+      } catch (e) {}
     });
   </script>
 </body>

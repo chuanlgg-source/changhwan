@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import base64
 import json
-import os
 import sys
 import tempfile
 import traceback
@@ -32,7 +31,7 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 # ──────────────────────────────────────────────────────────────
 STATE: dict[str, Any] = {
     "original": None,
-    " original_name": "",
+    "original_name": "",
     "sahu": None,
     "sahu_name": "",
     "jeoga": None,
@@ -45,15 +44,17 @@ STATE: dict[str, Any] = {
 
 
 def get_available_months() -> list[str]:
-    months: set[str] = set()
+    months: set[str] = {
+        "2026-12", "2026-11", "2026-10", "2026-09", "2026-08",
+        "2026-07", "2026-06", "2026-05", "2026-04", "2026-03",
+        "2026-02", "2026-01",
+    }
     for key in ("original", "sahu", "jeoga", "yakga"):
         data = STATE.get(key)
         if data and "months" in data:
             for m in data["months"]:
                 if m and m >= "2025-01":
                     months.add(m)
-    if not months:
-        months = {"2026-08", "2026-09", "2026-10"}
     return sorted(months, reverse=True)
 
 
@@ -93,6 +94,17 @@ def build_status_payload() -> dict[str, Any]:
             },
         },
     }
+
+
+def reset_uploaded_files(step: str = "all") -> dict[str, Any]:
+    targets = ("original", "sahu", "jeoga", "yakga") if step == "all" else (step,)
+    for k in targets:
+        if k in ("original", "sahu", "jeoga", "yakga"):
+            STATE[k] = None
+            STATE[f"{k}_name"] = ""
+    STATE["last_analysis"] = None
+    STATE["last_excel_path"] = None
+    return build_status_payload()
 
 
 def preload_sample_files() -> dict[str, Any]:
@@ -184,6 +196,13 @@ class ReconcileHandler(BaseHTTPRequestHandler):
                 self._send_json(payload)
                 return
 
+            if path == "/api/reset":
+                body = self._read_json_body()
+                step = body.get("step", "all")
+                payload = reset_uploaded_files(step)
+                self._send_json(payload)
+                return
+
             if path == "/api/upload":
                 body = self._read_json_body()
                 step = body.get("step", "")
@@ -215,28 +234,27 @@ class ReconcileHandler(BaseHTTPRequestHandler):
                     STATE["yakga"] = eng.parse_yakga_file(save_path)
                     STATE["yakga_name"] = filename
 
+                STATE["last_analysis"] = None
                 self._send_json(build_status_payload())
                 return
 
             if path == "/api/analyze":
                 body = self._read_json_body()
                 base_month = body.get("base_month", "2026-09")
-                vendor_scope = body.get("vendor_scope", "all")
-                include_prior = bool(body.get("include_prior_unsettled", False))
 
                 missing = [
                     label for key, label in [
-                        ("original", "2. 원본데이터 (Sample.xls)"),
-                        ("sahu", "3-1. 사후미결"),
-                        ("jeoga", "3-2. 저가미결"),
-                        ("yakga", "3-3. 약가미결"),
+                        ("original", "Step 2. 원본데이터"),
+                        ("sahu", "Step 3-1. 사후미결"),
+                        ("jeoga", "Step 3-2. 저가미결"),
+                        ("yakga", "Step 3-3. 약가미결"),
                     ]
                     if STATE.get(key) is None
                 ]
                 if missing:
                     self._send_json({
                         "ok": False,
-                        "error": f"다음 파일을 먼저 업로드해 주세요: {', '.join(missing)}"
+                        "error": f"다음 스텝의 엑셀 파일을 먼저 업로드해 주세요: {', '.join(missing)}"
                     }, 400)
                     return
 
@@ -246,8 +264,6 @@ class ReconcileHandler(BaseHTTPRequestHandler):
                     STATE["jeoga"],
                     STATE["yakga"],
                     base_month=base_month,
-                    vendor_scope=vendor_scope,
-                    include_prior_unsettled=include_prior,
                 )
                 STATE["last_analysis"] = res
                 self._send_json({"ok": True, "result": res})
@@ -256,7 +272,6 @@ class ReconcileHandler(BaseHTTPRequestHandler):
             if path == "/api/generate":
                 body = self._read_json_body()
                 if STATE.get("last_analysis") is None:
-                    # 분석이 아직 안 되어 있으면 자동 분석 후 생성
                     if all(STATE.get(k) is not None for k in ("original", "sahu", "jeoga", "yakga")):
                         STATE["last_analysis"] = eng.analyze_and_merge(
                             STATE["original"],
@@ -264,11 +279,9 @@ class ReconcileHandler(BaseHTTPRequestHandler):
                             STATE["jeoga"],
                             STATE["yakga"],
                             base_month=body.get("base_month", "2026-09"),
-                            vendor_scope=body.get("vendor_scope", "all"),
-                            include_prior_unsettled=bool(body.get("include_prior_unsettled", False)),
                         )
                     else:
-                        self._send_json({"ok": False, "error": "먼저 데이터 업로드 및 분석을 실행해 주세요."}, 400)
+                        self._send_json({"ok": False, "error": "먼저 2~3스텝 데이터를 업로드하고 분석을 실행해 주세요."}, 400)
                         return
 
                 analysis = STATE["last_analysis"]
