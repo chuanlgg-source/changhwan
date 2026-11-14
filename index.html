@@ -65,13 +65,19 @@
         <form onsubmit="event.preventDefault(); handleFormLogin();" class="space-y-4" autocomplete="off">
           <div>
             <label class="block text-xs font-bold text-[#131b2e] mb-1.5">업무용 이메일 (ID)</label>
-            <input type="email" id="input-email" value="" placeholder="name@hospital.com" required autocomplete="off"
+            <input type="email" id="input-email" value="" required autocomplete="off"
               class="w-full px-3.5 py-2.5 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white">
           </div>
           <div>
             <label class="block text-xs font-bold text-[#131b2e] mb-1.5">비밀번호 (Password)</label>
-            <input type="password" id="input-password" value="" placeholder="••••••••" required autocomplete="new-password"
+            <input type="password" id="input-password" value="" required autocomplete="new-password"
               class="w-full px-3.5 py-2.5 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white">
+          </div>
+          <div class="flex items-center justify-between">
+            <label class="inline-flex items-center gap-2 text-xs text-[#444651] cursor-pointer select-none">
+              <input type="checkbox" id="remember-email" class="w-3.5 h-3.5 rounded border-[#cbd5e1] text-[#00236f] focus:ring-[#1e3a8a] cursor-pointer">
+              <span class="font-medium">아이디 저장</span>
+            </label>
           </div>
           <div id="login-error" class="hidden p-2.5 rounded bg-[#fef2f2] border border-[#fecaca] text-[#dc2626] text-xs font-semibold"></div>
           <button type="submit" id="btn-login-submit" class="w-full py-2.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-md shadow transition cursor-pointer">
@@ -562,7 +568,7 @@
       }
 
       // Version Cache Invalidation
-      const APP_BUILD_ID = 'v2.9.4';
+      const APP_BUILD_ID = 'v2.9.5';
       const storedBuild = localStorage.getItem('clp_build_id');
       if (storedBuild !== APP_BUILD_ID) {
         localStorage.removeItem('clp_menu_groups_v3');
@@ -653,14 +659,57 @@
       errBox.classList.add('hidden');
 
       // 1. Check in managed portalUsers list
-      const found = portalUsers.find(u => u.email.toLowerCase() === email);
+      let found = portalUsers.find(u => u.email.toLowerCase() === email);
+
+      // 2. If not found or password mismatch locally, sync latest from Supabase portal_users / Auth (cross-device support)
+      if (supabaseClient && (!found || found.password !== pw)) {
+        try {
+          const { data: sbRow, error: sbErr } = await supabaseClient
+            .from('portal_users')
+            .select('*')
+            .eq('email', email)
+            .maybeSingle();
+
+          if (!sbErr && sbRow) {
+            const syncedUser = {
+              id: sbRow.id,
+              email: sbRow.email,
+              password: sbRow.password_hash || 'password123',
+              name: sbRow.full_name,
+              department: sbRow.department || '병원사업부',
+              role: sbRow.role || 'staff',
+              status: sbRow.status || 'active',
+              createdAt: (sbRow.created_at || '').substring(0, 10)
+            };
+            const idx = portalUsers.findIndex(u => u.email.toLowerCase() === email);
+            if (idx >= 0) portalUsers[idx] = syncedUser;
+            else portalUsers.push(syncedUser);
+            localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
+            found = syncedUser;
+          }
+        } catch (e) {}
+      }
+
       if (found) {
         if (found.status === 'locked') {
           errBox.innerText = '잠금(비활성화) 처리된 계정입니다. 내부관리자에게 문의하세요.';
           errBox.classList.remove('hidden');
           return;
         }
+
         if (found.password !== pw) {
+          // Try Supabase Auth in case password was updated directly via Supabase Auth
+          if (supabaseClient) {
+            try {
+              const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pw });
+              if (!error && data?.user) {
+                found.password = pw;
+                localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
+                loginSuccess(found);
+                return;
+              }
+            } catch (e) {}
+          }
           errBox.innerText = '비밀번호가 일치하지 않습니다. 다시 확인해 주세요.';
           errBox.classList.remove('hidden');
           return;
@@ -677,7 +726,7 @@
         return;
       }
 
-      // 2. If not in local list, check Supabase Auth directly
+      // 3. If not in local list, check Supabase Auth directly
       if (supabaseClient) {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pw });
         if (!error && data?.user) {
@@ -703,6 +752,13 @@
     }
 
     function loginSuccess(userObj) {
+      const rememberCheck = document.getElementById('remember-email');
+      if (rememberCheck && rememberCheck.checked) {
+        localStorage.setItem('clp_remembered_email', userObj.email);
+      } else {
+        localStorage.removeItem('clp_remembered_email');
+      }
+
       currentUser = {
         id: userObj.id,
         email: userObj.email,
@@ -729,7 +785,11 @@
       document.getElementById('screen-login').classList.remove('hidden');
       const emailInput = document.getElementById('input-email');
       const pwInput = document.getElementById('input-password');
-      if (emailInput) emailInput.value = '';
+      const rememberCheck = document.getElementById('remember-email');
+      const remembered = localStorage.getItem('clp_remembered_email');
+
+      if (emailInput) emailInput.value = remembered || '';
+      if (rememberCheck) rememberCheck.checked = Boolean(remembered);
       if (pwInput) pwInput.value = '';
       const errBox = document.getElementById('login-error');
       if (errBox) errBox.classList.add('hidden');
