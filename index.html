@@ -269,24 +269,28 @@
     </div>
   </div>
 
-  <div id="modal-blog-detail" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-2xl w-full max-w-3xl p-6 fade-in max-h-[85vh] overflow-y-auto">
-      <div class="flex items-center justify-between pb-3 border-b border-[#e2e8f0] mb-3">
-        <div class="flex items-center gap-2">
-          <span id="bd-category" class="text-[10px] font-bold px-2.5 py-0.5 rounded bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]">공지</span>
-          <span id="bd-date" class="text-xs text-[#757682]">2026-11-13</span>
+  <div id="modal-blog-detail" onclick="if(event.target===this) closeBlogDetailModal();" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-2xl w-full max-w-3xl fade-in max-h-[88vh] flex flex-col overflow-hidden">
+      <div class="shrink-0 px-6 pt-5 pb-3 border-b border-[#e2e8f0]">
+        <div class="flex items-center justify-between pb-2.5 border-b border-[#f1f5f9] mb-2.5">
+          <div class="flex items-center gap-2">
+            <span id="bd-category" class="text-[10px] font-bold px-2.5 py-0.5 rounded bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]">공지</span>
+            <span id="bd-date" class="text-xs text-[#757682]">2026-11-13</span>
+          </div>
+          <button onclick="closeBlogDetailModal();" class="text-gray-400 hover:text-gray-700 text-xl font-bold leading-none">&times;</button>
         </div>
-        <button onclick="closeBlogDetailModal();" class="text-gray-400 hover:text-gray-700 text-xl font-bold">&times;</button>
+        <h2 id="bd-title" class="text-lg font-bold font-headline text-[#00236f] mb-1.5">제목</h2>
+        <div class="flex items-center justify-between text-xs text-[#757682]">
+          <span id="bd-author">작성자: 이창환</span>
+          <span id="bd-views">조회 100</span>
+        </div>
       </div>
-      <h2 id="bd-title" class="text-lg font-bold font-headline text-[#00236f] mb-2">제목</h2>
-      <div class="flex items-center justify-between text-xs text-[#757682] pb-3 mb-4 border-b border-[#f1f5f9]">
-        <span id="bd-author">작성자: 이창환</span>
-        <span id="bd-views">조회 100</span>
+      <div id="bd-scroll-body" class="flex-1 overflow-y-auto px-6 py-4">
+        <div id="bd-content" class="text-xs text-[#131b2e] leading-relaxed whitespace-pre-line bg-[#faf8ff] p-4 rounded-lg border border-[#e2e8f0]"></div>
       </div>
-      <div id="bd-content" class="text-xs text-[#131b2e] leading-relaxed whitespace-pre-line bg-[#faf8ff] p-4 rounded-lg border border-[#e2e8f0]"></div>
-      <div class="flex justify-between items-center pt-4 mt-4 border-t border-[#e2e8f0]">
+      <div class="shrink-0 flex justify-between items-center px-6 py-3.5 border-t border-[#e2e8f0] bg-white">
         <button id="bd-delete-btn" class="text-xs text-[#dc2626] hover:underline font-semibold">게시글 삭제</button>
-        <button onclick="closeBlogDetailModal();" class="px-4 py-1.5 bg-[#00236f] text-white text-xs font-bold rounded">닫기</button>
+        <button onclick="closeBlogDetailModal();" class="px-5 py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-lg shadow-sm transition">닫기</button>
       </div>
     </div>
   </div>
@@ -558,7 +562,7 @@
       }
 
       // Version Cache Invalidation
-      const APP_BUILD_ID = 'v2.9.8';
+      const APP_BUILD_ID = 'v2.9.9';
       const storedBuild = localStorage.getItem('clp_build_id');
       if (storedBuild !== APP_BUILD_ID) {
         localStorage.removeItem('clp_menu_groups_v3');
@@ -1921,6 +1925,8 @@ create policy "Allow all portal_users" on public.portal_users for all using (tru
       };
 
       document.getElementById('modal-blog-detail').classList.remove('hidden');
+      const scrollBody = document.getElementById('bd-scroll-body');
+      if (scrollBody) scrollBody.scrollTop = 0;
       if (activeViewId === 'blog-main') renderViewport(activeViewId);
     }
 
