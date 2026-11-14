@@ -334,13 +334,14 @@
     const DEFAULT_MENU_GROUPS = [
       {
         themeId: 'finance',
-        themeTitle: '🏥 병원부 정산/재무',
-        themeDesc: '병원 제약 공급망 정산 원장 대사 및 미결 금액 관리',
+        themeTitle: '🗂️ 개인업무',
+        themeDesc: '월간 개인업무 일정 달력 기록 및 병원부 정산 원장 관리',
         adminOnly: false,
         dashboard: {
-          id: 'finance-dash',
-          title: '미결 정산 총괄 대시보드',
-          type: 'builtin-finance-dash'
+          id: 'work-schedule',
+          title: '개인업무 일정 캘린더',
+          type: 'iframe',
+          url: 'work-schedule.html'
         },
         subMenus: [
           {
@@ -545,7 +546,7 @@
       }
 
       // Version Cache Invalidation
-      const APP_BUILD_ID = 'v2.9.1';
+      const APP_BUILD_ID = 'v2.9.2';
       const storedBuild = localStorage.getItem('clp_build_id');
       if (storedBuild !== APP_BUILD_ID) {
         localStorage.removeItem('clp_menu_groups_v3');

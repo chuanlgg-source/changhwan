@@ -1,21 +1,22 @@
 {
   "$schema": "./schema/portal-spec.schema.json",
-  "version": "2.9.1",
+  "version": "2.9.2",
   "systemTitle": "Clinical Ledger Precision",
   "systemSubtitle": "병원부 미결 원장 대사 및 업무 통합 포털",
   "themes": [
     {
       "id": "finance",
       "themeId": "finance",
-      "title": "🏥 병원부 정산/재무",
-      "themeTitle": "🏥 병원부 정산/재무",
-      "description": "병원 제약 공급망 정산 원장 대사 및 미결 금액 관리",
-      "themeDesc": "병원 제약 공급망 정산 원장 대사 및 미결 금액 관리",
+      "title": "🗂️ 개인업무",
+      "themeTitle": "🗂️ 개인업무",
+      "description": "월간 개인업무 일정 달력 기록 및 병원부 정산 원장 관리",
+      "themeDesc": "월간 개인업무 일정 달력 기록 및 병원부 정산 원장 관리",
       "adminOnly": false,
       "dashboard": {
-        "id": "finance-dash",
-        "title": "미결 정산 총괄 대시보드",
-        "type": "builtin-finance-dash"
+        "id": "work-schedule",
+        "title": "개인업무 일정 캘린더",
+        "type": "iframe",
+        "url": "work-schedule.html"
       },
       "subMenus": [
         {

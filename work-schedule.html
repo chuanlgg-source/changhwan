@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>개인업무 일정 캘린더</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #faf8ff;
+      color: #131b2e;
+    }
+    .font-headline { font-family: 'Plus Jakarta Sans', 'Pretendard', sans-serif; }
+    .num-font { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    .cal-cell {
+      min-height: 108px;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+    .cal-cell:hover {
+      background-color: #f2f3ff;
+    }
+    .cal-cell.today {
+      background-color: #eff6ff;
+      box-shadow: inset 0 0 0 2px #1e3a8a;
+    }
+    @media (max-width: 640px) {
+      .cal-cell { min-height: 76px; }
+    }
+  </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+
+  <!-- Header & Year/Month Controls -->
+  <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-4 border-b border-[#cbd5e1]">
+    <div>
+      <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#1e3a8a]/10 border border-[#1e3a8a]/20 text-[#00236f] text-[11px] font-bold mb-1.5">
+        <span>PERSONAL WORK SCHEDULE</span>
+      </div>
+      <h1 class="text-2xl font-extrabold font-headline text-[#00236f] tracking-tight">
+        개인업무 일정 캘린더
+      </h1>
+      <p class="text-xs text-[#444651] mt-0.5">
+        날짜를 클릭하면 팝업창에서 업무유형 · 시간 · 비고내용을 기록하고 관리할 수 있습니다.
+      </p>
+    </div>
+
+    <!-- Year & Month Selector -->
+    <div class="flex flex-wrap items-center gap-2">
+      <button onclick="moveMonth(-1)" class="px-3 py-2 bg-white hover:bg-[#f1f5f9] border border-[#cbd5e1] rounded-lg text-xs font-bold text-[#00236f] shadow-sm cursor-pointer transition">
+        ◀ 이전달
+      </button>
+
+      <div class="flex items-center gap-1.5 bg-white border border-[#cbd5e1] rounded-lg px-2.5 py-1.5 shadow-sm">
+        <select id="select-year" onchange="onYearMonthChange()" class="text-xs font-bold text-[#00236f] bg-transparent focus:outline-none cursor-pointer num-font">
+        </select>
+        <span class="text-xs text-[#64748b]">년</span>
+        <select id="select-month" onchange="onYearMonthChange()" class="text-xs font-bold text-[#00236f] bg-transparent focus:outline-none cursor-pointer num-font ml-1">
+        </select>
+        <span class="text-xs text-[#64748b]">월</span>
+      </div>
+
+      <button onclick="moveMonth(1)" class="px-3 py-2 bg-white hover:bg-[#f1f5f9] border border-[#cbd5e1] rounded-lg text-xs font-bold text-[#00236f] shadow-sm cursor-pointer transition">
+        다음달 ▶
+      </button>
+
+      <button onclick="goToday()" class="px-3 py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white rounded-lg text-xs font-bold shadow-sm cursor-pointer transition">
+        오늘
+      </button>
+    </div>
+  </header>
+
+  <!-- Month Summary Stats -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+    <div class="bg-white rounded-xl border border-[#cbd5e1] p-3.5 shadow-sm">
+      <div class="text-[11px] font-bold text-[#64748b]">선택 월 전체 일정</div>
+      <div id="stat-total" class="text-xl font-extrabold text-[#00236f] num-font mt-0.5">0건</div>
+    </div>
+    <div class="bg-white rounded-xl border border-[#cbd5e1] p-3.5 shadow-sm">
+      <div class="text-[11px] font-bold text-[#64748b]">일정 등록 일수</div>
+      <div id="stat-days" class="text-xl font-extrabold text-[#1e3a8a] num-font mt-0.5">0일</div>
+    </div>
+    <div class="bg-white rounded-xl border border-[#cbd5e1] p-3.5 shadow-sm">
+      <div class="text-[11px] font-bold text-[#64748b]">최다 업무유형</div>
+      <div id="stat-top-type" class="text-base font-extrabold text-[#059669] mt-1 truncate">-</div>
+    </div>
+    <div class="bg-white rounded-xl border border-[#cbd5e1] p-3.5 shadow-sm flex items-center justify-between">
+      <div>
+        <div class="text-[11px] font-bold text-[#64748b]">오늘 날짜</div>
+        <div id="stat-today" class="text-sm font-bold text-[#131b2e] num-font mt-1">-</div>
+      </div>
+      <button onclick="openDateModal(getTodayStr())" class="px-2.5 py-1.5 bg-[#eff6ff] hover:bg-[#dbeafe] text-[#00236f] rounded-md text-[11px] font-bold border border-[#bfdbfe] cursor-pointer transition">
+        + 오늘 기록
+      </button>
+    </div>
+  </div>
+
+  <!-- Calendar Grid -->
+  <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-sm overflow-hidden mb-6">
+    <!-- Weekday Headers -->
+    <div class="grid grid-cols-7 bg-[#f8fafc] border-b border-[#cbd5e1] text-center text-xs font-bold py-2.5">
+      <div class="text-[#dc2626]">일 (SUN)</div>
+      <div class="text-[#334155]">월 (MON)</div>
+      <div class="text-[#334155]">화 (TUE)</div>
+      <div class="text-[#334155]">수 (WED)</div>
+      <div class="text-[#334155]">목 (THU)</div>
+      <div class="text-[#334155]">금 (FRI)</div>
+      <div class="text-[#2563eb]">토 (SAT)</div>
+    </div>
+
+    <!-- Days Container -->
+    <div id="calendar-grid" class="grid grid-cols-7 divide-x divide-y divide-[#e2e8f0]">
+      <!-- Rendered by JS -->
+    </div>
+  </div>
+
+  <!-- Monthly Schedule List -->
+  <section class="bg-white rounded-xl border border-[#cbd5e1] shadow-sm p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-sm sm:text-base font-bold text-[#00236f]" id="monthly-list-title">월간 업무일정 목록</h2>
+      <span class="text-[11px] text-[#64748b]">항목을 클릭하면 해당 날짜 팝업에서 수정/삭제할 수 있습니다.</span>
+    </div>
+    <div id="monthly-list-body" class="space-y-2">
+      <!-- Rendered by JS -->
+    </div>
+  </section>
+
+  <!-- Date Detail & Schedule Modal -->
+  <div id="schedule-modal" class="hidden fixed inset-0 z-50 bg-[#0b1326]/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-[#cbd5e1] shadow-2xl w-full max-w-lg overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-5 py-4 bg-[#00236f] text-white flex items-center justify-between">
+        <div>
+          <div class="text-[11px] text-white/75 font-semibold">업무일정 기록 및 관리</div>
+          <h3 id="modal-date-title" class="text-lg font-extrabold num-font">2026-11-14</h3>
+        </div>
+        <button onclick="closeModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-sm font-bold cursor-pointer transition">
+          ✕
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 max-h-[80vh] overflow-y-auto space-y-5">
+        <!-- Existing Schedules for this Date -->
+        <div>
+          <div class="text-xs font-bold text-[#475569] mb-2 flex items-center justify-between">
+            <span>등록된 일정</span>
+            <span id="modal-day-count" class="text-[11px] text-[#00236f] num-font">0건</span>
+          </div>
+          <div id="modal-day-list" class="space-y-2">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Add / Edit Form -->
+        <form onsubmit="event.preventDefault(); saveSchedule();" class="pt-4 border-t border-[#e2e8f0] space-y-3.5">
+          <div class="text-xs font-bold text-[#00236f]" id="form-mode-title">+ 새 업무일정 추가</div>
+          <input type="hidden" id="edit-schedule-id" value="">
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-[#131b2e] mb-1">업무유형 <span class="text-[#dc2626]">*</span></label>
+              <select id="input-type" required
+                class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white">
+                <option value="정산/대사">정산/대사</option>
+                <option value="외근/미팅">외근/미팅</option>
+                <option value="보고/회의">보고/회의</option>
+                <option value="결재/행정">결재/행정</option>
+                <option value="개인일정">개인일정</option>
+                <option value="기타">기타</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[#131b2e] mb-1">시간 <span class="text-[#dc2626]">*</span></label>
+              <div class="flex items-center gap-1.5">
+                <input type="time" id="input-time" value="09:00" required
+                  class="flex-1 px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md num-font focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white">
+                <button type="button" onclick="document.getElementById('input-time').value='09:00'"
+                  class="px-2 py-2 text-[10px] font-bold bg-[#f1f5f9] hover:bg-[#e2e8f0] text-[#475569] rounded border border-[#cbd5e1] cursor-pointer">
+                  09시
+                </button>
+                <button type="button" onclick="document.getElementById('input-time').value='14:00'"
+                  class="px-2 py-2 text-[10px] font-bold bg-[#f1f5f9] hover:bg-[#e2e8f0] text-[#475569] rounded border border-[#cbd5e1] cursor-pointer">
+                  14시
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-[#131b2e] mb-1">비고내용 <span class="text-[#dc2626]">*</span></label>
+            <textarea id="input-memo" rows="3" required placeholder="업무 상세 내용, 방문처, 처리할 사항 등을 입력하세요..."
+              class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white resize-none"></textarea>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-1">
+            <button type="button" id="btn-cancel-edit" onclick="resetForm()" class="hidden px-3 py-2 bg-[#f1f5f9] hover:bg-[#e2e8f0] text-[#475569] text-xs font-bold rounded-md cursor-pointer">
+              수정 취소
+            </button>
+            <button type="button" onclick="closeModal()" class="px-3.5 py-2 bg-white hover:bg-[#f8fafc] border border-[#cbd5e1] text-[#475569] text-xs font-bold rounded-md cursor-pointer">
+              닫기
+            </button>
+            <button type="submit" id="btn-save-schedule" class="px-4 py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-md shadow cursor-pointer transition">
+              일정 저장
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'clp_work_schedules_v1';
+    let schedules = {}; // { "YYYY-MM-DD": [ { id, type, time, memo } ] }
+    let viewYear = new Date().getFullYear();
+    let viewMonth = new Date().getMonth() + 1; // 1~12
+    let selectedDateStr = '';
+
+    const TYPE_BADGE_MAP = {
+      '정산/대사': 'bg-[#eff6ff] text-[#1e3a8a] border-[#bfdbfe]',
+      '외근/미팅': 'bg-[#ecfdf5] text-[#059669] border-[#a7f3d0]',
+      '보고/회의': 'bg-[#fef3c7] text-[#b45309] border-[#fde68a]',
+      '결재/행정': 'bg-[#f5f3ff] text-[#6d28d9] border-[#ddd6fe]',
+      '개인일정': 'bg-[#fce7f3] text-[#be185d] border-[#fbcfe8]',
+      '기타': 'bg-[#f1f5f9] text-[#475569] border-[#cbd5e1]'
+    };
+
+    function getTodayStr() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function loadSchedules() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        schedules = raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        schedules = {};
+      }
+    }
+
+    function persistSchedules() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(schedules));
+    }
+
+    function initSelectors() {
+      const yearSel = document.getElementById('select-year');
+      const monthSel = document.getElementById('select-month');
+      const currentY = new Date().getFullYear();
+
+      yearSel.innerHTML = '';
+      for (let y = currentY - 3; y <= currentY + 4; y++) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        yearSel.appendChild(opt);
+      }
+
+      monthSel.innerHTML = '';
+      for (let m = 1; m <= 12; m++) {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = String(m).padStart(2, '0');
+        monthSel.appendChild(opt);
+      }
+
+      yearSel.value = viewYear;
+      monthSel.value = viewMonth;
+      document.getElementById('stat-today').innerText = getTodayStr();
+    }
+
+    function onYearMonthChange() {
+      viewYear = parseInt(document.getElementById('select-year').value, 10);
+      viewMonth = parseInt(document.getElementById('select-month').value, 10);
+      renderCalendar();
+    }
+
+    function moveMonth(delta) {
+      viewMonth += delta;
+      if (viewMonth < 1) {
+        viewMonth = 12;
+        viewYear -= 1;
+      } else if (viewMonth > 12) {
+        viewMonth = 1;
+        viewYear += 1;
+      }
+      document.getElementById('select-year').value = viewYear;
+      document.getElementById('select-month').value = viewMonth;
+      renderCalendar();
+    }
+
+    function goToday() {
+      const now = new Date();
+      viewYear = now.getFullYear();
+      viewMonth = now.getMonth() + 1;
+      document.getElementById('select-year').value = viewYear;
+      document.getElementById('select-month').value = viewMonth;
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const grid = document.getElementById('calendar-grid');
+      const firstDay = new Date(viewYear, viewMonth - 1, 1).getDay(); // 0=Sun
+      const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
+      const todayStr = getTodayStr();
+
+      let html = '';
+
+      // Leading empty cells
+      for (let i = 0; i < firstDay; i++) {
+        html += `<div class="cal-cell bg-[#f8fafc]/60 p-2"></div>`;
+      }
+
+      // Actual days
+      for (let day = 1; day <= daysInMonth; day++) {
+        const mm = String(viewMonth).padStart(2, '0');
+        const dd = String(day).padStart(2, '0');
+        const dateStr = `${viewYear}-${mm}-${dd}`;
+        const dayOfWeek = new Date(viewYear, viewMonth - 1, day).getDay();
+        const isToday = dateStr === todayStr;
+
+        const dayNumColor = dayOfWeek === 0
+          ? 'text-[#dc2626]'
+          : dayOfWeek === 6
+            ? 'text-[#2563eb]'
+            : 'text-[#131b2e]';
+
+        const dayItems = (schedules[dateStr] || []).slice().sort((a, b) => a.time.localeCompare(b.time));
+        const itemsHtml = dayItems.slice(0, 3).map(item => {
+          const badgeCls = TYPE_BADGE_MAP[item.type] || TYPE_BADGE_MAP['기타'];
+          return `
+            <div class="px-1.5 py-0.5 rounded border text-[10px] leading-tight truncate ${badgeCls}" title="[${item.time}] ${item.type} - ${escapeHtml(item.memo)}">
+              <span class="font-bold num-font">${item.time}</span> <span class="font-semibold">${escapeHtml(item.type)}</span>
+            </div>
+          `;
+        }).join('');
+
+        const moreHtml = dayItems.length > 3
+          ? `<div class="text-[10px] font-bold text-[#64748b] pl-1">+${dayItems.length - 3}건 더보기</div>`
+          : '';
+
+        html += `
+          <div onclick="openDateModal('${dateStr}')"
+            class="cal-cell ${isToday ? 'today' : 'bg-white'} p-2 cursor-pointer flex flex-col justify-between group">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-extrabold num-font ${dayNumColor}">${day}</span>
+              <span class="opacity-0 group-hover:opacity-100 text-[10px] font-bold text-[#1e3a8a] bg-[#eff6ff] px-1.5 rounded transition">+</span>
+            </div>
+            <div class="space-y-1 flex-1">
+              ${itemsHtml}
+              ${moreHtml}
+            </div>
+          </div>
+        `;
+      }
+
+      // Trailing empty cells to complete the last week row
+      const totalCells = firstDay + daysInMonth;
+      const remainder = totalCells % 7;
+      if (remainder !== 0) {
+        for (let i = 0; i < 7 - remainder; i++) {
+          html += `<div class="cal-cell bg-[#f8fafc]/60 p-2"></div>`;
+        }
+      }
+
+      grid.innerHTML = html;
+      renderMonthlySummary();
+    }
+
+    function renderMonthlySummary() {
+      const prefix = `${viewYear}-${String(viewMonth).padStart(2, '0')}-`;
+      const monthEntries = [];
+      let daysWithEvents = 0;
+      const typeCounts = {};
+
+      Object.keys(schedules).sort().forEach(dateStr => {
+        if (dateStr.startsWith(prefix) && schedules[dateStr].length > 0) {
+          daysWithEvents++;
+          schedules[dateStr].slice().sort((a, b) => a.time.localeCompare(b.time)).forEach(item => {
+            monthEntries.push({ dateStr, ...item });
+            typeCounts[item.type] = (typeCounts[item.type] || 0) + 1;
+          });
+        }
+      });
+
+      document.getElementById('stat-total').innerText = `${monthEntries.length}건`;
+      document.getElementById('stat-days').innerText = `${daysWithEvents}일`;
+
+      let topType = '-';
+      let maxCnt = 0;
+      Object.entries(typeCounts).forEach(([t, c]) => {
+        if (c > maxCnt) { maxCnt = c; topType = `${t} (${c}건)`; }
+      });
+      document.getElementById('stat-top-type').innerText = topType;
+      document.getElementById('monthly-list-title').innerText = `${viewYear}년 ${viewMonth}월 업무일정 목록`;
+
+      const listBody = document.getElementById('monthly-list-body');
+      if (monthEntries.length === 0) {
+        listBody.innerHTML = `
+          <div class="text-center py-8 text-xs text-[#64748b] bg-[#f8fafc] rounded-lg border border-dashed border-[#cbd5e1]">
+            ${viewYear}년 ${viewMonth}월에 등록된 업무일정이 없습니다. 위 달력에서 날짜를 클릭해 일정을 기록해보세요.
+          </div>
+        `;
+        return;
+      }
+
+      listBody.innerHTML = monthEntries.map(entry => {
+        const badgeCls = TYPE_BADGE_MAP[entry.type] || TYPE_BADGE_MAP['기타'];
+        return `
+          <div onclick="openDateModal('${entry.dateStr}')"
+            class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border border-[#e2e8f0] hover:border-[#1e3a8a] hover:bg-[#faf8ff] cursor-pointer transition">
+            <div class="flex items-center gap-3">
+              <span class="text-xs font-extrabold text-[#00236f] num-font shrink-0">${entry.dateStr}</span>
+              <span class="text-xs font-bold text-[#475569] num-font shrink-0">${entry.time}</span>
+              <span class="px-2 py-0.5 rounded border text-[10px] font-bold shrink-0 ${badgeCls}">${escapeHtml(entry.type)}</span>
+              <span class="text-xs text-[#131b2e] break-all">${escapeHtml(entry.memo)}</span>
+            </div>
+            <span class="text-[11px] font-bold text-[#1e3a8a] shrink-0">상세/수정 →</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openDateModal(dateStr) {
+      selectedDateStr = dateStr;
+      const d = new Date(dateStr + 'T00:00:00');
+      const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+      const dayLabel = weekdays[d.getDay()];
+
+      document.getElementById('modal-date-title').innerText = `${dateStr} (${dayLabel})`;
+      resetForm();
+      renderModalDayList();
+      document.getElementById('schedule-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('schedule-modal').classList.add('hidden');
+    }
+
+    function renderModalDayList() {
+      const items = (schedules[selectedDateStr] || []).slice().sort((a, b) => a.time.localeCompare(b.time));
+      document.getElementById('modal-day-count').innerText = `${items.length}건`;
+      const container = document.getElementById('modal-day-list');
+
+      if (items.length === 0) {
+        container.innerHTML = `<div class="text-xs text-[#64748b] py-3 px-3 bg-[#f8fafc] rounded-md border border-[#e2e8f0]">아직 등록된 일정이 없습니다. 아래 양식에서 새 일정을 추가하세요.</div>`;
+        return;
+      }
+
+      container.innerHTML = items.map(item => {
+        const badgeCls = TYPE_BADGE_MAP[item.type] || TYPE_BADGE_MAP['기타'];
+        return `
+          <div class="p-3 rounded-lg border border-[#cbd5e1] bg-[#faf8ff] flex items-start justify-between gap-3">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded border text-[10px] font-bold ${badgeCls}">${escapeHtml(item.type)}</span>
+                <span class="text-xs font-extrabold text-[#00236f] num-font">${item.time}</span>
+              </div>
+              <p class="text-xs text-[#131b2e] whitespace-pre-wrap">${escapeHtml(item.memo)}</p>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button type="button" onclick="editSchedule('${item.id}')" class="px-2 py-1 rounded bg-white hover:bg-[#eff6ff] border border-[#cbd5e1] text-[10px] font-bold text-[#1e3a8a] cursor-pointer">수정</button>
+              <button type="button" onclick="deleteSchedule('${item.id}')" class="px-2 py-1 rounded bg-white hover:bg-[#fef2f2] border border-[#fecaca] text-[10px] font-bold text-[#dc2626] cursor-pointer">삭제</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function saveSchedule() {
+      const editId = document.getElementById('edit-schedule-id').value;
+      const type = document.getElementById('input-type').value;
+      const time = document.getElementById('input-time').value;
+      const memo = document.getElementById('input-memo').value.trim();
+
+      if (!memo) return;
+
+      if (!schedules[selectedDateStr]) {
+        schedules[selectedDateStr] = [];
+      }
+
+      if (editId) {
+        const idx = schedules[selectedDateStr].findIndex(s => s.id === editId);
+        if (idx !== -1) {
+          schedules[selectedDateStr][idx] = { id: editId, type, time, memo };
+        }
+      } else {
+        schedules[selectedDateStr].push({
+          id: 'sch_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          type,
+          time,
+          memo
+        });
+      }
+
+      persistSchedules();
+      resetForm();
+      renderModalDayList();
+      renderCalendar();
+    }
+
+    function editSchedule(id) {
+      const item = (schedules[selectedDateStr] || []).find(s => s.id === id);
+      if (!item) return;
+      document.getElementById('edit-schedule-id').value = item.id;
+      document.getElementById('input-type').value = item.type;
+      document.getElementById('input-time').value = item.time;
+      document.getElementById('input-memo').value = item.memo;
+      document.getElementById('form-mode-title').innerText = '✏️ 기존 일정 수정';
+      document.getElementById('btn-save-schedule').innerText = '수정 저장';
+      document.getElementById('btn-cancel-edit').classList.remove('hidden');
+    }
+
+    function deleteSchedule(id) {
+      if (!confirm('이 업무일정을 삭제하시겠습니까?')) return;
+      schedules[selectedDateStr] = (schedules[selectedDateStr] || []).filter(s => s.id !== id);
+      if (schedules[selectedDateStr].length === 0) {
+        delete schedules[selectedDateStr];
+      }
+      persistSchedules();
+      resetForm();
+      renderModalDayList();
+      renderCalendar();
+    }
+
+    function resetForm() {
+      document.getElementById('edit-schedule-id').value = '';
+      document.getElementById('input-type').value = '정산/대사';
+      document.getElementById('input-time').value = '09:00';
+      document.getElementById('input-memo').value = '';
+      document.getElementById('form-mode-title').innerText = '+ 새 업무일정 추가';
+      document.getElementById('btn-save-schedule').innerText = '일정 저장';
+      document.getElementById('btn-cancel-edit').classList.add('hidden');
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSchedules();
+      initSelectors();
+      renderCalendar();
+    });
+  </script>
+</body>
+</html>
