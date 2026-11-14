@@ -568,7 +568,7 @@
       }
 
       // Version Cache Invalidation
-      const APP_BUILD_ID = 'v2.9.5';
+      const APP_BUILD_ID = 'v2.9.6';
       const storedBuild = localStorage.getItem('clp_build_id');
       if (storedBuild !== APP_BUILD_ID) {
         localStorage.removeItem('clp_menu_groups_v3');
@@ -602,7 +602,7 @@
         console.warn('portal-spec.json load fallback:', e);
       }
 
-      // 4. Load Blog Posts
+      // 4. Load Blog Posts & Sync with Supabase
       const savedPosts = localStorage.getItem('clp_blog_posts_v3');
       if (savedPosts) {
         try {
@@ -615,25 +615,7 @@
         localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
       }
 
-      if (supabaseClient) {
-        try {
-          const { data, error } = await supabaseClient.from('blog_posts').select('*').order('created_at', { ascending: false });
-          if (!error && data && data.length > 0) {
-            blogPosts = data.map(p => ({
-              id: p.id,
-              title: p.title,
-              category: p.category || '공지',
-              author: p.author_name || '관리자',
-              date: (p.created_at || '').substring(0, 10),
-              summary: p.summary || p.title,
-              content: p.content || '',
-              views: p.view_count || 1,
-              tags: p.tags || ['업무공유']
-            }));
-            localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
-          }
-        } catch (e) {}
-      }
+      await syncBlogPostsFromSupabase(true);
 
       // 5. Restore Session
       const savedSession = localStorage.getItem('clp_session_user_v3');
@@ -1728,13 +1710,84 @@ create policy "Allow all portal_users" on public.portal_users for all using (tru
     }
 
     // -------------------------------------------------------------------------
-    // 10. BLOG MODULE FUNCTIONS
+    // 10. BLOG MODULE FUNCTIONS (SUPABASE CLOUD SYNC)
     // -------------------------------------------------------------------------
+    async function syncBlogPostsFromSupabase(autoSeed = false) {
+      if (!supabaseClient) return false;
+      try {
+        const { data, error } = await supabaseClient
+          .from('blog_posts')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!error && Array.isArray(data)) {
+          if (data.length === 0 && autoSeed && DEFAULT_BLOG_POSTS.length > 0) {
+            const seedRows = DEFAULT_BLOG_POSTS.map(p => ({
+              title: p.title,
+              slug: p.id,
+              category: p.category || '공지',
+              author_name: p.author || '관리자',
+              summary: p.summary || p.title,
+              content: p.content || '',
+              tags: p.tags || ['업무공유'],
+              view_count: p.views || 1,
+              is_published: true
+            }));
+            await supabaseClient.from('blog_posts').upsert(seedRows, { onConflict: 'slug' });
+            const retry = await supabaseClient
+              .from('blog_posts')
+              .select('*')
+              .order('created_at', { ascending: false });
+            if (!retry.error && Array.isArray(retry.data) && retry.data.length > 0) {
+              blogPosts = retry.data.map(mapDbPost);
+              localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
+              return true;
+            }
+          } else if (data.length > 0) {
+            blogPosts = data.map(mapDbPost);
+            localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
+            return true;
+          }
+        }
+      } catch (e) {
+        console.warn('Supabase blog sync warning:', e);
+      }
+      return false;
+    }
+
+    function mapDbPost(p) {
+      return {
+        id: p.id,
+        slug: p.slug || p.id,
+        title: p.title,
+        category: p.category || '공지',
+        author: p.author_name || '관리자',
+        date: (p.created_at || '').substring(0, 10),
+        summary: p.summary || p.title,
+        content: p.content || '',
+        views: p.view_count || 1,
+        tags: p.tags || ['업무공유']
+      };
+    }
+
+    async function refreshBlogFromCloud() {
+      const ok = await syncBlogPostsFromSupabase(false);
+      renderViewport(activeViewId);
+      if (ok) {
+        alert('Supabase 클라우드 블로그와 최신 동기화가 완료되었습니다.');
+      }
+    }
+
     function renderBlogHub(container, actionsSlot) {
       actionsSlot.innerHTML = `
-        <button onclick="openBlogWriteModal();" class="px-3.5 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
-          ✍️ 새 글 작성하기
-        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="refreshBlogFromCloud();" class="px-3 py-1.5 bg-white hover:bg-[#f1f5f9] text-[#00236f] border border-[#cbd5e1] text-xs font-bold rounded shadow-sm cursor-pointer">
+            🔄 DB 동기화
+          </button>
+          <button onclick="openBlogWriteModal();" class="px-3.5 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
+            ✍️ 새 글 작성하기
+          </button>
+        </div>
       `;
 
       const categories = ['전체', '공지', '업무가이드', '정산리포트', '시스템개선'];
@@ -1802,8 +1855,10 @@ create policy "Allow all portal_users" on public.portal_users for all using (tru
       const tags = document.getElementById('bw-tags').value.split(',').map(t => t.trim()).filter(Boolean);
       const content = document.getElementById('bw-content').value.trim();
 
-      const newPost = {
-        id: 'post-' + Date.now(),
+      const slugId = 'post-' + Date.now();
+      let newPost = {
+        id: slugId,
+        slug: slugId,
         title,
         category,
         author: `${currentUser.name}`,
@@ -1811,21 +1866,28 @@ create policy "Allow all portal_users" on public.portal_users for all using (tru
         summary,
         content,
         views: 1,
-        tags
+        tags: tags.length > 0 ? tags : ['업무공유']
       };
 
       if (supabaseClient) {
         try {
-          await supabaseClient.from('blog_posts').insert([{
+          const { data, error } = await supabaseClient.from('blog_posts').insert([{
             title,
-            slug: newPost.id,
+            slug: slugId,
             category,
             author_name: currentUser.name,
             summary,
             content,
-            tags
-          }]);
-        } catch (e) {}
+            tags: newPost.tags,
+            view_count: 1,
+            is_published: true
+          }]).select().single();
+          if (!error && data) {
+            newPost = mapDbPost(data);
+          }
+        } catch (e) {
+          console.warn('Supabase blog insert warning:', e);
+        }
       }
 
       blogPosts.unshift(newPost);
@@ -1834,11 +1896,17 @@ create policy "Allow all portal_users" on public.portal_users for all using (tru
       renderViewport(activeViewId);
     }
 
-    function openBlogDetailModal(postId) {
+    async function openBlogDetailModal(postId) {
       const post = blogPosts.find(p => p.id === postId);
       if (!post) return;
       post.views += 1;
       localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('blog_posts').update({ view_count: post.views }).eq('id', post.id);
+        } catch (e) {}
+      }
 
       document.getElementById('bd-category').innerText = post.category;
       document.getElementById('bd-date').innerText = post.date;
@@ -1848,8 +1916,13 @@ create policy "Allow all portal_users" on public.portal_users for all using (tru
       document.getElementById('bd-content').innerText = post.content;
 
       const delBtn = document.getElementById('bd-delete-btn');
-      delBtn.onclick = () => {
+      delBtn.onclick = async () => {
         if (confirm('이 게시글을 삭제하시겠습니까?')) {
+          if (supabaseClient) {
+            try {
+              await supabaseClient.from('blog_posts').delete().eq('id', postId);
+            } catch (e) {}
+          }
           blogPosts = blogPosts.filter(p => p.id !== postId);
           localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
           closeBlogDetailModal();
