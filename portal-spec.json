@@ -1,6 +1,6 @@
 {
   "$schema": "./schema/portal-spec.schema.json",
-  "version": "2.7.3",
+  "version": "2.8.0",
   "systemTitle": "Clinical Ledger Precision",
   "systemSubtitle": "병원부 미결 원장 대사 및 업무 통합 포털",
   "themes": [
@@ -36,33 +36,6 @@
           "badgeColor": "amber",
           "role": "all",
           "description": "약정 할인율 및 사후 정산 차액 항목별 소명 추적 관리"
-        }
-      ]
-    },
-    {
-      "id": "board-theme",
-      "themeId": "board-theme",
-      "title": "📋 사내 업무 게시판",
-      "themeTitle": "📋 사내 업무 게시판",
-      "description": "실무 Q&A, 업무 개선 제안, 자유 소통 및 댓글 토론 게시판",
-      "themeDesc": "실무 Q&A, 업무 개선 제안, 자유 소통 및 댓글 토론 게시판",
-      "adminOnly": false,
-      "dashboard": {
-        "id": "board-main-dash",
-        "title": "사내 업무 게시판 (Q&A/제안)",
-        "type": "iframe",
-        "url": "board.html"
-      },
-      "subMenus": [
-        {
-          "id": "board-all",
-          "title": "전체 게시글 / Q&A 목록",
-          "type": "iframe",
-          "url": "board.html",
-          "badge": "신규오픈",
-          "badgeColor": "green",
-          "role": "all",
-          "description": "실시간 댓글 및 카테고리별 업무 토론"
         }
       ]
     },

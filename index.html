@@ -62,15 +62,15 @@
 
       <!-- Login Card -->
       <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-lg p-6 sm:p-8">
-        <form onsubmit="event.preventDefault(); handleFormLogin();" class="space-y-4">
+        <form onsubmit="event.preventDefault(); handleFormLogin();" class="space-y-4" autocomplete="off">
           <div>
             <label class="block text-xs font-bold text-[#131b2e] mb-1.5">업무용 이메일 (ID)</label>
-            <input type="email" id="input-email" placeholder="name@hospital.com" required
+            <input type="email" id="input-email" value="" placeholder="name@hospital.com" required autocomplete="off"
               class="w-full px-3.5 py-2.5 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white">
           </div>
           <div>
             <label class="block text-xs font-bold text-[#131b2e] mb-1.5">비밀번호 (Password)</label>
-            <input type="password" id="input-password" placeholder="••••••••" required
+            <input type="password" id="input-password" value="" placeholder="••••••••" required autocomplete="new-password"
               class="w-full px-3.5 py-2.5 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white">
           </div>
           <div id="login-error" class="hidden p-2.5 rounded bg-[#fef2f2] border border-[#fecaca] text-[#dc2626] text-xs font-semibold"></div>
@@ -78,32 +78,6 @@
             포털 시스템 로그인 →
           </button>
         </form>
-
-        <!-- Account Access Guide -->
-        <div class="mt-6 pt-5 border-t border-[#e2e8f0]">
-          <div class="text-[11px] font-bold text-[#444651] mb-2 flex items-center justify-between">
-            <span>🔑 기본 발급 계정 안내 (클릭 시 자동 입력)</span>
-          </div>
-          <div class="grid grid-cols-1 gap-2">
-            <button type="button" onclick="fillLogin('chuan@hospital.com', 'password123');"
-              class="w-full text-left p-2.5 rounded-md border border-[#cbd5e1] bg-[#faf8ff] hover:bg-[#eaedff] transition flex items-center justify-between">
-              <div>
-                <div class="font-bold text-[#00236f] text-xs">이창환 (병원사업부 / 정산총괄)</div>
-                <div class="text-[11px] text-[#757682] num-font">ID: chuan@hospital.com | PW: password123</div>
-              </div>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0]">업무계정</span>
-            </button>
-
-            <button type="button" onclick="fillLogin('admin@hospital.com', 'admin1234');"
-              class="w-full text-left p-2.5 rounded-md border border-[#cbd5e1] bg-[#faf8ff] hover:bg-[#eaedff] transition flex items-center justify-between">
-              <div>
-                <div class="font-bold text-[#00236f] text-xs">내부관리자 (계정/비밀번호/메뉴 통합 관리)</div>
-                <div class="text-[11px] text-[#757682] num-font">ID: admin@hospital.com | PW: admin1234</div>
-              </div>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]">내부관리</span>
-            </button>
-          </div>
-        </div>
       </div>
 
       <div class="text-center mt-5 text-xs text-[#757682]">
@@ -389,29 +363,6 @@
         ]
       },
       {
-        themeId: 'board-theme',
-        themeTitle: '📋 사내 업무 게시판',
-        themeDesc: '실무 Q&A, 업무 개선 제안, 자유 소통 및 댓글 토론 게시판',
-        adminOnly: false,
-        dashboard: {
-          id: 'board-main-dash',
-          title: '사내 업무 게시판 (Q&A/제안)',
-          type: 'iframe',
-          url: 'board.html'
-        },
-        subMenus: [
-          {
-            id: 'board-all',
-            title: '전체 게시글 / Q&A 목록',
-            type: 'iframe',
-            url: 'board.html',
-            badge: '신규오픈',
-            badgeColor: 'green',
-            role: 'all'
-          }
-        ]
-      },
-      {
         themeId: 'tools',
         themeTitle: '📊 금융/자산 도구',
         themeDesc: '단리/복리 이자율 시뮬레이션 및 만기 수령액 분석',
@@ -435,7 +386,7 @@
       },
       {
         themeId: 'knowledge',
-        themeTitle: '📖 소통/블로그 허브',
+        themeTitle: '📖 블로그 & 명함',
         themeDesc: '사내 공지사항, 정산 매뉴얼 블로그 및 담당자 디지털 명함',
         adminOnly: false,
         dashboard: {
@@ -444,15 +395,6 @@
           type: 'builtin-blog'
         },
         subMenus: [
-          {
-            id: 'community-board',
-            title: '사내 업무 게시판 (Q&A/제안)',
-            type: 'iframe',
-            url: 'board.html',
-            badge: '게시판',
-            badgeColor: 'blue',
-            role: 'all'
-          },
           {
             id: 'business-card',
             title: '이창환 디지털 명함 (Profile)',
@@ -602,7 +544,7 @@
       }
 
       // Version Cache Invalidation
-      const APP_BUILD_ID = 'v2.7.3';
+      const APP_BUILD_ID = 'v2.8.0';
       const storedBuild = localStorage.getItem('clp_build_id');
       if (storedBuild !== APP_BUILD_ID) {
         localStorage.removeItem('clp_menu_groups_v3');
@@ -685,13 +627,6 @@
     // -------------------------------------------------------------------------
     // 3. LOGIN & AUTHENTICATION (이메일 / 비밀번호 검증)
     // -------------------------------------------------------------------------
-    function fillLogin(email, pw) {
-      document.getElementById('input-email').value = email;
-      document.getElementById('input-password').value = pw;
-      document.getElementById('login-error').classList.add('hidden');
-      handleFormLogin();
-    }
-
     async function handleFormLogin() {
       const email = document.getElementById('input-email').value.trim().toLowerCase();
       const pw = document.getElementById('input-password').value;
@@ -773,6 +708,12 @@
     function showLoginScreen() {
       document.getElementById('screen-portal').classList.add('hidden');
       document.getElementById('screen-login').classList.remove('hidden');
+      const emailInput = document.getElementById('input-email');
+      const pwInput = document.getElementById('input-password');
+      if (emailInput) emailInput.value = '';
+      if (pwInput) pwInput.value = '';
+      const errBox = document.getElementById('login-error');
+      if (errBox) errBox.classList.add('hidden');
     }
 
     function enterPortal() {
@@ -978,11 +919,7 @@
         `;
         body.innerHTML = `
           <div class="flex-1 bg-white rounded-xl border border-[#cbd5e1] shadow-sm overflow-hidden flex flex-col min-h-[760px] fade-in">
-            <div class="px-4 py-2 bg-[#f2f3ff] border-b border-[#cbd5e1] flex items-center justify-between text-xs">
-              <span class="font-bold text-[#00236f]">🔗 통합 실행 모듈: <code>${currentItem.url}</code></span>
-              <span class="text-[11px] text-[#059669] font-semibold">✓ 원본 엔진 및 상대경로 무결성 100% 유지</span>
-            </div>
-            <iframe src="${currentItem.url}" class="w-full flex-1 border-0 min-h-[720px]"></iframe>
+            <iframe src="${currentItem.url}" class="w-full flex-1 border-0 min-h-[760px]"></iframe>
           </div>
         `;
         return;
