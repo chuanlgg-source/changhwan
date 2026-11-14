@@ -389,6 +389,29 @@
         ]
       },
       {
+        themeId: 'board-theme',
+        themeTitle: '📋 사내 업무 게시판',
+        themeDesc: '실무 Q&A, 업무 개선 제안, 자유 소통 및 댓글 토론 게시판',
+        adminOnly: false,
+        dashboard: {
+          id: 'board-main-dash',
+          title: '사내 업무 게시판 (Q&A/제안)',
+          type: 'iframe',
+          url: 'board.html'
+        },
+        subMenus: [
+          {
+            id: 'board-all',
+            title: '전체 게시글 / Q&A 목록',
+            type: 'iframe',
+            url: 'board.html',
+            badge: '신규오픈',
+            badgeColor: 'green',
+            role: 'all'
+          }
+        ]
+      },
+      {
         themeId: 'tools',
         themeTitle: '📊 금융/자산 도구',
         themeDesc: '단리/복리 이자율 시뮬레이션 및 만기 수령액 분석',
@@ -578,9 +601,18 @@
         } catch (e) {}
       }
 
+      // Version Cache Invalidation
+      const APP_BUILD_ID = 'v2.7.2';
+      const storedBuild = localStorage.getItem('clp_build_id');
+      if (storedBuild !== APP_BUILD_ID) {
+        localStorage.removeItem('clp_menu_groups_v3');
+        localStorage.setItem('clp_build_id', APP_BUILD_ID);
+      }
+
       // 3. Load Menu Groups from portal-spec.json (Single Source of Truth) or LocalStorage
+      menuGroups = JSON.parse(JSON.stringify(DEFAULT_MENU_GROUPS));
       try {
-        const specResp = await fetch('portal-spec.json?t=' + Date.now());
+        const specResp = await fetch('portal-spec.json?v=' + Date.now());
         if (specResp.ok) {
           const specData = await specResp.json();
           if (specData && specData.themes && Array.isArray(specData.themes)) {
@@ -590,20 +622,6 @@
         }
       } catch (e) {
         console.warn('portal-spec.json load fallback:', e);
-      }
-
-      if (!menuGroups || menuGroups.length === 0) {
-        const savedMenus = localStorage.getItem('clp_menu_groups_v3');
-        if (savedMenus) {
-          try {
-            menuGroups = JSON.parse(savedMenus);
-          } catch {
-            menuGroups = JSON.parse(JSON.stringify(DEFAULT_MENU_GROUPS));
-          }
-        } else {
-          menuGroups = JSON.parse(JSON.stringify(DEFAULT_MENU_GROUPS));
-          localStorage.setItem('clp_menu_groups_v3', JSON.stringify(menuGroups));
-        }
       }
 
       // 4. Load Blog Posts
