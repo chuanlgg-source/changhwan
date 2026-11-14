@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+  <!-- Pyodide WebAssembly for Serverless Browser Execution -->
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
   <style>
     :root {
       --canvas-bg: #F8FAFC;
@@ -94,6 +96,38 @@
       padding: 6px 10px;
       border-radius: var(--radius-sm);
       letter-spacing: 0.04em;
+    }
+
+    .mode-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      letter-spacing: normal;
+      transition: all 0.2s ease;
+    }
+    .mode-detecting {
+      background: #1E293B;
+      color: #94A3B8;
+      border: 1px solid #475569;
+    }
+    .mode-server {
+      background: #064E3B;
+      color: #A7F3D0;
+      border: 1px solid #059669;
+    }
+    .mode-browser {
+      background: #1E3A8A;
+      color: #BFDBFE;
+      border: 1px solid #3B82F6;
+    }
+    .mode-loading {
+      background: #78350F;
+      color: #FDE68A;
+      border: 1px solid #D97706;
     }
 
     .brand-title h1 {
@@ -844,7 +878,10 @@
     <div class="brand-group">
       <span class="brand-badge">CLINICAL LEDGER</span>
       <div class="brand-title">
-        <h1>병원부 미결 통합 관리 및 리포트 시스템</h1>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h1>병원부 미결 통합 관리 및 리포트 시스템</h1>
+          <span id="runtimeModeBadge" class="mode-badge mode-detecting">⚡ 모드 감지 중...</span>
+        </div>
         <p>1. 기준월 이전건 업데이트 및 수정 리포트 · 2. 기준월 해당건 추가 · 3. Step 3 합계 vs 통합자료 합계 일치 검증</p>
       </div>
     </div>
@@ -1223,6 +1260,195 @@
       });
     });
 
+    // ══════════════════════════════════════════════════════════════════
+    // 하이브리드 런타임 엔진: 로컬 서버 vs 브라우저 단독(Pyodide WebAssembly)
+    // ══════════════════════════════════════════════════════════════════
+    let RUN_MODE = 'detecting'; // 'server' | 'browser' | 'loading'
+    let pyodideInstance = null;
+    let pyodideReadyPromise = null;
+
+    function setRuntimeMode(mode, label) {
+      RUN_MODE = mode;
+      const badge = document.getElementById('runtimeModeBadge');
+      if (!badge) return;
+      badge.className = `mode-badge mode-${mode}`;
+      badge.innerHTML = label;
+    }
+
+    async function initPyodideEngine() {
+      if (pyodideReadyPromise) return pyodideReadyPromise;
+      pyodideReadyPromise = (async () => {
+        setRuntimeMode('loading', '⏳ 웹 파이썬 엔진 로딩 중 (최초 1회 약 10초)...');
+        showToast('🌐 브라우저 내장 파이썬 환경(Pyodide WebAssembly)을 준비하고 있습니다...');
+        
+        // 1. Pyodide 인스턴스 초기화
+        pyodideInstance = await loadPyodide({
+          indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/"
+        });
+
+        showToast('📦 엑셀 처리 엔진 패키지(openpyxl, xlrd) 설치 중...');
+        await pyodideInstance.loadPackage(['micropip']);
+        const micropip = pyodideInstance.pyimport('micropip');
+        await micropip.install(['openpyxl', 'xlrd']);
+
+        showToast('⚙️ 병원부 미결 대사 엔진(reconcile_engine.py) 로드 중...');
+        let engineCode = '';
+        try {
+          const resp = await fetch('reconcile_engine.py');
+          if (resp.ok) {
+            engineCode = await resp.text();
+          }
+        } catch (e) {
+          console.warn('fetch reconcile_engine.py failed', e);
+        }
+
+        if (!engineCode) {
+          throw new Error('reconcile_engine.py 소스 파일을 읽어오지 못했습니다.');
+        }
+
+        pyodideInstance.FS.writeFile('/home/pyodide/reconcile_engine.py', engineCode);
+
+        // 2. 브라우저 파이썬 래퍼 스크립트 실행
+        await pyodideInstance.runPythonAsync(`
+import base64
+import json
+import os
+import sys
+from pathlib import Path
+
+sys.path.insert(0, '/home/pyodide')
+import reconcile_engine as eng
+
+PY_STATE = {
+    "original": None,
+    "original_name": "",
+    "sahu": None,
+    "sahu_name": "",
+    "jeoga": None,
+    "jeoga_name": "",
+    "yakga": None,
+    "yakga_name": "",
+    "last_analysis": None,
+    "last_excel_path": None,
+}
+
+def py_build_status():
+    orig = PY_STATE["original"]
+    sahu = PY_STATE["sahu"]
+    jeoga = PY_STATE["jeoga"]
+    yakga = PY_STATE["yakga"]
+    months = set([
+        "2026-12", "2026-11", "2026-10", "2026-09", "2026-08",
+        "2026-07", "2026-06", "2026-05", "2026-04", "2026-03",
+        "2026-02", "2026-01",
+    ])
+    for key in ("original", "sahu", "jeoga", "yakga"):
+        d = PY_STATE.get(key)
+        if d and "months" in d:
+            for m in d["months"]:
+                if m and m >= "2025-01":
+                    months.add(m)
+    return {
+        "ok": True,
+        "available_months": sorted(list(months), reverse=True),
+        "files": {
+            "original": {
+                "loaded": orig is not None,
+                "filename": PY_STATE.get("original_name", ""),
+                "counts": orig["counts"] if orig else {},
+                "total": sum(orig["counts"].values()) if orig else 0,
+                "months": orig["months"] if orig else [],
+            },
+            "sahu": {
+                "loaded": sahu is not None,
+                "filename": PY_STATE.get("sahu_name", ""),
+                "count": sahu["count"] if sahu else 0,
+                "months": sahu["months"] if sahu else [],
+            },
+            "jeoga": {
+                "loaded": jeoga is not None,
+                "filename": PY_STATE.get("jeoga_name", ""),
+                "count": jeoga["count"] if jeoga else 0,
+                "months": jeoga["months"] if jeoga else [],
+            },
+            "yakga": {
+                "loaded": yakga is not None,
+                "filename": PY_STATE.get("yakga_name", ""),
+                "count": yakga["count"] if yakga else 0,
+                "months": yakga["months"] if yakga else [],
+            },
+        }
+    }
+
+def py_upload_step(step, filename, b64_content):
+    save_path = Path("/tmp") / filename
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    save_path.write_bytes(base64.b64decode(b64_content))
+
+    if step == "original":
+        PY_STATE["original"] = eng.parse_original_sample(save_path)
+        PY_STATE["original_name"] = filename
+    elif step == "sahu":
+        PY_STATE["sahu"] = eng.parse_sahu_file(save_path)
+        PY_STATE["sahu_name"] = filename
+    elif step == "jeoga":
+        PY_STATE["jeoga"] = eng.parse_jeoga_file(save_path)
+        PY_STATE["jeoga_name"] = filename
+    elif step == "yakga":
+        PY_STATE["yakga"] = eng.parse_yakga_file(save_path)
+        PY_STATE["yakga_name"] = filename
+
+    return json.dumps(py_build_status())
+
+def py_reset_step(step="all"):
+    targets = ("original", "sahu", "jeoga", "yakga") if step == "all" else (step,)
+    for k in targets:
+        if k in PY_STATE:
+            PY_STATE[k] = None
+            PY_STATE[f"{k}_name"] = ""
+    PY_STATE["last_analysis"] = None
+    PY_STATE["last_excel_path"] = None
+    return json.dumps(py_build_status())
+
+def py_run_analysis(base_month):
+    missing = []
+    if PY_STATE.get("original") is None: missing.append("Step 2. 원본")
+    if PY_STATE.get("sahu") is None: missing.append("Step 3-1. 사후미결")
+    if PY_STATE.get("jeoga") is None: missing.append("Step 3-2. 저가미결")
+    if PY_STATE.get("yakga") is None: missing.append("Step 3-3. 약가미결")
+    if missing:
+        return json.dumps({"ok": False, "error": f"다음 스텝 파일을 먼저 업로드해 주세요: {', '.join(missing)}"})
+    res = eng.analyze_and_merge(
+        PY_STATE["original"],
+        PY_STATE["sahu"],
+        PY_STATE["jeoga"],
+        PY_STATE["yakga"],
+        base_month=base_month,
+    )
+    PY_STATE["last_analysis"] = res
+    return json.dumps({"ok": True, "result": res})
+
+def py_generate_excel(base_month):
+    if PY_STATE.get("last_analysis") is None:
+        analysis_res = py_run_analysis(base_month)
+        data = json.loads(analysis_res)
+        if not data.get("ok"):
+            return json.dumps(data)
+    analysis = PY_STATE["last_analysis"]
+    bm = analysis.get("base_month", base_month)
+    out_path = Path("/tmp") / f"미결(병원부)_통합_{bm}.xlsx"
+    eng.generate_integrated_excel(analysis, out_path)
+    PY_STATE["last_excel_path"] = str(out_path)
+    return json.dumps({"ok": True, "path": str(out_path), "filename": out_path.name})
+        `);
+
+        setRuntimeMode('browser', '🌐 브라우저 단독 실행 모드 (WebAssembly)');
+        showToast('✅ 웹 파이썬 엔진 준비 완료! 엑셀 파일을 업로드하면 브라우저 안에서 바로 분석됩니다.');
+        return pyodideInstance;
+      })();
+      return pyodideReadyPromise;
+    }
+
     function handleFileSelect(ev, step) {
       const file = ev.target.files[0];
       if (file) uploadFileObject(file, step);
@@ -1234,6 +1460,15 @@
       reader.onload = async () => {
         const base64 = reader.result.split(',')[1];
         try {
+          if (RUN_MODE === 'browser' || RUN_MODE === 'loading') {
+            await initPyodideEngine();
+            const resJsonStr = pyodideInstance.runPython(`py_upload_step(${JSON.stringify(step)}, ${JSON.stringify(file.name)}, ${JSON.stringify(base64)})`);
+            const data = JSON.parse(resJsonStr);
+            updateUploadCards(data);
+            showToast(`✅ [${file.name}] 브라우저 파싱 완료!`);
+            return;
+          }
+
           const res = await fetch('/api/upload', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1251,6 +1486,22 @@
           updateUploadCards(data);
           showToast(`✅ [${file.name}] 업로드 완료!`);
         } catch (err) {
+          // 서버 연결 실패 시 브라우저 모드로 폴백 시도
+          if (RUN_MODE === 'server' || RUN_MODE === 'detecting') {
+            console.warn('Server upload failed, falling back to browser engine...', err);
+            setRuntimeMode('browser', '🌐 브라우저 단독 모드로 전환 중...');
+            try {
+              await initPyodideEngine();
+              const resJsonStr = pyodideInstance.runPython(`py_upload_step(${JSON.stringify(step)}, ${JSON.stringify(file.name)}, ${JSON.stringify(base64)})`);
+              const data = JSON.parse(resJsonStr);
+              updateUploadCards(data);
+              showToast(`✅ [${file.name}] 브라우저 모드로 파싱 완료!`);
+              return;
+            } catch (innerErr) {
+              showToast(`업로드 실패: ${innerErr.message}`, 5000);
+              return;
+            }
+          }
           showToast(`업로드 실패: ${err.message}`, 5000);
         }
       };
@@ -1259,18 +1510,38 @@
 
     async function resetStepFiles(step = 'all') {
       try {
-        const res = await fetch('/api/reset', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ step })
-        });
-        const data = await res.json();
+        let data;
+        if (RUN_MODE === 'browser' || RUN_MODE === 'loading') {
+          await initPyodideEngine();
+          const resJsonStr = pyodideInstance.runPython(`py_reset_step(${JSON.stringify(step)})`);
+          data = JSON.parse(resJsonStr);
+        } else {
+          const res = await fetch('/api/reset', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ step })
+          });
+          data = await res.json();
+        }
+
         if (!data.ok) {
           showToast(`초기화 오류: ${data.error}`, 4000);
           return;
         }
         const targets = step === 'all' ? ['original', 'sahu', 'jeoga', 'yakga'] : [step];
         targets.forEach(k => {
+          const inp = document.getElementById(`input-${k}`);
+          if (inp) inp.value = '';
+        });
+
+        ANALYSIS = null;
+        resetKPIsAndViews();
+        updateUploadCards(data);
+        showToast(step === 'all' ? '🔄 2~3스텝 모든 업로드 파일이 초기화되었습니다.' : `🔄 해당 스텝의 업로드 파일이 초기화되었습니다.`);
+      } catch (err) {
+        showToast(`초기화 실패: ${err.message}`, 4000);
+      }
+    }
           const inp = document.getElementById(`input-${k}`);
           if (inp) inp.value = '';
         });
@@ -1416,12 +1687,20 @@
       const base_month = document.getElementById('selBaseMonth').value;
       showToast(`기준월 [${base_month}] 데이터 업데이트 · 추가 · 합계 검증 중...`);
       try {
-        const res = await fetch('/api/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ base_month })
-        });
-        const data = await res.json();
+        let data;
+        if (RUN_MODE === 'browser' || RUN_MODE === 'loading') {
+          await initPyodideEngine();
+          const resJsonStr = pyodideInstance.runPython(`py_run_analysis(${JSON.stringify(base_month)})`);
+          data = JSON.parse(resJsonStr);
+        } else {
+          const res = await fetch('/api/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ base_month })
+          });
+          data = await res.json();
+        }
+
         if (!data.ok) {
           showToast(`⚠️ ${data.error}`, 5000);
           return;
@@ -1959,6 +2238,28 @@
       const base_month = document.getElementById('selBaseMonth').value;
       showToast('업데이트된 통합 엑셀파일을 생성하고 있습니다...');
       try {
+        if (RUN_MODE === 'browser' || RUN_MODE === 'loading') {
+          await initPyodideEngine();
+          const resJsonStr = pyodideInstance.runPython(`py_generate_excel(${JSON.stringify(base_month)})`);
+          const data = JSON.parse(resJsonStr);
+          if (!data.ok) {
+            showToast(`⚠️ ${data.error}`, 5000);
+            return;
+          }
+          const fileBytes = pyodideInstance.FS.readFile(data.path);
+          const blob = new Blob([fileBytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = data.filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          showToast(`✅ 통합 엑셀파일 다운로드 완료: ${data.filename}`);
+          return;
+        }
+
         const res = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1976,15 +2277,44 @@
       }
     }
 
-    // 페이지 진입 시 현재 서버에 업로드된 상태만 조회 (혼선 유발하는 샘플 자동로드 제거)
+    // 페이지 진입 시 런타임 모드 자동 감지 (로컬 서버 vs 브라우저 단독 WebAssembly)
     window.addEventListener('DOMContentLoaded', async () => {
+      let isServerAvailable = false;
       try {
-        const res = await fetch('/api/status');
-        const data = await res.json();
-        if (data && data.ok) {
-          updateUploadCards(data);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1200);
+        const res = await fetch('/api/status', { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.ok) {
+            isServerAvailable = true;
+            setRuntimeMode('server', '🟢 로컬 서버 연동 모드 (127.0.0.1:8765)');
+            updateUploadCards(data);
+          }
         }
-      } catch (e) {}
+      } catch (e) {
+        // 서버 응답 없음
+      }
+
+      if (!isServerAvailable) {
+        setRuntimeMode('browser', '🌐 브라우저 클라우드 모드 (무설치 WebAssembly)');
+        updateUploadCards({
+          ok: true,
+          available_months: [
+            '2026-12', '2026-11', '2026-10', '2026-09', '2026-08',
+            '2026-07', '2026-06', '2026-05', '2026-04', '2026-03',
+            '2026-02', '2026-01'
+          ],
+          files: {}
+        });
+        // 백그라운드에서 Pyodide 미리 로드 시작
+        setTimeout(() => {
+          initPyodideEngine().catch(err => {
+            console.error('Pyodide background preload error:', err);
+          });
+        }, 500);
+      }
     });
   </script>
 </body>
