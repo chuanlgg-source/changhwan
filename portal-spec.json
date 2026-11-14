@@ -1,6 +1,6 @@
 {
   "$schema": "./schema/portal-spec.schema.json",
-  "version": "2.9.6",
+  "version": "2.9.7",
   "systemTitle": "Clinical Ledger Precision",
   "systemSubtitle": "병원부 미결 원장 대사 및 업무 통합 포털",
   "themes": [
@@ -45,8 +45,8 @@
       "themeId": "tools",
       "title": "📊 금융/자산",
       "themeTitle": "📊 금융/자산",
-      "description": "금일 주식시장·환율 동향, 주요 종목 지수, 5대 뉴스 및 수익 시뮬레이션",
-      "themeDesc": "금일 주식시장·환율 동향, 주요 종목 지수, 5대 뉴스 및 수익 시뮬레이션",
+      "description": "금일 주식시장·환율 동향, 주요 종목 지수 및 5대 뉴스",
+      "themeDesc": "금일 주식시장·환율 동향, 주요 종목 지수 및 5대 뉴스",
       "adminOnly": false,
       "dashboard": {
         "id": "financial-info",
@@ -54,44 +54,22 @@
         "type": "iframe",
         "url": "financial-info.html"
       },
-      "subMenus": [
-        {
-          "id": "savings-sim",
-          "title": "적금/수익 정밀 시뮬레이터",
-          "type": "iframe",
-          "url": "savings-simulator.html",
-          "badge": "계산기",
-          "badgeColor": "green",
-          "role": "all",
-          "description": "단리/복리, 과세 유형별 실수령액 및 월별 적립 이자 계산"
-        }
-      ]
+      "subMenus": []
     },
     {
       "id": "knowledge",
       "themeId": "knowledge",
       "title": "📖 블로그",
       "themeTitle": "📖 블로그",
-      "description": "사내 공지사항, 정산 매뉴얼 블로그 및 담당자 디지털 명함",
-      "themeDesc": "사내 공지사항, 정산 매뉴얼 블로그 및 담당자 디지털 명함",
+      "description": "사내 공지사항 및 업무 지식 블로그",
+      "themeDesc": "사내 공지사항 및 업무 지식 블로그",
       "adminOnly": false,
       "dashboard": {
         "id": "blog-main",
         "title": "업무 지식 블로그 & 공지",
         "type": "builtin-blog"
       },
-      "subMenus": [
-        {
-          "id": "business-card",
-          "title": "이창환 디지털 명함 (Profile)",
-          "type": "iframe",
-          "url": "business-card.html",
-          "badge": "프로필",
-          "badgeColor": "blue",
-          "role": "all",
-          "description": "담당자 프로필 카드 및 연락처 QR 코드"
-        }
-      ]
+      "subMenus": []
     },
     {
       "id": "internal-admin",
