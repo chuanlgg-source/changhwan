@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --stitch-surface: #faf8ff;
+  --stitch-surface-lowest: #ffffff;
+  --stitch-surface-low: #f2f3ff;
+  --stitch-surface-container: #eaedff;
+  --stitch-primary: #00236f;
+  --stitch-primary-container: #1e3a8a;
+  --stitch-on-primary: #ffffff;
+  --stitch-text-primary: #131b2e;
+  --stitch-text-secondary: #444651;
+  --stitch-border-hairline: #e2e8f0;
+  --stitch-border-strong: #cbd5e1;
+}
+
+body {
+  background-color: #f8fafc;
+  color: #131b2e;
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Monospace alignment for numbers in financial tables */
+.num-font {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

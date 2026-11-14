@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>일일 저축 & 자산 증식 복리 시뮬레이터</title>
+
+  <!-- Pretendard Font -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons & Chart.js -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg: #0b1326;
+      --bg-glow-1: rgba(129, 140, 248, 0.14);
+      --bg-glow-2: rgba(78, 222, 163, 0.10);
+      --card-bg: rgba(19, 27, 46, 0.88);
+      --card-elevated: rgba(23, 31, 51, 0.95);
+      --card-border: rgba(148, 163, 184, 0.14);
+      --card-hover: rgba(34, 42, 61, 0.95);
+      --primary: #6366f1;
+      --primary-light: #a5b4fc;
+      --primary-glow: rgba(99, 102, 241, 0.28);
+      --profit: #4edea3;
+      --profit-strong: #10b981;
+      --profit-glow: rgba(78, 222, 163, 0.20);
+      --accent: #38bdf8;
+      --text-main: #dae2fd;
+      --text-strong: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --input-bg: #060e20;
+      --table-head-bg: rgba(11, 19, 38, 0.65);
+      --row-hover: rgba(148, 163, 184, 0.06);
+      --grid-line: rgba(148, 163, 184, 0.08);
+      --tick-color: #94a3b8;
+      --legend-color: #cbd5e1;
+      --radius: 20px;
+    }
+
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --bg-glow-1: rgba(99, 102, 241, 0.08);
+      --bg-glow-2: rgba(16, 185, 129, 0.06);
+      --card-bg: rgba(255, 255, 255, 0.94);
+      --card-elevated: #ffffff;
+      --card-border: rgba(203, 213, 225, 0.85);
+      --card-hover: #ffffff;
+      --primary: #4f46e5;
+      --primary-light: #4f46e5;
+      --primary-glow: rgba(79, 70, 229, 0.14);
+      --profit: #059669;
+      --profit-strong: #059669;
+      --profit-glow: rgba(5, 150, 105, 0.14);
+      --accent: #0284c7;
+      --text-main: #0f172a;
+      --text-strong: #0f172a;
+      --text-muted: #475569;
+      --text-dim: #64748b;
+      --input-bg: #f1f5f9;
+      --table-head-bg: #f8fafc;
+      --row-hover: rgba(79, 70, 229, 0.04);
+      --grid-line: rgba(15, 23, 42, 0.07);
+      --tick-color: #475569;
+      --legend-color: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', 'Plus Jakarta Sans', -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(circle at 12% 8%, var(--bg-glow-1) 0px, transparent 48%),
+        radial-gradient(circle at 88% 85%, var(--bg-glow-2) 0px, transparent 48%);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 28px 18px 80px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Header Nav */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--card-border);
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--profit-strong));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      box-shadow: 0 6px 20px var(--primary-glow);
+      flex-shrink: 0;
+    }
+
+    .brand h1 {
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text-strong);
+    }
+
+    .brand p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-icon {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 9px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(10px);
+    }
+    .btn-icon:hover {
+      color: var(--text-strong);
+      border-color: var(--primary-light);
+      transform: translateY(-1px);
+    }
+
+    /* Main Grid Layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 370px minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (min-width: 961px) {
+      .input-panel {
+        position: sticky;
+        top: 24px;
+      }
+    }
+
+    @media (max-width: 960px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cards */
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: 0 14px 36px rgba(2, 6, 23, 0.16);
+    }
+
+    /* Input Panel */
+    .input-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-title {
+      font-size: 16.5px;
+      font-weight: 700;
+      color: var(--text-strong);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-reset {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 5px 10px;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+    .btn-reset:hover {
+      color: var(--text-strong);
+      border-color: var(--primary-light);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .value-highlight {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--primary-light);
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    /* Flex input wrapper prevents unit text overlap */
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      background: var(--input-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 0 12px 0 14px;
+      gap: 8px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-wrapper:focus-within {
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .text-input {
+      width: 100%;
+      min-width: 0;
+      background: transparent;
+      border: none;
+      padding: 11px 0;
+      color: var(--text-strong);
+      font-size: 16px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+      outline: none;
+    }
+
+    .input-unit {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 4px 8px;
+      border-radius: 7px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* Range slider custom */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+      margin-top: 4px;
+    }
+    input[type=range]:focus {
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 6px;
+      cursor: pointer;
+      background: var(--card-border);
+      border-radius: 10px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: var(--profit-strong);
+      cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -7px;
+      box-shadow: 0 0 12px var(--profit-glow);
+      border: 2px solid #fff;
+      transition: transform 0.15s ease;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.16);
+    }
+
+    /* Quick Preset Chips */
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .chip {
+      background: var(--input-bg);
+      border: 1px solid var(--card-border);
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .chip:hover {
+      color: var(--text-strong);
+      border-color: var(--primary-light);
+    }
+    .chip.active {
+      background: rgba(99, 102, 241, 0.16);
+      color: var(--primary-light);
+      border-color: var(--primary-light);
+    }
+    [data-theme="light"] .chip.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* Converted Equivalent box */
+    .converted-box {
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.22);
+      padding: 11px 14px;
+      border-radius: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      text-align: center;
+    }
+    .converted-item p {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+    .converted-item span {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--primary-light);
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Advanced Options Accordion */
+    .options-toggle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0 4px;
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-top: 1px solid var(--card-border);
+    }
+    .options-toggle:hover {
+      color: var(--text-strong);
+    }
+
+    .options-content {
+      display: none;
+      flex-direction: column;
+      gap: 13px;
+      padding-top: 10px;
+    }
+    .options-content.open {
+      display: flex;
+    }
+
+    .switch-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+    .switch-label {
+      color: var(--text-muted);
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider-toggle {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--input-bg);
+      border: 1px solid var(--card-border);
+      transition: .3s;
+      border-radius: 24px;
+    }
+    .slider-toggle:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: var(--text-dim);
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider-toggle {
+      background-color: var(--profit-strong);
+      border-color: var(--profit-strong);
+    }
+    input:checked + .slider-toggle:before {
+      transform: translateX(20px);
+      background-color: #fff;
+    }
+
+    /* Milestone Cards (3, 5, 10 Years) */
+    .milestone-container {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    @media (max-width: 760px) {
+      .milestone-container {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+    }
+
+    .milestone-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .milestone-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--primary-light);
+    }
+    .milestone-card.featured {
+      background: linear-gradient(180deg, rgba(78, 222, 163, 0.10), var(--card-bg) 65%);
+      border-color: rgba(78, 222, 163, 0.45);
+      box-shadow: 0 12px 28px var(--profit-glow);
+    }
+
+    .milestone-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .milestone-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      font-weight: 700;
+      background: var(--input-bg);
+      border: 1px solid var(--card-border);
+      color: var(--primary-light);
+      white-space: nowrap;
+    }
+
+    .milestone-card.featured .milestone-badge {
+      background: var(--profit-strong);
+      border-color: var(--profit-strong);
+      color: #fff;
+    }
+
+    .milestone-roi-pill {
+      font-size: 11.5px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+      color: var(--profit);
+      background: rgba(78, 222, 163, 0.12);
+      padding: 3px 8px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+
+    .milestone-korean {
+      font-size: 25px;
+      font-weight: 800;
+      color: var(--text-strong);
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+      margin-top: 10px;
+    }
+
+    .milestone-amount {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+      margin-top: 4px;
+    }
+
+    .milestone-metrics {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-top: 10px;
+      border-top: 1px solid var(--card-border);
+    }
+
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+
+    .breakdown-right {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .breakdown-val {
+      font-weight: 600;
+      color: var(--text-strong);
+    }
+
+    .breakdown-pct {
+      font-size: 11px;
+      color: var(--text-dim);
+      min-width: 30px;
+      text-align: right;
+    }
+
+    .profit-val {
+      color: var(--profit) !important;
+      font-weight: 700;
+    }
+
+    /* Stacked ratio bar */
+    .ratio-bar {
+      height: 7px;
+      width: 100%;
+      background: var(--input-bg);
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      margin-top: 6px;
+    }
+    .ratio-principal {
+      background: #3b82f6;
+      height: 100%;
+      transition: width 0.25s ease;
+    }
+    .ratio-profit {
+      background: var(--profit-strong);
+      height: 100%;
+      transition: width 0.25s ease;
+    }
+
+    /* Chart & Table Area */
+    .visual-area {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-width: 0;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chart-title {
+      font-size: 16.5px;
+      font-weight: 700;
+      color: var(--text-strong);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 330px;
+      width: 100%;
+    }
+
+    /* Insight Banner */
+    .insight-box {
+      background: linear-gradient(135deg, rgba(78, 222, 163, 0.11), rgba(56, 189, 248, 0.08));
+      border: 1px solid rgba(78, 222, 163, 0.28);
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .insight-main {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex: 1 1 320px;
+      min-width: 0;
+    }
+    .insight-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: rgba(78, 222, 163, 0.18);
+      color: var(--profit);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .insight-text h4 {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--text-strong);
+      margin-bottom: 3px;
+    }
+    .insight-text p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .insight-stat {
+      background: var(--card-elevated);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .insight-stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+      white-space: nowrap;
+    }
+    .insight-stat-val {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--profit);
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    /* Table */
+    .table-wrapper {
+      overflow-x: auto;
+      margin-top: 8px;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: right;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    th, td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    th {
+      font-weight: 700;
+      color: var(--text-muted);
+      font-size: 12px;
+      background: var(--table-head-bg);
+    }
+    th:first-child, td:first-child {
+      text-align: left;
+      position: sticky;
+      left: 0;
+      background: var(--card-elevated);
+      z-index: 1;
+    }
+    th:first-child {
+      background: var(--table-head-bg);
+      z-index: 2;
+    }
+    td {
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+    tbody tr:hover td {
+      background: var(--row-hover);
+    }
+    .highlight-row td {
+      background: rgba(99, 102, 241, 0.08);
+      font-weight: 700;
+    }
+    .highlight-row td:first-child {
+      background: var(--card-elevated);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--profit-strong);
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 30px;
+      font-size: 13.5px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px var(--profit-glow);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 999;
+      pointer-events: none;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <div class="brand-icon">
+          <i data-lucide="trending-up"></i>
+        </div>
+        <div>
+          <h1>일일 저축 & 자산 증식 시뮬레이터</h1>
+          <p>매일 꾸준한 저축과 복리의 힘으로 쌓이는 미래 자산</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <a href="index.html" class="btn-icon" title="내 웹 명함 보기">
+          <i data-lucide="user"></i>
+          <span>내 명함</span>
+        </a>
+        <button class="btn-icon" id="shareBtn" title="시뮬레이션 공유">
+          <i data-lucide="share-2"></i>
+          <span>공유</span>
+        </button>
+        <button class="btn-icon" id="themeToggleBtn" title="화면 테마 변경">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Grid -->
+    <div class="dashboard-grid">
+
+      <!-- LEFT: Control Panel -->
+      <div class="glass-card input-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <i data-lucide="sliders" style="width: 18px; height: 18px; color: var(--primary-light);"></i>
+            시뮬레이션 조건 설정
+          </h2>
+          <button type="button" class="btn-reset" id="resetBtn" title="기본 조건으로 초기화">
+            <i data-lucide="rotate-ccw" style="width: 13px; height: 13px;"></i>
+            <span>초기화</span>
+          </button>
+        </div>
+
+        <!-- 1. Daily Savings -->
+        <div class="form-group">
+          <div class="label-row">
+            <span>매일 저축할 금액</span>
+            <span class="value-highlight" id="dispDailySavings">10,000 원</span>
+          </div>
+          <div class="input-wrapper">
+            <input type="number" id="inputDailySavings" class="text-input" value="10000" step="1000" min="0">
+            <span class="input-unit">원 / 일</span>
+          </div>
+          <input type="range" id="sliderDailySavings" min="1000" max="100000" step="1000" value="10000">
+          
+          <div class="chip-group">
+            <button class="chip" data-daily="5000">5천원</button>
+            <button class="chip active" data-daily="10000">1만원 (커피값)</button>
+            <button class="chip" data-daily="20000">2만원</button>
+            <button class="chip" data-daily="30000">3만원</button>
+            <button class="chip" data-daily="50000">5만원</button>
+          </div>
+        </div>
+
+        <!-- Equivalent Info -->
+        <div class="converted-box">
+          <div class="converted-item">
+            <p>한 달 약 (30.4일)</p>
+            <span id="dispMonthlyEquivalent">30.4만 원</span>
+          </div>
+          <div class="converted-item">
+            <p>1년 저축 원금 (365일)</p>
+            <span id="dispYearlyEquivalent">365.0만 원</span>
+          </div>
+        </div>
+
+        <!-- 2. Annual Return Rate (n%) -->
+        <div class="form-group">
+          <div class="label-row">
+            <span>예상 연간 수익률</span>
+            <span class="value-highlight" id="dispReturnRate">8.0 %</span>
+          </div>
+          <div class="input-wrapper">
+            <input type="number" id="inputReturnRate" class="text-input" value="8" step="0.1" min="0" max="100">
+            <span class="input-unit">% / 년</span>
+          </div>
+          <input type="range" id="sliderReturnRate" min="0" max="25" step="0.1" value="8">
+
+          <div class="chip-group">
+            <button class="chip" data-rate="3.5">정기예금 (3.5%)</button>
+            <button class="chip" data-rate="5.0">채권/배당 (5.0%)</button>
+            <button class="chip active" data-rate="8.0">S&amp;P500 (8.0%)</button>
+            <button class="chip" data-rate="12.0">성장주 (12.0%)</button>
+          </div>
+        </div>
+
+        <!-- 3. Initial Seed Money (Optional) -->
+        <div class="form-group">
+          <div class="label-row">
+            <span>초기 시작 자산 (시드머니)</span>
+            <span class="value-highlight" id="dispSeedMoney">0 원</span>
+          </div>
+          <div class="input-wrapper">
+            <input type="number" id="inputSeedMoney" class="text-input" value="0" step="1000000" min="0">
+            <span class="input-unit">원</span>
+          </div>
+          <input type="range" id="sliderSeedMoney" min="0" max="50000000" step="1000000" value="0">
+          <div class="chip-group">
+            <button class="chip active" data-seed="0">0원 (무자본)</button>
+            <button class="chip" data-seed="5000000">500만</button>
+            <button class="chip" data-seed="10000000">1천만</button>
+            <button class="chip" data-seed="30000000">3천만</button>
+          </div>
+        </div>
+
+        <!-- 4. Advanced Settings Toggle -->
+        <div>
+          <div class="options-toggle" id="optionsToggle">
+            <span>고급 옵션 (복리 주기 / 세금 / 물가)</span>
+            <i data-lucide="chevron-down" id="optionsIcon"></i>
+          </div>
+          
+          <div class="options-content" id="optionsContent">
+            <!-- Compounding Frequency -->
+            <div class="switch-row">
+              <span class="switch-label">일 복리 계산 (OFF 시 월 복리)</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkDailyCompound" checked>
+                <span class="slider-toggle"></span>
+              </label>
+            </div>
+
+            <!-- Tax -->
+            <div class="switch-row">
+              <span class="switch-label">이자소득세 반영 (일반과세 15.4%)</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkTax">
+                <span class="slider-toggle"></span>
+              </label>
+            </div>
+
+            <!-- Inflation -->
+            <div class="switch-row">
+              <span class="switch-label">물가상승률 감안 실질가치 (연 2.5%)</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkInflation">
+                <span class="slider-toggle"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Results & Analytics -->
+      <div class="visual-area">
+
+        <!-- 3 Milestone Cards: 3 Years / 5 Years / 10 Years -->
+        <div class="milestone-container">
+          
+          <!-- 3 Years -->
+          <div class="milestone-card" id="card3y">
+            <div>
+              <div class="milestone-top">
+                <div class="milestone-badge">
+                  <i data-lucide="calendar" style="width: 12px; height: 12px;"></i>
+                  3년 후 (단기)
+                </div>
+                <span class="milestone-roi-pill" id="roi3y">+0.0%</span>
+              </div>
+              <div class="milestone-korean" id="korean3y">0만 원</div>
+              <div class="milestone-amount" id="total3y">0 원</div>
+            </div>
+
+            <div class="milestone-metrics">
+              <div class="breakdown-row">
+                <span>납입 원금</span>
+                <span class="breakdown-right">
+                  <span class="breakdown-val" id="principal3y">0 원</span>
+                  <span class="breakdown-pct" id="pctPrincipal3y">80%</span>
+                </span>
+              </div>
+              <div class="breakdown-row">
+                <span>복리 수익</span>
+                <span class="breakdown-right">
+                  <span class="breakdown-val profit-val" id="profit3y">+0 원</span>
+                  <span class="breakdown-pct profit-val" id="pctProfit3y">20%</span>
+                </span>
+              </div>
+              <div class="ratio-bar">
+                <div class="ratio-principal" id="barPrincipal3y" style="width: 80%;"></div>
+                <div class="ratio-profit" id="barProfit3y" style="width: 20%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5 Years (Featured) -->
+          <div class="milestone-card featured" id="card5y">
+            <div>
+              <div class="milestone-top">
+                <div class="milestone-badge">
+                  <i data-lucide="sparkles" style="width: 12px; height: 12px;"></i>
+                  5년 후 · 추천 목표
+                </div>
+                <span class="milestone-roi-pill" id="roi5y">+0.0%</span>
+              </div>
+              <div class="milestone-korean" id="korean5y">0만 원</div>
+              <div class="milestone-amount" id="total5y">0 원</div>
+            </div>
+
+            <div class="milestone-metrics">
+              <div class="breakdown-row">
+                <span>납입 원금</span>
+                <span class="breakdown-right">
+                  <span class="breakdown-val" id="principal5y">0 원</span>
+                  <span class="breakdown-pct" id="pctPrincipal5y">70%</span>
+                </span>
+              </div>
+              <div class="breakdown-row">
+                <span>복리 수익</span>
+                <span class="breakdown-right">
+                  <span class="breakdown-val profit-val" id="profit5y">+0 원</span>
+                  <span class="breakdown-pct profit-val" id="pctProfit5y">30%</span>
+                </span>
+              </div>
+              <div class="ratio-bar">
+                <div class="ratio-principal" id="barPrincipal5y" style="width: 70%;"></div>
+                <div class="ratio-profit" id="barProfit5y" style="width: 30%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 10 Years -->
+          <div class="milestone-card" id="card10y">
+            <div>
+              <div class="milestone-top">
+                <div class="milestone-badge">
+                  <i data-lucide="award" style="width: 12px; height: 12px;"></i>
+                  10년 후 (복리 폭발)
+                </div>
+                <span class="milestone-roi-pill" id="roi10y">+0.0%</span>
+              </div>
+              <div class="milestone-korean" id="korean10y">0만 원</div>
+              <div class="milestone-amount" id="total10y">0 원</div>
+            </div>
+
+            <div class="milestone-metrics">
+              <div class="breakdown-row">
+                <span>납입 원금</span>
+                <span class="breakdown-right">
+                  <span class="breakdown-val" id="principal10y">0 원</span>
+                  <span class="breakdown-pct" id="pctPrincipal10y">50%</span>
+                </span>
+              </div>
+              <div class="breakdown-row">
+                <span>복리 수익</span>
+                <span class="breakdown-right">
+                  <span class="breakdown-val profit-val" id="profit10y">+0 원</span>
+                  <span class="breakdown-pct profit-val" id="pctProfit10y">50%</span>
+                </span>
+              </div>
+              <div class="ratio-bar">
+                <div class="ratio-principal" id="barPrincipal10y" style="width: 50%;"></div>
+                <div class="ratio-profit" id="barProfit10y" style="width: 50%;"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Insight Banner -->
+        <div class="insight-box">
+          <div class="insight-main">
+            <div class="insight-icon">
+              <i data-lucide="zap"></i>
+            </div>
+            <div class="insight-text">
+              <h4 id="insightTitle">복리의 가속도 법칙</h4>
+              <p id="insightDesc">계산 중...</p>
+            </div>
+          </div>
+          <div class="insight-stat">
+            <div class="insight-stat-label">10년차 하루 이자 (추정)</div>
+            <div class="insight-stat-val" id="insightDailyInterest">+0 원 / 일</div>
+          </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="glass-card">
+          <div class="chart-header">
+            <h3 class="chart-title">
+              <i data-lucide="line-chart" style="width: 18px; height: 18px; color: var(--primary-light);"></i>
+              연도별 자산 성장 시각화 (1년 ~ 10년)
+            </h3>
+            <span style="font-size: 12px; color: var(--text-dim);">단위: 만 원</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="growthChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Yearly Detail Table -->
+        <div class="glass-card">
+          <div class="chart-header">
+            <h3 class="chart-title">
+              <i data-lucide="table" style="width: 18px; height: 18px; color: var(--accent);"></i>
+              연차별 상세 성장 내역
+            </h3>
+            <button class="btn-icon" id="downloadCsvBtn" style="padding: 6px 12px; font-size: 12px;">
+              <i data-lucide="download"></i>
+              <span>CSV 내보내기</span>
+            </button>
+          </div>
+          
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>경과 기간</th>
+                  <th>누적 원금</th>
+                  <th>누적 복리 수익</th>
+                  <th>최종 총 자산</th>
+                  <th>원금 대비 수익률</th>
+                </tr>
+              </thead>
+              <tbody id="detailTableBody">
+                <!-- Dynamically generated rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toastMessage">
+    <i data-lucide="check-circle-2"></i>
+    <span id="toastText">링크가 복사되었습니다!</span>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    // Formatting utilities
+    function formatKRW(val) {
+      return Math.round(val).toLocaleString('ko-KR') + ' 원';
+    }
+
+    function formatKoreanUnits(val) {
+      const v = Math.round(val);
+      if (v >= 100000000) {
+        const eok = Math.floor(v / 100000000);
+        const man = Math.round((v % 100000000) / 10000);
+        return man > 0 ? `${eok}억 ${man.toLocaleString()}만 원` : `${eok}억 원`;
+      } else if (v >= 10000) {
+        const man = (v / 10000).toFixed(1);
+        return `${Number(man).toLocaleString()}만 원`;
+      }
+      return v.toLocaleString() + ' 원';
+    }
+
+    // Input Elements
+    const inputDailySavings = document.getElementById('inputDailySavings');
+    const sliderDailySavings = document.getElementById('sliderDailySavings');
+    const dispDailySavings = document.getElementById('dispDailySavings');
+    const dispMonthlyEquivalent = document.getElementById('dispMonthlyEquivalent');
+    const dispYearlyEquivalent = document.getElementById('dispYearlyEquivalent');
+
+    const inputReturnRate = document.getElementById('inputReturnRate');
+    const sliderReturnRate = document.getElementById('sliderReturnRate');
+    const dispReturnRate = document.getElementById('dispReturnRate');
+
+    const inputSeedMoney = document.getElementById('inputSeedMoney');
+    const sliderSeedMoney = document.getElementById('sliderSeedMoney');
+    const dispSeedMoney = document.getElementById('dispSeedMoney');
+    const resetBtn = document.getElementById('resetBtn');
+
+    const checkDailyCompound = document.getElementById('checkDailyCompound');
+    const checkTax = document.getElementById('checkTax');
+    const checkInflation = document.getElementById('checkInflation');
+
+    const optionsToggle = document.getElementById('optionsToggle');
+    const optionsContent = document.getElementById('optionsContent');
+    const optionsIcon = document.getElementById('optionsIcon');
+
+    // Advanced options toggle
+    optionsToggle.addEventListener('click', () => {
+      optionsContent.classList.toggle('open');
+      optionsIcon.setAttribute('data-lucide', optionsContent.classList.contains('open') ? 'chevron-up' : 'chevron-down');
+      lucide.createIcons();
+    });
+
+    function getChartColors() {
+      const styles = getComputedStyle(document.body);
+      return {
+        legend: styles.getPropertyValue('--legend-color').trim() || '#cbd5e1',
+        grid: styles.getPropertyValue('--grid-line').trim() || 'rgba(148, 163, 184, 0.08)',
+        tick: styles.getPropertyValue('--tick-color').trim() || '#94a3b8'
+      };
+    }
+
+    // Chart.js Setup
+    const ctx = document.getElementById('growthChart').getContext('2d');
+    let growthChart;
+
+    function initChart() {
+      const colors = getChartColors();
+      growthChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: '누적 납입 원금',
+              data: [],
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.22)',
+              fill: true,
+              tension: 0.35,
+              borderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6
+            },
+            {
+              label: '복리 수익 합산 (총 자산)',
+              data: [],
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.18)',
+              fill: true,
+              tension: 0.35,
+              borderWidth: 2.5,
+              pointRadius: 4,
+              pointHoverRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                color: colors.legend,
+                font: { family: 'Pretendard', weight: '600' }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return ` ${context.dataset.label}: ${formatKoreanUnits(context.parsed.y * 10000)}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: colors.grid },
+              ticks: { color: colors.tick, font: { family: 'Pretendard' } }
+            },
+            y: {
+              grid: { color: colors.grid },
+              ticks: {
+                color: colors.tick,
+                callback: (val) => val.toLocaleString() + '만'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Core Compound Simulation Engine
+    function calculateSimulation() {
+      const dailySavings = Math.max(0, parseFloat(inputDailySavings.value) || 0);
+      const annualRate = Math.max(0, parseFloat(inputReturnRate.value) || 0) / 100;
+      const seedMoney = Math.max(0, parseFloat(inputSeedMoney.value) || 0);
+      const isDailyCompound = checkDailyCompound.checked;
+      const isTax = checkTax.checked;
+      const isInflation = checkInflation.checked;
+
+      // Update Top Display
+      dispDailySavings.innerText = formatKRW(dailySavings);
+      dispMonthlyEquivalent.innerText = ((dailySavings * 365 / 12) / 10000).toFixed(1) + '만 원';
+      dispYearlyEquivalent.innerText = ((dailySavings * 365) / 10000).toFixed(1) + '만 원';
+      dispReturnRate.innerText = (annualRate * 100).toFixed(1) + ' %';
+      dispSeedMoney.innerText = formatKoreanUnits(seedMoney);
+
+      // Simulation for 10 years (day by day or month by month)
+      const yearlyResults = [];
+      const inflationRate = 0.025; // 2.5% inflation
+
+      let currentAsset = seedMoney;
+      let totalPrincipal = seedMoney;
+
+      if (isDailyCompound) {
+        // Daily compounding: daily rate = (1 + r)^(1/365) - 1
+        const dailyRate = Math.pow(1 + annualRate, 1 / 365) - 1;
+
+        for (let day = 1; day <= 365 * 10; day++) {
+          currentAsset = (currentAsset + dailySavings) * (1 + dailyRate);
+          totalPrincipal += dailySavings;
+
+          if (day % 365 === 0) {
+            const year = day / 365;
+            let displayAsset = currentAsset;
+            let profit = Math.max(0, displayAsset - totalPrincipal);
+
+            if (isTax) {
+              profit *= (1 - 0.154); // deduct 15.4% tax
+              displayAsset = totalPrincipal + profit;
+            }
+
+            if (isInflation) {
+              const discountFactor = Math.pow(1 + inflationRate, year);
+              displayAsset /= discountFactor;
+            }
+
+            yearlyResults.push({
+              year,
+              principal: totalPrincipal,
+              profit: Math.max(0, displayAsset - totalPrincipal),
+              total: displayAsset,
+              roi: totalPrincipal > 0 ? ((displayAsset - totalPrincipal) / totalPrincipal * 100) : 0
+            });
+          }
+        }
+      } else {
+        // Monthly compounding: 12 periods per year, monthly deposit = daily * (365/12)
+        const monthlyDeposit = dailySavings * (365 / 12);
+        const monthlyRate = Math.pow(1 + annualRate, 1 / 12) - 1;
+
+        for (let m = 1; m <= 120; m++) {
+          currentAsset = (currentAsset + monthlyDeposit) * (1 + monthlyRate);
+          totalPrincipal += monthlyDeposit;
+
+          if (m % 12 === 0) {
+            const year = m / 12;
+            let displayAsset = currentAsset;
+            let profit = Math.max(0, displayAsset - totalPrincipal);
+
+            if (isTax) {
+              profit *= (1 - 0.154);
+              displayAsset = totalPrincipal + profit;
+            }
+
+            if (isInflation) {
+              const discountFactor = Math.pow(1 + inflationRate, year);
+              displayAsset /= discountFactor;
+            }
+
+            yearlyResults.push({
+              year,
+              principal: totalPrincipal,
+              profit: Math.max(0, displayAsset - totalPrincipal),
+              total: displayAsset,
+              roi: totalPrincipal > 0 ? ((displayAsset - totalPrincipal) / totalPrincipal * 100) : 0
+            });
+          }
+        }
+      }
+
+      // Update 3, 5, 10 Years Milestone Cards
+      updateMilestone(3, yearlyResults[2]);
+      updateMilestone(5, yearlyResults[4]);
+      updateMilestone(10, yearlyResults[9]);
+
+      // Update Chart
+      updateChart(yearlyResults);
+
+      // Update Table
+      updateTable(yearlyResults);
+
+      // Update Insight
+      updateInsight(yearlyResults);
+    }
+
+    function updateMilestone(year, data) {
+      if (!data) return;
+      document.getElementById(`total${year}y`).innerText = formatKRW(data.total);
+      document.getElementById(`korean${year}y`).innerText = formatKoreanUnits(data.total);
+      document.getElementById(`principal${year}y`).innerText = formatKRW(data.principal);
+      document.getElementById(`profit${year}y`).innerText = '+' + formatKRW(data.profit);
+      document.getElementById(`roi${year}y`).innerText = '+' + data.roi.toFixed(1) + '%';
+
+      const total = data.total || 1;
+      const principalPct = Math.min(100, Math.max(5, (data.principal / total) * 100));
+      const profitPct = Math.max(0, 100 - principalPct);
+
+      document.getElementById(`barPrincipal${year}y`).style.width = principalPct + '%';
+      document.getElementById(`barProfit${year}y`).style.width = profitPct + '%';
+      document.getElementById(`pctPrincipal${year}y`).innerText = Math.round(principalPct) + '%';
+      document.getElementById(`pctProfit${year}y`).innerText = Math.round(profitPct) + '%';
+    }
+
+    function updateChart(results) {
+      if (!growthChart) return;
+      growthChart.data.labels = results.map(r => `${r.year}년차`);
+      growthChart.data.datasets[0].data = results.map(r => Math.round(r.principal / 10000));
+      growthChart.data.datasets[1].data = results.map(r => Math.round(r.total / 10000));
+      growthChart.update();
+    }
+
+    function updateTable(results) {
+      const tbody = document.getElementById('detailTableBody');
+      tbody.innerHTML = '';
+
+      results.forEach(r => {
+        const tr = document.createElement('tr');
+        if (r.year === 3 || r.year === 5 || r.year === 10) {
+          tr.className = 'highlight-row';
+        }
+        tr.innerHTML = `
+          <td><b>${r.year}년차</b> ${r.year === 3 ? '⭐' : r.year === 5 ? '🎯' : r.year === 10 ? '👑' : ''}</td>
+          <td>${formatKRW(r.principal)}</td>
+          <td class="profit-val">+${formatKRW(r.profit)}</td>
+          <td><b>${formatKoreanUnits(r.total)}</b></td>
+          <td class="profit-val">+${r.roi.toFixed(1)}%</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateInsight(results) {
+      const tenY = results[9];
+      const fiveY = results[4];
+      const daily = parseFloat(inputDailySavings.value) || 0;
+      const annualRate = Math.max(0, parseFloat(inputReturnRate.value) || 0) / 100;
+
+      const insightTitle = document.getElementById('insightTitle');
+      const insightDesc = document.getElementById('insightDesc');
+      const insightDailyInterest = document.getElementById('insightDailyInterest');
+
+      const effectiveRate = checkTax.checked ? annualRate * (1 - 0.154) : annualRate;
+      const dailyInterest10y = (tenY.total * effectiveRate) / 365;
+      insightDailyInterest.innerText = `+${formatKRW(dailyInterest10y)} / 일`;
+
+      if (tenY.profit > tenY.principal * 0.7) {
+        insightTitle.innerText = "복리의 폭발적인 임계점 돌파!";
+        insightDesc.innerText = `10년 후에는 순수 이자/투자 수익만 무려 ${formatKoreanUnits(tenY.profit)}에 달합니다. 하루 커피값(${formatKRW(daily)})의 작은 습관이 원금의 약 ${(tenY.total / (tenY.principal || 1)).toFixed(1)}배인 ${formatKoreanUnits(tenY.total)}의 든든한 자산으로 성장합니다.`;
+      } else {
+        insightTitle.innerText = "꾸준함이 만드는 자산의 첫걸음";
+        insightDesc.innerText = `5년 동안 꾸준히 저축하면 원금 ${formatKoreanUnits(fiveY.principal)}에 수익 ${formatKoreanUnits(fiveY.profit)}이 더해져 약 ${formatKoreanUnits(fiveY.total)}을 모으게 됩니다.`;
+      }
+    }
+
+    function syncPresetChips(attr, value) {
+      const numericVal = parseFloat(value);
+      document.querySelectorAll(`[${attr}]`).forEach(btn => {
+        btn.classList.toggle('active', parseFloat(btn.getAttribute(attr)) === numericVal);
+      });
+    }
+
+    function syncAllChips() {
+      syncPresetChips('data-daily', inputDailySavings.value);
+      syncPresetChips('data-rate', inputReturnRate.value);
+      syncPresetChips('data-seed', inputSeedMoney.value);
+    }
+
+    // Synchronize Input & Slider
+    function bindInputSlider(inputEl, sliderEl, chipAttr, callback) {
+      inputEl.addEventListener('input', () => {
+        sliderEl.value = inputEl.value;
+        syncPresetChips(chipAttr, inputEl.value);
+        callback();
+      });
+      sliderEl.addEventListener('input', () => {
+        inputEl.value = sliderEl.value;
+        syncPresetChips(chipAttr, sliderEl.value);
+        callback();
+      });
+      document.querySelectorAll(`[${chipAttr}]`).forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = btn.getAttribute(chipAttr);
+          inputEl.value = val;
+          sliderEl.value = val;
+          syncPresetChips(chipAttr, val);
+          callback();
+        });
+      });
+    }
+
+    bindInputSlider(inputDailySavings, sliderDailySavings, 'data-daily', calculateSimulation);
+    bindInputSlider(inputReturnRate, sliderReturnRate, 'data-rate', calculateSimulation);
+    bindInputSlider(inputSeedMoney, sliderSeedMoney, 'data-seed', calculateSimulation);
+
+    checkDailyCompound.addEventListener('change', calculateSimulation);
+    checkTax.addEventListener('change', calculateSimulation);
+    checkInflation.addEventListener('change', calculateSimulation);
+
+    resetBtn.addEventListener('click', () => {
+      inputDailySavings.value = sliderDailySavings.value = 10000;
+      inputReturnRate.value = sliderReturnRate.value = 8;
+      inputSeedMoney.value = sliderSeedMoney.value = 0;
+      checkDailyCompound.checked = true;
+      checkTax.checked = false;
+      checkInflation.checked = false;
+      syncAllChips();
+      calculateSimulation();
+      showToast('기본 시뮬레이션 조건으로 초기화되었습니다.');
+    });
+
+    // Theme Toggle
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    let isLight = localStorage.getItem('sim_theme') === 'light';
+
+    function applyTheme() {
+      if (isLight) {
+        document.body.setAttribute('data-theme', 'light');
+        themeIcon.setAttribute('data-lucide', 'sun');
+      } else {
+        document.body.removeAttribute('data-theme');
+        themeIcon.setAttribute('data-lucide', 'moon');
+      }
+      lucide.createIcons();
+      if (growthChart) {
+        const colors = getChartColors();
+        growthChart.options.plugins.legend.labels.color = colors.legend;
+        growthChart.options.scales.x.grid.color = colors.grid;
+        growthChart.options.scales.y.grid.color = colors.grid;
+        growthChart.options.scales.x.ticks.color = colors.tick;
+        growthChart.options.scales.y.ticks.color = colors.tick;
+        growthChart.update();
+      }
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+      isLight = !isLight;
+      localStorage.setItem('sim_theme', isLight ? 'light' : 'dark');
+      applyTheme();
+    });
+
+    // Toast
+    const toast = document.getElementById('toastMessage');
+    const toastText = document.getElementById('toastText');
+    let toastTimer;
+    function showToast(msg) {
+      toastText.innerText = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // Share simulation URL
+    document.getElementById('shareBtn').addEventListener('click', () => {
+      const params = new URLSearchParams({
+        d: inputDailySavings.value,
+        r: inputReturnRate.value,
+        s: inputSeedMoney.value
+      });
+      const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('시뮬레이션 조건 링크가 복사되었습니다!');
+      }).catch(() => {
+        showToast('링크 복사에 실패했습니다.');
+      });
+    });
+
+    // Download CSV
+    document.getElementById('downloadCsvBtn').addEventListener('click', () => {
+      const rows = [
+        ['Year', 'Principal(KRW)', 'Profit(KRW)', 'Total(KRW)', 'ROI(%)']
+      ];
+      document.querySelectorAll('#detailTableBody tr').forEach(tr => {
+        const cols = Array.from(tr.querySelectorAll('td')).map(td => td.innerText.replace(/,/g, '').replace(' 원', '').replace('%', '').trim());
+        rows.push(cols);
+      });
+
+      const csvContent = "\uFEFF" + rows.map(e => e.join(",")).join("\n");
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `복리시뮬레이션_일저축${inputDailySavings.value}원_연${inputReturnRate.value}퍼.csv`;
+      link.click();
+      showToast('CSV 파일이 다운로드되었습니다.');
+    });
+
+    // Read URL params on load
+    function loadFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('d')) inputDailySavings.value = sliderDailySavings.value = params.get('d');
+      if (params.has('r')) inputReturnRate.value = sliderReturnRate.value = params.get('r');
+      if (params.has('s')) inputSeedMoney.value = sliderSeedMoney.value = params.get('s');
+      syncAllChips();
+    }
+
+    // Init
+    applyTheme();
+    loadFromUrl();
+    initChart();
+    calculateSimulation();
+  </script>
+</body>
+</html>
