@@ -1,6 +1,6 @@
 {
   "$schema": "./schema/portal-spec.schema.json",
-  "version": "2.9.0",
+  "version": "2.9.1",
   "systemTitle": "Clinical Ledger Precision",
   "systemSubtitle": "병원부 미결 원장 대사 및 업무 통합 포털",
   "themes": [
@@ -42,15 +42,16 @@
     {
       "id": "tools",
       "themeId": "tools",
-      "title": "📊 금융/자산 도구",
-      "themeTitle": "📊 금융/자산 도구",
-      "description": "단리/복리 이자율 시뮬레이션, 만기 수령액 분석 및 실시간 금융정보",
-      "themeDesc": "단리/복리 이자율 시뮬레이션, 만기 수령액 분석 및 실시간 금융정보",
+      "title": "📊 금융/자산",
+      "themeTitle": "📊 금융/자산",
+      "description": "금일 주식시장·환율 동향, 주요 종목 지수, 5대 뉴스 및 수익 시뮬레이션",
+      "themeDesc": "금일 주식시장·환율 동향, 주요 종목 지수, 5대 뉴스 및 수익 시뮬레이션",
       "adminOnly": false,
       "dashboard": {
-        "id": "tools-dash",
-        "title": "금융 시뮬레이션 종합 안내",
-        "type": "builtin-tools-dash"
+        "id": "financial-info",
+        "title": "금융정보",
+        "type": "iframe",
+        "url": "financial-info.html"
       },
       "subMenus": [
         {
@@ -62,16 +63,6 @@
           "badgeColor": "green",
           "role": "all",
           "description": "단리/복리, 과세 유형별 실수령액 및 월별 적립 이자 계산"
-        },
-        {
-          "id": "financial-info",
-          "title": "금융정보",
-          "type": "iframe",
-          "url": "financial-info.html",
-          "badge": "시황/뉴스",
-          "badgeColor": "blue",
-          "role": "all",
-          "description": "금일 주식시장 동향(코스피, 환율), 주요 종목 지수 및 주요 5대 뉴스"
         }
       ]
     },

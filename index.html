@@ -364,13 +364,14 @@
       },
       {
         themeId: 'tools',
-        themeTitle: '📊 금융/자산 도구',
-        themeDesc: '단리/복리 이자율 시뮬레이션 및 만기 수령액 분석',
+        themeTitle: '📊 금융/자산',
+        themeDesc: '금일 주식시장·환율 동향, 주요 종목 지수, 5대 뉴스 및 수익 시뮬레이션',
         adminOnly: false,
         dashboard: {
-          id: 'tools-dash',
-          title: '금융 시뮬레이션 종합 안내',
-          type: 'builtin-tools-dash'
+          id: 'financial-info',
+          title: '금융정보',
+          type: 'iframe',
+          url: 'financial-info.html'
         },
         subMenus: [
           {
@@ -380,15 +381,6 @@
             url: 'savings-simulator.html',
             badge: '계산기',
             badgeColor: 'green',
-            role: 'all'
-          },
-          {
-            id: 'financial-info',
-            title: '금융정보',
-            type: 'iframe',
-            url: 'financial-info.html',
-            badge: '시황/뉴스',
-            badgeColor: 'blue',
             role: 'all'
           }
         ]
@@ -553,7 +545,7 @@
       }
 
       // Version Cache Invalidation
-      const APP_BUILD_ID = 'v2.9.0';
+      const APP_BUILD_ID = 'v2.9.1';
       const storedBuild = localStorage.getItem('clp_build_id');
       if (storedBuild !== APP_BUILD_ID) {
         localStorage.removeItem('clp_menu_groups_v3');
