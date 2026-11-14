@@ -83,6 +83,16 @@
       },
       "subMenus": [
         {
+          "id": "community-board",
+          "title": "사내 업무 게시판 (Q&A/제안)",
+          "type": "iframe",
+          "url": "board.html",
+          "badge": "게시판",
+          "badgeColor": "blue",
+          "role": "all",
+          "description": "사내 실무 Q&A, 업무 제안 및 자유 소통 게시판"
+        },
+        {
           "id": "business-card",
           "title": "이창환 디지털 명함 (Profile)",
           "type": "iframe",

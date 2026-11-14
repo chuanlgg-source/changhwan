@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>사내 업무 게시판 — Clinical Ledger Precision</title>
+  <!-- Google Fonts: Plus Jakarta Sans, Noto Sans KR, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --primary: #00236f;
+      --primary-container: #1e3a8a;
+      --surface: #faf8ff;
+    }
+    body {
+      background-color: #faf8ff;
+      color: #131b2e;
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 13px;
+      margin: 0;
+      padding: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .font-headline { font-family: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif; }
+    .num-font { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    .fade-in { animation: fadeIn 0.2s ease-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="p-4 sm:p-6">
+  <div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Board Header -->
+    <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#1e3a8a]/10 border border-[#1e3a8a]/20 text-[#1e3a8a] text-[11px] font-bold mb-1.5">
+          <span>COMMUNICATION BOARD</span>
+        </div>
+        <h1 class="text-xl sm:text-2xl font-bold font-headline text-[#00236f] tracking-tight">
+          사내 업무 게시판 (Q&A / 제안 / 자유게시)
+        </h1>
+        <p class="text-xs text-[#444651] mt-1">
+          병원부 정산 실무 Q&A, 시스템 개선 제안, 자유로운 의견을 공유하는 열린 소통 공간입니다.
+        </p>
+      </div>
+
+      <button onclick="openWriteModal();"
+        class="px-4 py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-md shadow flex items-center gap-1.5 transition cursor-pointer shrink-0">
+        <span>✍️ 새 게시글 등록</span>
+      </button>
+    </div>
+
+    <!-- Filters & Search Toolbar -->
+    <div class="bg-white p-3.5 rounded-xl border border-[#cbd5e1] shadow-sm flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+      <!-- Category Tabs -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0" id="category-tabs">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Search Input -->
+      <div class="relative w-full sm:w-64">
+        <input type="text" id="board-search" oninput="handleSearch();" placeholder="제목, 작성자, 내용 검색..."
+          class="w-full pl-8 pr-3 py-1.5 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
+        <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">🔍</span>
+      </div>
+    </div>
+
+    <!-- Board Table View -->
+    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-sm overflow-hidden">
+      <div class="p-4 bg-[#f2f3ff] border-b border-[#cbd5e1] flex items-center justify-between text-xs">
+        <span class="font-bold text-[#00236f]" id="board-count-text">전체 게시글 (0건)</span>
+        <span class="text-[11px] text-[#757682]">최근 작성순 정렬</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-50 border-b border-[#cbd5e1] text-[#1e3a8a] font-bold text-[11px] uppercase">
+              <th class="py-2.5 px-4 text-center w-14">번호</th>
+              <th class="py-2.5 px-4 text-center w-24">분류</th>
+              <th class="py-2.5 px-4">제목</th>
+              <th class="py-2.5 px-4 text-center w-28">작성자</th>
+              <th class="py-2.5 px-4 text-center w-24">작성일</th>
+              <th class="py-2.5 px-4 text-center w-16">조회</th>
+            </tr>
+          </thead>
+          <tbody id="board-tbody" class="divide-y divide-[#e2e8f0]">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- WRITE POST MODAL -->
+  <div id="modal-write" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-2xl w-full max-w-xl p-6 fade-in">
+      <div class="flex items-center justify-between pb-3 border-b border-[#e2e8f0] mb-4">
+        <h2 class="text-base font-bold font-headline text-[#00236f]">게시판 새 글 등록</h2>
+        <button onclick="closeWriteModal();" class="text-gray-400 hover:text-gray-700 text-xl font-bold">&times;</button>
+      </div>
+
+      <form onsubmit="event.preventDefault(); submitPost();" class="space-y-4">
+        <div class="grid grid-cols-3 gap-3">
+          <div class="col-span-2">
+            <label class="block text-xs font-bold text-[#131b2e] mb-1">제목 *</label>
+            <input type="text" id="post-title" required placeholder="게시글 제목을 입력하세요"
+              class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded focus:outline-none focus:ring-1 focus:ring-[#1e3a8a]">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#131b2e] mb-1">카테고리</label>
+            <select id="post-category" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+              <option value="업무질문">업무질문(Q&A)</option>
+              <option value="업무제안">업무제안</option>
+              <option value="정산공유">정산공유</option>
+              <option value="자유게시">자유게시</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-[#131b2e] mb-1">작성자 성명 *</label>
+          <input type="text" id="post-author" value="이창환 (병원사업부)" required
+            class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-[#131b2e] mb-1">본문 내용 *</label>
+          <textarea id="post-content" rows="6" required placeholder="공유할 내용을 자유롭게 작성하세요..."
+            class="w-full p-3 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded leading-relaxed"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-[#e2e8f0]">
+          <button type="button" onclick="closeWriteModal();" class="px-4 py-1.5 border border-[#cbd5e1] text-xs font-semibold rounded">취소</button>
+          <button type="submit" class="px-5 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow">게시글 등록</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- VIEW DETAIL MODAL -->
+  <div id="modal-detail" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-2xl w-full max-w-2xl p-6 fade-in max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-[#e2e8f0] mb-3">
+        <div class="flex items-center gap-2">
+          <span id="detail-category" class="text-[10px] font-bold px-2.5 py-0.5 rounded bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]">분류</span>
+          <span id="detail-date" class="text-xs text-[#757682]">2026-11-14</span>
+        </div>
+        <button onclick="closeDetailModal();" class="text-gray-400 hover:text-gray-700 text-xl font-bold">&times;</button>
+      </div>
+
+      <h2 id="detail-title" class="text-lg font-bold font-headline text-[#00236f] mb-2 leading-snug">게시글 제목</h2>
+      <div class="flex items-center justify-between text-xs text-[#757682] pb-3 mb-4 border-b border-[#f1f5f9]">
+        <span id="detail-author">작성자: 이창환</span>
+        <span id="detail-views">조회 12</span>
+      </div>
+
+      <div id="detail-content" class="text-xs text-[#131b2e] leading-relaxed whitespace-pre-line bg-[#faf8ff] p-4 rounded-lg border border-[#e2e8f0]">
+        본문 내용
+      </div>
+
+      <!-- Comments Section -->
+      <div class="mt-5 pt-4 border-t border-[#e2e8f0] space-y-3">
+        <h3 class="text-xs font-bold text-[#00236f]">💬 댓글 및 답변 (<span id="comment-count">0</span>)</h3>
+        <div id="comments-list" class="space-y-2">
+          <!-- Rendered by JS -->
+        </div>
+
+        <!-- Add Comment Form -->
+        <form onsubmit="event.preventDefault(); submitComment();" class="flex gap-2 pt-2">
+          <input type="text" id="comment-input" required placeholder="댓글을 입력하세요..."
+            class="flex-1 px-3 py-1.5 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+          <button type="submit" class="px-3.5 py-1.5 bg-[#00236f] text-white text-xs font-bold rounded shadow shrink-0">
+            등록
+          </button>
+        </form>
+      </div>
+
+      <div class="flex justify-between items-center pt-4 mt-4 border-t border-[#e2e8f0]">
+        <button id="btn-delete-post" class="text-xs text-[#dc2626] hover:underline font-semibold">게시글 삭제</button>
+        <button onclick="closeDetailModal();" class="px-4 py-1.5 bg-[#00236f] text-white text-xs font-bold rounded">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CATEGORIES = ['전체', '업무질문', '업무제안', '정산공유', '자유게시'];
+
+    const INITIAL_BOARD_POSTS = [
+      {
+        id: 'board-1',
+        title: '세브란스병원 10월 단가 변경분 대사 시 유의사항 문의',
+        category: '업무질문',
+        author: '김정산 주임 (재무관리팀)',
+        date: '2026-11-13',
+        views: 42,
+        content: "세브란스병원(H02) 10월분 원장 대사 중 소급 적용된 단가 차액 2,500만원에 대해\n[월별 미결 차액 소명 관리] 메뉴에 사유 코드를 어떻게 분류해야 하는지 문의드립니다.",
+        comments: [
+          { author: '이창환 (총괄매니저)', date: '2026-11-13', text: '사유코드를 "03-단가변경소급"으로 선택하시고 공문 사본을 첨부해 주시면 승인 처리하겠습니다.' }
+        ]
+      },
+      {
+        id: 'board-2',
+        title: '대사 결과 엑셀 리포트에 거래처별 합계 시트 추가 제안',
+        category: '업무제안',
+        author: '박운영 대리 (병원사업부)',
+        date: '2026-11-12',
+        views: 67,
+        content: "현재 reconcile_ui에서 생성되는 통합 엑셀 파일에 병원별 월별 소계가 담긴 요약 시트가 추가되면 마감 보고서 작성 시 훨씬 수월할 것 같습니다.",
+        comments: [
+          { author: '시스템관리자', date: '2026-11-13', text: '좋은 제안 감사합니다! 다음 버전 업데이트 시 reconcile_engine.py에 반영 검토하겠습니다.' }
+        ]
+      },
+      {
+        id: 'board-3',
+        title: '하반기 정산 시스템 포털 개편 및 메뉴 구성 환영합니다',
+        category: '자유게시',
+        author: '정원장 과장 (감사팀)',
+        date: '2026-11-11',
+        views: 89,
+        content: "Stitch 디자인 시스템이 적용되어 숫자가 monospace로 딱 떨어져서 검수하기 매우 편해졌네요. 팀원 모두 만족스럽게 사용 중입니다.",
+        comments: []
+      }
+    ];
+
+    let currentCategory = '전체';
+    let boardPosts = [];
+    let currentDetailId = null;
+
+    function initBoard() {
+      const saved = localStorage.getItem('clp_community_board_v1');
+      if (saved) {
+        try { boardPosts = JSON.parse(saved); }
+        catch { boardPosts = JSON.parse(JSON.stringify(INITIAL_BOARD_POSTS)); }
+      } else {
+        boardPosts = JSON.parse(JSON.stringify(INITIAL_BOARD_POSTS));
+        localStorage.setItem('clp_community_board_v1', JSON.stringify(boardPosts));
+      }
+      renderTabs();
+      renderBoardTable();
+    }
+
+    function renderTabs() {
+      const container = document.getElementById('category-tabs');
+      container.innerHTML = CATEGORIES.map(cat => `
+        <button onclick="currentCategory='${cat}'; renderTabs(); renderBoardTable();"
+          class="px-3 py-1 rounded-md text-xs font-bold transition cursor-pointer whitespace-nowrap ${
+            currentCategory === cat
+              ? 'bg-[#1e3a8a] text-white shadow-sm'
+              : 'bg-[#f2f3ff] text-[#444651] hover:bg-[#eaedff]'
+          }">${cat}</button>
+      `).join('');
+    }
+
+    function renderBoardTable() {
+      const query = (document.getElementById('board-search')?.value || '').toLowerCase();
+      let list = currentCategory === '전체'
+        ? boardPosts
+        : boardPosts.filter(p => p.category === currentCategory);
+
+      if (query) {
+        list = list.filter(p =>
+          p.title.toLowerCase().includes(query) ||
+          p.author.toLowerCase().includes(query) ||
+          p.content.toLowerCase().includes(query)
+        );
+      }
+
+      document.getElementById('board-count-text').innerText = `전체 게시글 (${list.length}건)`;
+      const tbody = document.getElementById('board-tbody');
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400">등록된 게시글이 없습니다.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map((p, idx) => {
+        const badgeColor = p.category === '업무질문'
+          ? 'bg-amber-100 text-amber-700 border-amber-300'
+          : p.category === '업무제안'
+          ? 'bg-blue-100 text-blue-700 border-blue-300'
+          : p.category === '정산공유'
+          ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
+          : 'bg-slate-100 text-slate-700 border-slate-300';
+
+        return `
+          <tr class="hover:bg-[#faf8ff] transition cursor-pointer" onclick="openDetailModal('${p.id}');">
+            <td class="py-3 px-4 text-center num-font text-gray-400 font-semibold">${list.length - idx}</td>
+            <td class="py-3 px-4 text-center">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">${p.category}</span>
+            </td>
+            <td class="py-3 px-4">
+              <div class="font-bold text-[#00236f] hover:underline flex items-center gap-1.5">
+                <span>${p.title}</span>
+                ${(p.comments || []).length > 0 ? `<span class="text-[10px] text-[#2563eb] font-bold">[${p.comments.length}]</span>` : ''}
+              </div>
+            </td>
+            <td class="py-3 px-4 text-center font-medium text-[#444651]">${p.author}</td>
+            <td class="py-3 px-4 text-center num-font text-gray-500 text-[11px]">${p.date}</td>
+            <td class="py-3 px-4 text-center num-font text-gray-500 text-[11px]">${p.views}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function handleSearch() {
+      renderBoardTable();
+    }
+
+    function openWriteModal() {
+      document.getElementById('post-title').value = '';
+      document.getElementById('post-content').value = '';
+      document.getElementById('modal-write').classList.remove('hidden');
+    }
+
+    function closeWriteModal() {
+      document.getElementById('modal-write').classList.add('hidden');
+    }
+
+    function submitPost() {
+      const title = document.getElementById('post-title').value.trim();
+      const category = document.getElementById('post-category').value;
+      const author = document.getElementById('post-author').value.trim() || '익명 담당자';
+      const content = document.getElementById('post-content').value.trim();
+
+      const newPost = {
+        id: 'board-' + Date.now(),
+        title,
+        category,
+        author,
+        date: new Date().toISOString().substring(0, 10),
+        views: 1,
+        content,
+        comments: []
+      };
+
+      boardPosts.unshift(newPost);
+      localStorage.setItem('clp_community_board_v1', JSON.stringify(boardPosts));
+      closeWriteModal();
+      renderBoardTable();
+      alert('게시글이 성공적으로 등록되었습니다.');
+    }
+
+    function openDetailModal(id) {
+      currentDetailId = id;
+      const post = boardPosts.find(p => p.id === id);
+      if (!post) return;
+
+      post.views += 1;
+      localStorage.setItem('clp_community_board_v1', JSON.stringify(boardPosts));
+
+      document.getElementById('detail-category').innerText = post.category;
+      document.getElementById('detail-date').innerText = post.date;
+      document.getElementById('detail-title').innerText = post.title;
+      document.getElementById('detail-author').innerText = `작성자: ${post.author}`;
+      document.getElementById('detail-views').innerText = `조회 ${post.views}`;
+      document.getElementById('detail-content').innerText = post.content;
+
+      renderComments(post);
+
+      document.getElementById('btn-delete-post').onclick = () => {
+        if (confirm('이 게시글을 삭제하시겠습니까?')) {
+          boardPosts = boardPosts.filter(p => p.id !== id);
+          localStorage.setItem('clp_community_board_v1', JSON.stringify(boardPosts));
+          closeDetailModal();
+          renderBoardTable();
+        }
+      };
+
+      document.getElementById('modal-detail').classList.remove('hidden');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('modal-detail').classList.add('hidden');
+      renderBoardTable();
+    }
+
+    function renderComments(post) {
+      const list = post.comments || [];
+      document.getElementById('comment-count').innerText = list.length;
+      const container = document.getElementById('comments-list');
+
+      if (list.length === 0) {
+        container.innerHTML = `<div class="text-[11px] text-gray-400 py-1">등록된 댓글이 없습니다. 첫 의견을 남겨보세요!</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(c => `
+        <div class="p-2.5 rounded bg-slate-50 border border-slate-200 text-xs">
+          <div class="flex items-center justify-between text-[11px] text-gray-500 mb-1">
+            <span class="font-bold text-[#00236f]">${c.author}</span>
+            <span class="num-font">${c.date}</span>
+          </div>
+          <div class="text-[#131b2e] leading-snug">${c.text}</div>
+        </div>
+      `).join('');
+    }
+
+    function submitComment() {
+      const input = document.getElementById('comment-input');
+      const text = input.value.trim();
+      if (!text || !currentDetailId) return;
+
+      const post = boardPosts.find(p => p.id === currentDetailId);
+      if (!post) return;
+
+      if (!post.comments) post.comments = [];
+      post.comments.push({
+        author: '이창환 (병원사업부)',
+        date: new Date().toISOString().substring(0, 10),
+        text
+      });
+
+      localStorage.setItem('clp_community_board_v1', JSON.stringify(boardPosts));
+      input.value = '';
+      renderComments(post);
+    }
+
+    window.addEventListener('DOMContentLoaded', initBoard);
+  </script>
+</body>
+</html>
