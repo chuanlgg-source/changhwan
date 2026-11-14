@@ -41,7 +41,7 @@
 <body class="min-h-screen flex flex-col">
 
   <!-- ========================================================================= -->
-  <!-- 1. LOGIN SCREEN                                                           -->
+  <!-- 1. LOGIN SCREEN (클린 엔터프라이즈 로그인)                                  -->
   <!-- ========================================================================= -->
   <div id="screen-login" class="flex-1 flex flex-col justify-center items-center p-4 sm:p-6 bg-[#faf8ff] relative overflow-hidden">
     <div class="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-3xl h-72 bg-gradient-to-b from-[#eaedff] to-transparent rounded-full blur-3xl pointer-events-none opacity-70"></div>
@@ -56,63 +56,51 @@
           업무 통합 포털 시스템
         </h1>
         <p class="text-xs sm:text-sm text-[#444651] mt-1.5">
-          병원부 미결 원장 대사, 금융 시뮬레이터, 업무 지식 블로그 통합 공간
+          병원부 미결 원장 대사, 금융 시뮬레이터, 업무 지식 허브
         </p>
       </div>
 
-      <!-- Login Box -->
+      <!-- Login Card -->
       <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-lg p-6 sm:p-8">
-        <!-- Connection Badge -->
-        <div class="mb-5 p-3 rounded-lg border text-xs flex items-center justify-between bg-[#f2f3ff] border-[#dae2fd]">
-          <div class="flex items-center gap-2">
-            <span id="login-sb-dot" class="w-2 h-2 rounded-full bg-[#2563eb] animate-pulse"></span>
-            <span id="login-sb-text" class="font-semibold text-[#131b2e]">포털 인증 시스템 준비 완료</span>
-          </div>
-          <button onclick="openSupabaseModal();" class="text-[11px] px-2 py-0.5 rounded bg-white hover:bg-[#eaedff] text-[#1e3a8a] font-bold border border-[#c5c5d3] transition">
-            ⚙️ DB 설정
-          </button>
-        </div>
-
         <form onsubmit="event.preventDefault(); handleFormLogin();" class="space-y-4">
           <div>
-            <label class="block text-xs font-bold text-[#131b2e] mb-1">업무용 이메일</label>
-            <input type="email" id="input-email" value="chuan@hospital.com" required
-              class="w-full px-3.5 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white">
+            <label class="block text-xs font-bold text-[#131b2e] mb-1.5">업무용 이메일 (ID)</label>
+            <input type="email" id="input-email" placeholder="name@hospital.com" required
+              class="w-full px-3.5 py-2.5 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white">
           </div>
           <div>
-            <label class="block text-xs font-bold text-[#131b2e] mb-1">비밀번호</label>
-            <input type="password" id="input-password" value="password123" required
-              class="w-full px-3.5 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white">
+            <label class="block text-xs font-bold text-[#131b2e] mb-1.5">비밀번호 (Password)</label>
+            <input type="password" id="input-password" placeholder="••••••••" required
+              class="w-full px-3.5 py-2.5 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white">
           </div>
-          <div id="login-error" class="hidden p-2.5 rounded bg-[#fef2f2] border border-[#fecaca] text-[#dc2626] text-xs font-medium"></div>
-          <button type="submit" class="w-full py-2.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-md shadow transition cursor-pointer">
+          <div id="login-error" class="hidden p-2.5 rounded bg-[#fef2f2] border border-[#fecaca] text-[#dc2626] text-xs font-semibold"></div>
+          <button type="submit" id="btn-login-submit" class="w-full py-2.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-md shadow transition cursor-pointer">
             포털 시스템 로그인 →
           </button>
         </form>
 
-        <!-- One-click Quick Login -->
+        <!-- Account Access Guide -->
         <div class="mt-6 pt-5 border-t border-[#e2e8f0]">
-          <div class="text-xs font-bold text-[#444651] mb-2.5 flex items-center justify-between">
-            <span>⚡ 원클릭 빠른 접속 계정</span>
-            <span class="text-[10px] font-normal text-[#757682]">클릭 시 즉시 입장</span>
+          <div class="text-[11px] font-bold text-[#444651] mb-2 flex items-center justify-between">
+            <span>🔑 기본 발급 계정 안내 (클릭 시 자동 입력)</span>
           </div>
-          <div class="space-y-2">
-            <button onclick="quickLogin('chuan@hospital.com', '이창환', 'finance_manager', '병원사업부 / 정산총괄');"
+          <div class="grid grid-cols-1 gap-2">
+            <button type="button" onclick="fillLogin('chuan@hospital.com', 'password123');"
               class="w-full text-left p-2.5 rounded-md border border-[#cbd5e1] bg-[#faf8ff] hover:bg-[#eaedff] transition flex items-center justify-between">
               <div>
-                <div class="font-bold text-[#00236f] text-xs">이창환 (정산 총괄 매니저)</div>
-                <div class="text-[11px] text-[#757682]">chuan@hospital.com • 병원사업부</div>
+                <div class="font-bold text-[#00236f] text-xs">이창환 (병원사업부 / 정산총괄)</div>
+                <div class="text-[11px] text-[#757682] num-font">ID: chuan@hospital.com | PW: password123</div>
               </div>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0]">Finance Manager</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0]">업무계정</span>
             </button>
 
-            <button onclick="quickLogin('admin@hospital.com', '시스템 관리자', 'admin', 'IT 인프라팀');"
+            <button type="button" onclick="fillLogin('admin@hospital.com', 'admin1234');"
               class="w-full text-left p-2.5 rounded-md border border-[#cbd5e1] bg-[#faf8ff] hover:bg-[#eaedff] transition flex items-center justify-between">
               <div>
-                <div class="font-bold text-[#00236f] text-xs">시스템 관리자 (전체 권한)</div>
-                <div class="text-[11px] text-[#757682]">admin@hospital.com • 메뉴 추가/관리</div>
+                <div class="font-bold text-[#00236f] text-xs">내부관리자 (계정/비밀번호/메뉴 통합 관리)</div>
+                <div class="text-[11px] text-[#757682] num-font">ID: admin@hospital.com | PW: admin1234</div>
               </div>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]">Admin</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]">내부관리</span>
             </button>
           </div>
         </div>
@@ -125,7 +113,7 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- 2. PORTAL MAIN WORKSPACE                                                  -->
+  <!-- 2. PORTAL MAIN WORKSPACE (클린 상단 GNB: 메뉴추가/DB설정 버튼 완전 제거)     -->
   <!-- ========================================================================= -->
   <div id="screen-portal" class="hidden flex-1 flex flex-col min-h-screen">
     <!-- TOP GNB -->
@@ -140,42 +128,24 @@
 
         <!-- Dynamic Theme Tabs (GNB) -->
         <nav id="gnb-theme-tabs" class="flex items-center gap-1 overflow-x-auto py-1">
-          <!-- Populated dynamically -->
+          <!-- Populated dynamically based on user role -->
         </nav>
 
-        <!-- Right Controls -->
+        <!-- Clean Right Controls: User Profile, My Password Change & Logout ONLY -->
         <div class="flex items-center gap-2.5 shrink-0">
-          <button onclick="openMenuManagerModal();"
-            class="px-2.5 py-1 rounded bg-[#059669] hover:bg-[#047857] text-white text-[11px] font-bold flex items-center gap-1 shadow transition cursor-pointer"
-            title="코딩 없이 화면에서 새 메뉴/하위메뉴 추가">
-            <span>➕ 메뉴 추가/관리</span>
-          </button>
-
-          <button onclick="openSupabaseModal();"
-            id="gnb-sb-btn"
-            class="hidden md:flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded bg-[#1e3a8a]/80 hover:bg-[#1e3a8a] border border-[#3b82f6]/30 text-[#dae2fd] cursor-pointer">
-            <span id="gnb-sb-dot" class="w-1.5 h-1.5 rounded-full bg-[#60a5fa]"></span>
-            <span id="gnb-sb-label">DB 설정</span>
-          </button>
-
-          <!-- Role Switcher -->
-          <div class="hidden sm:flex items-center gap-1 bg-[#131b2e] px-2 py-1 rounded border border-white/10 text-[11px]">
-            <span class="text-white/60">권한:</span>
-            <select id="gnb-role-select" onchange="changeUserRole(this.value);" class="bg-transparent text-[#90a8ff] font-bold focus:outline-none cursor-pointer">
-              <option value="finance_manager" class="bg-[#131b2e] text-white">Finance Manager</option>
-              <option value="admin" class="bg-[#131b2e] text-white">Admin</option>
-              <option value="staff" class="bg-[#131b2e] text-white">Staff</option>
-            </select>
-          </div>
-
-          <!-- User Profile & Logout -->
-          <div class="flex items-center gap-2 pl-2 border-l border-white/15">
+          <div class="flex items-center gap-2">
             <div id="gnb-user-avatar" class="w-7 h-7 rounded-full bg-[#1e3a8a] border border-[#90a8ff]/40 flex items-center justify-center font-bold text-xs text-white">이</div>
-            <div class="hidden lg:block text-left leading-tight">
-              <div id="gnb-user-name" class="text-xs font-bold">이창환</div>
+            <div class="hidden md:block text-left leading-tight">
+              <div class="flex items-center gap-1.5">
+                <span id="gnb-user-name" class="text-xs font-bold">이창환</span>
+                <span id="gnb-user-role-badge" class="text-[10px] px-1.5 py-0.2 rounded bg-[#1e3a8a] text-[#90a8ff] font-semibold">Manager</span>
+              </div>
               <div id="gnb-user-dept" class="text-[10px] text-[#dae2fd]/75">병원사업부</div>
             </div>
-            <button onclick="logoutPortal();" class="text-xs text-white/75 hover:text-white px-2 py-1 rounded hover:bg-white/10 transition ml-1">
+            <button onclick="openMyPasswordModal();" class="text-[11px] text-[#dae2fd] hover:text-white px-2 py-1 rounded hover:bg-white/10 transition ml-1 border border-white/15">
+              비밀번호 변경
+            </button>
+            <button onclick="logoutPortal();" class="text-xs text-white/80 hover:text-white px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 transition font-semibold">
               로그아웃
             </button>
           </div>
@@ -185,7 +155,7 @@
 
     <!-- WORKSPACE BODY: SIDEBAR + CONTENT -->
     <div class="max-w-[1800px] w-full mx-auto flex-1 flex flex-col lg:flex-row">
-      <!-- LNB SIDEBAR -->
+      <!-- LNB SIDEBAR (하단 메뉴추가 버튼 제거, 클린 구성) -->
       <aside class="w-full lg:w-64 shrink-0 bg-white border-b lg:border-b-0 lg:border-r border-[#e2e8f0] flex flex-col justify-between">
         <div class="p-4 space-y-5">
           <!-- Active Theme Box -->
@@ -207,23 +177,16 @@
           <!-- Submenus Tree -->
           <div>
             <div class="flex items-center justify-between text-[11px] font-bold text-[#757682] px-2 mb-1.5 uppercase tracking-wider">
-              <span>하위 세부메뉴 그룹</span>
-              <button onclick="openMenuManagerModal();" class="text-[10px] text-[#2563eb] hover:underline font-bold">+ 메뉴 추가</button>
+              <span>하위 세부메뉴</span>
             </div>
             <div id="lnb-submenus-slot" class="space-y-1"></div>
           </div>
         </div>
 
-        <!-- LNB Bottom Quick Add Box -->
-        <div class="p-3 border-t border-[#e2e8f0] bg-[#faf8ff] space-y-2">
-          <button onclick="openMenuManagerModal();"
-            class="w-full p-2.5 rounded-lg border border-[#cbd5e1] bg-white hover:bg-[#eaedff] transition text-left flex items-center justify-between">
-            <div>
-              <div class="text-xs font-bold text-[#00236f]">➕ 간편 메뉴 추가/그룹 관리</div>
-              <div class="text-[10px] text-[#757682]">코딩 없이 화면에서 즉시 메뉴 등록</div>
-            </div>
-            <span class="text-xs font-bold text-[#2563eb]">→</span>
-          </button>
+        <!-- Clean Sidebar Footer -->
+        <div class="p-3 border-t border-[#e2e8f0] bg-[#faf8ff] text-[11px] text-[#757682] flex items-center justify-between">
+          <span>Clinical Ledger v2.6</span>
+          <span id="lnb-user-email" class="num-font truncate max-w-[140px]">chuan@hospital.com</span>
         </div>
       </aside>
 
@@ -249,89 +212,35 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- 3. MODAL: NO-CODE MENU & THEME GROUP MANAGER                              -->
+  <!-- 3. MODAL: 내 비밀번호 변경 (본인 계정 보안 관리)                           -->
   <!-- ========================================================================= -->
-  <div id="modal-menu-manager" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-2xl w-full max-w-2xl p-6 fade-in max-h-[90vh] overflow-y-auto">
+  <div id="modal-my-password" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-2xl w-full max-w-md p-6 fade-in">
       <div class="flex items-center justify-between pb-3 border-b border-[#e2e8f0] mb-4">
         <div>
-          <span class="text-[10px] font-bold text-[#059669] uppercase tracking-wider">NO-CODE MENU BUILDER</span>
-          <h2 class="text-lg font-bold font-headline text-[#00236f]">신규 대시보드 & 하위메뉴 그룹화 매니저</h2>
+          <span class="text-[10px] font-bold text-[#1e3a8a] uppercase tracking-wider">ACCOUNT SECURITY</span>
+          <h2 class="text-base font-bold font-headline text-[#00236f]">내 비밀번호 변경</h2>
         </div>
-        <button onclick="closeMenuManagerModal();" class="text-gray-400 hover:text-gray-700 text-xl font-bold">&times;</button>
+        <button onclick="closeMyPasswordModal();" class="text-gray-400 hover:text-gray-700 text-xl font-bold">&times;</button>
       </div>
-
-      <!-- Guide Notice -->
-      <div class="p-3.5 rounded-lg bg-[#f2f3ff] border border-[#dae2fd] text-xs text-[#131b2e] mb-5 space-y-1">
-        <div class="font-bold text-[#00236f]">💡 가장 쉽고 효율적인 신규 메뉴 추가 방법 (2가지 방식)</div>
-        <div>1. <strong>외부/내부 HTML 파일 연결</strong>: 새로 코딩한 HTML 파일명(예: <code>template-page.html</code>) 또는 URL을 입력하면 포털 내부 화면으로 즉시 통합됩니다.</div>
-        <div>2. <strong>내장 표준 대시보드 생성</strong>: 별도 파일 없이도 즉시 KPI 카드와 테이블이 있는 신규 대시보드/서브메뉴를 자동 생성합니다.</div>
-      </div>
-
-      <!-- Add Menu Form -->
-      <form onsubmit="event.preventDefault(); handleAddMenu();" class="space-y-4 bg-[#faf8ff] p-4 rounded-lg border border-[#cbd5e1]">
-        <div class="font-bold text-xs text-[#00236f] border-b border-[#e2e8f0] pb-2">➕ 새 하위메뉴 또는 신규 테마 추가</div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-[#131b2e] mb-1">추가할 대상 테마 그룹</label>
-            <select id="mm-theme-select" onchange="toggleNewThemeInputs();" class="w-full px-3 py-2 text-xs bg-white border border-[#cbd5e1] rounded">
-              <!-- Populated dynamically -->
-            </select>
-          </div>
-          <div id="mm-new-theme-box" class="hidden">
-            <label class="block text-xs font-bold text-[#2563eb] mb-1">신규 업무 테마명 입력 *</label>
-            <input type="text" id="mm-new-theme-title" placeholder="예: 인사/총무 관리" class="w-full px-3 py-2 text-xs bg-white border border-[#2563eb] rounded">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-[#131b2e] mb-1">신규 메뉴 제목 *</label>
-            <input type="text" id="mm-menu-title" required placeholder="예: 분기별 약품 재고 실사" class="w-full px-3 py-2 text-xs bg-white border border-[#cbd5e1] rounded">
-          </div>
+      <form onsubmit="event.preventDefault(); handleUpdateMyPassword();" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-[#131b2e] mb-1">현재 로그인 계정</label>
+          <input type="text" id="mp-email" disabled class="w-full px-3 py-2 text-xs bg-slate-100 border border-[#cbd5e1] rounded text-[#444651] num-font">
         </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-[#131b2e] mb-1">화면 연결 방식</label>
-            <select id="mm-menu-type" onchange="toggleMenuUrlInput();" class="w-full px-3 py-2 text-xs bg-white border border-[#cbd5e1] rounded">
-              <option value="iframe">HTML 파일 / 외부 URL 연결</option>
-              <option value="template">표준 대시보드/테이블 자동 생성</option>
-            </select>
-          </div>
-          <div id="mm-url-box" class="sm:col-span-2">
-            <label class="block text-xs font-bold text-[#131b2e] mb-1">연결할 파일 경로 또는 URL *</label>
-            <input type="text" id="mm-menu-url" value="template-page.html" placeholder="예: template-page.html 또는 https://..." class="w-full px-3 py-2 text-xs bg-white border border-[#cbd5e1] rounded">
-          </div>
+        <div>
+          <label class="block text-xs font-bold text-[#131b2e] mb-1">새 비밀번호 입력 *</label>
+          <input type="password" id="mp-new-pw" required minlength="4" placeholder="새로운 비밀번호 입력" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
         </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-[#131b2e] mb-1">배지 텍스트 (선택)</label>
-            <input type="text" id="mm-menu-badge" value="신규" placeholder="예: 신규, 핵심, Beta" class="w-full px-3 py-2 text-xs bg-white border border-[#cbd5e1] rounded">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-[#131b2e] mb-1">접근 허용 권한</label>
-            <select id="mm-menu-role" class="w-full px-3 py-2 text-xs bg-white border border-[#cbd5e1] rounded">
-              <option value="all">모든 임직원 (전체 허용)</option>
-              <option value="admin">시스템 관리자 전용 (Admin)</option>
-            </select>
-          </div>
+        <div>
+          <label class="block text-xs font-bold text-[#131b2e] mb-1">새 비밀번호 확인 *</label>
+          <input type="password" id="mp-confirm-pw" required minlength="4" placeholder="새로운 비밀번호 재입력" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
         </div>
-
-        <div class="flex justify-end gap-2 pt-2">
-          <button type="button" onclick="resetDefaultMenus();" class="px-3 py-1.5 border border-[#cbd5e1] bg-white text-[#757682] hover:text-[#dc2626] text-xs font-semibold rounded">
-            초기 메뉴로 리셋
-          </button>
-          <button type="submit" class="px-4 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
-            + 포털에 즉시 추가하기
-          </button>
+        <div class="flex justify-end gap-2 pt-3 border-t border-[#e2e8f0]">
+          <button type="button" onclick="closeMyPasswordModal();" class="px-4 py-1.5 border border-[#cbd5e1] text-xs font-semibold rounded">취소</button>
+          <button type="submit" class="px-4 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow">비밀번호 변경 저장</button>
         </div>
       </form>
-
-      <!-- Current Custom Menus List -->
-      <div class="mt-5">
-        <div class="text-xs font-bold text-[#00236f] mb-2">현재 등록된 전체 테마 및 하위메뉴 트리</div>
-        <div id="mm-current-list" class="space-y-2 max-h-52 overflow-y-auto pr-1"></div>
-      </div>
     </div>
   </div>
 
@@ -403,49 +312,57 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- 5. MODAL: SUPABASE CLOUD CONNECTION CONFIG                                -->
-  <!-- ========================================================================= -->
-  <div id="modal-supabase" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-2xl w-full max-w-lg p-6 fade-in">
-      <div class="flex items-center justify-between pb-3 border-b border-[#e2e8f0] mb-4">
-        <div>
-          <span class="text-[10px] font-bold text-[#2563eb] uppercase tracking-wider">SUPABASE BAAS INTEGRATION</span>
-          <h2 class="text-base font-bold font-headline text-[#00236f]">Supabase 클라우드 DB & Auth 연동 설정</h2>
-        </div>
-        <button onclick="closeSupabaseModal();" class="text-gray-400 hover:text-gray-700 text-xl font-bold">&times;</button>
-      </div>
-      <p class="text-xs text-[#444651] mb-4 leading-relaxed">
-        Supabase Project URL과 Anon Key를 입력하면 실제 클라우드 PostgreSQL DB 및 Auth와 실시간 연동됩니다. 비워두면 브라우저 영구 스토리지(LocalStorage) 모드로 즉시 동작합니다.
-      </p>
-      <form onsubmit="event.preventDefault(); saveSupabaseConfig();" class="space-y-3.5">
-        <div>
-          <label class="block text-xs font-bold text-[#131b2e] mb-1">Supabase Project URL</label>
-          <input type="url" id="sb-url" placeholder="https://your-project.supabase.co" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-[#131b2e] mb-1">Supabase Anon Public Key</label>
-          <input type="text" id="sb-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded font-mono">
-        </div>
-        <div class="flex justify-end gap-2 pt-3 border-t border-[#e2e8f0]">
-          <button type="button" onclick="clearSupabaseConfig();" class="px-3 py-1.5 border border-[#cbd5e1] text-xs font-semibold rounded text-[#757682]">연동 해제 (로컬모드)</button>
-          <button type="submit" class="px-4 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow">연동 저장</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ========================================================================= -->
-  <!-- PORTAL ENGINE SCRIPT                                                      -->
+  <!-- PORTAL ENGINE SCRIPT (SUPABASE REAL CONNECTION + INTERNAL ADMIN)          -->
   <!-- ========================================================================= -->
   <script>
     // -------------------------------------------------------------------------
-    // 1. DEFAULT MENU GROUPS (기존 통합 메뉴 무결성 100% 보장)
+    // 0. SUPABASE CREDENTIALS (제공해주신 실제 프로젝트 URL & Public Key 내장)
     // -------------------------------------------------------------------------
+    const DEFAULT_SUPABASE_URL = 'https://cbarfruyknhfjvvhcmgu.supabase.co';
+    const DEFAULT_SUPABASE_KEY = 'sb_publishable_k-LLkVT3ducZNfkzF0tGvw_36TMYhhZ';
+
+    // -------------------------------------------------------------------------
+    // 1. DEFAULT ACCOUNTS & MENU STRUCTURE (내부관리 테마 분리)
+    // -------------------------------------------------------------------------
+    const INITIAL_USERS = [
+      {
+        id: 'usr-admin',
+        email: 'admin@hospital.com',
+        password: 'admin1234',
+        name: '내부관리자',
+        department: 'IT 인프라 / 내부관리팀',
+        role: 'admin',
+        status: 'active',
+        createdAt: '2026-11-01'
+      },
+      {
+        id: 'usr-chuan',
+        email: 'chuan@hospital.com',
+        password: 'password123',
+        name: '이창환',
+        department: '병원사업부 / 정산총괄',
+        role: 'finance_manager',
+        status: 'active',
+        createdAt: '2026-11-01'
+      },
+      {
+        id: 'usr-staff',
+        email: 'staff@hospital.com',
+        password: 'staff1234',
+        name: '김정산 주임',
+        department: '병원정산관리팀',
+        role: 'staff',
+        status: 'active',
+        createdAt: '2026-11-05'
+      }
+    ];
+
     const DEFAULT_MENU_GROUPS = [
       {
         themeId: 'finance',
         themeTitle: '🏥 병원부 정산/재무',
         themeDesc: '병원 제약 공급망 정산 원장 대사 및 미결 금액 관리',
+        adminOnly: false,
         dashboard: {
           id: 'finance-dash',
           title: '미결 정산 총괄 대시보드',
@@ -454,10 +371,10 @@
         subMenus: [
           {
             id: 'reconcile-ui',
-            title: '병원부 미결 통합 원장 (Engine)',
+            title: '병원부 미결 통합 원장',
             type: 'iframe',
             url: 'reconcile_ui.html',
-            badge: '원장엔진',
+            badge: '핵심원장',
             badgeColor: 'blue',
             role: 'all'
           },
@@ -465,7 +382,7 @@
             id: 'variance-audit',
             title: '월별 미결 차액 소명 관리',
             type: 'builtin-variance',
-            badge: '신규코딩',
+            badge: '대사관리',
             badgeColor: 'amber',
             role: 'all'
           }
@@ -475,6 +392,7 @@
         themeId: 'tools',
         themeTitle: '📊 금융/자산 도구',
         themeDesc: '단리/복리 이자율 시뮬레이션 및 만기 수령액 분석',
+        adminOnly: false,
         dashboard: {
           id: 'tools-dash',
           title: '금융 시뮬레이션 종합 안내',
@@ -486,7 +404,7 @@
             title: '적금/수익 정밀 시뮬레이터',
             type: 'iframe',
             url: 'savings-simulator.html',
-            badge: '통합완료',
+            badge: '계산기',
             badgeColor: 'green',
             role: 'all'
           }
@@ -496,6 +414,7 @@
         themeId: 'knowledge',
         themeTitle: '📖 소통/블로그 허브',
         themeDesc: '사내 공지사항, 정산 매뉴얼 블로그 및 담당자 디지털 명함',
+        adminOnly: false,
         dashboard: {
           id: 'blog-main',
           title: '업무 지식 블로그 & 공지',
@@ -507,37 +426,46 @@
             title: '이창환 디지털 명함 (Profile)',
             type: 'iframe',
             url: 'business-card.html',
-            badge: '명함/QR',
+            badge: '프로필',
             badgeColor: 'blue',
             role: 'all'
           }
         ]
       },
       {
-        themeId: 'custom',
-        themeTitle: '🧩 신규 메뉴 확장 샘플',
-        themeDesc: '화면에서 버튼 클릭 또는 HTML 파일로 즉시 추가 가능한 그룹',
+        themeId: 'internal-admin',
+        themeTitle: '⚙️ 내부관리',
+        themeDesc: '업무 이메일/비밀번호 계정 관리, 메뉴 그룹화 및 Supabase 연동 관리 (내부관리자 전용)',
+        adminOnly: true, // 오직 admin 계정으로 로그인했을 때만 노출
         dashboard: {
-          id: 'custom-guide',
-          title: '신규 메뉴 그룹화 가이드',
-          type: 'builtin-guide'
+          id: 'admin-users',
+          title: '업무 계정 및 비밀번호 관리',
+          type: 'builtin-admin-users'
         },
         subMenus: [
           {
-            id: 'sample-template-html',
-            title: '신규 업무 화면 (template-page)',
-            type: 'iframe',
-            url: 'template-page.html',
-            badge: 'HTML템플릿',
+            id: 'admin-menus',
+            title: '포털 메뉴 및 테마 그룹 관리',
+            type: 'builtin-admin-menus',
+            badge: '메뉴추가',
             badgeColor: 'green',
-            role: 'all'
+            role: 'admin'
           },
           {
-            id: 'admin-console',
-            title: '시스템 보안 감사 콘솔',
-            type: 'builtin-admin',
-            badge: 'Admin전용',
-            badgeColor: 'red',
+            id: 'admin-supabase',
+            title: 'Supabase 클라우드 연동 관리',
+            type: 'builtin-admin-supabase',
+            badge: 'DB연동',
+            badgeColor: 'blue',
+            role: 'admin'
+          },
+          {
+            id: 'sample-template-html',
+            title: '신규 코딩 템플릿 미리보기',
+            type: 'iframe',
+            url: 'template-page.html',
+            badge: '템플릿',
+            badgeColor: 'amber',
             role: 'admin'
           }
         ]
@@ -558,14 +486,14 @@
       },
       {
         id: 'post-102',
-        title: '[가이드] 코딩 없이 10초 만에 신규 대시보드 및 하위메뉴 추가하기',
+        title: '[내부관리 안내] 임직원 업무 이메일 계정 발급 및 비밀번호 관리 규정',
         category: '업무가이드',
-        author: '시스템 관리자',
+        author: '내부관리자',
         date: '2026-11-12',
-        summary: '상단 [➕ 메뉴 추가/관리] 버튼을 이용해 새로운 업무 테마나 하위메뉴를 즉시 그룹화하여 등록하는 방법입니다.',
-        content: "신규 대시보드 및 하위메뉴 그룹화 방법\n\n방법 1: 화면에서 버튼 클릭으로 즉시 추가 (No-Code)\n- 상단 우측 또는 좌측 하단의 [➕ 메뉴 추가/관리] 버튼을 클릭합니다.\n- 소속될 테마를 고르고 메뉴 이름과 연결할 HTML 파일명(예: template-page.html) 또는 자동 대시보드 템플릿을 선택하면 즉시 반영됩니다.\n\n방법 2: 신규 HTML 파일 코딩 연동\n- 제공된 template-page.html 파일을 복사하여 원하는 화면을 코딩한 뒤 파일명만 등록하면 포털 내부 화면으로 완벽히 동작합니다.",
+        summary: '신규 입사자 업무 이메일/비밀번호 부여 및 메뉴 추가 관리는 내부관리자(admin@hospital.com) 계정의 [⚙️ 내부관리] 테마에서 수행합니다.',
+        content: "보안 및 내부관리 정책 안내\n\n1. 업무 이메일 및 비밀번호 관리\n- 신규 계정 생성, 부서 배정, 권한(Admin / Manager / Staff) 변경 및 비밀번호 초기화는 [⚙️ 내부관리 > 업무 계정 및 비밀번호 관리] 메뉴에서 통합 운영됩니다.\n- 일반 사용자는 우측 상단의 [비밀번호 변경] 버튼을 통해 본인의 비밀번호를 언제든 변경할 수 있습니다.\n\n2. 포털 메뉴 및 테마 그룹 관리\n- 상단 헤더의 불필요한 설정 버튼을 모두 제거하고, 내부관리자 전용 메뉴인 [⚙️ 내부관리 > 포털 메뉴 및 테마 그룹 관리]로 일원화하였습니다.",
         views: 112,
-        tags: ['메뉴추가', '그룹화가이드', '포털매뉴얼']
+        tags: ['계정관리', '비밀번호', '내부관리']
       },
       {
         id: 'post-103',
@@ -581,34 +509,68 @@
     ];
 
     // -------------------------------------------------------------------------
-    // 2. STATE & STORAGE INITIALIZATION
+    // 2. STATE & SUPABASE INITIALIZATION
     // -------------------------------------------------------------------------
     let supabaseClient = null;
+    let supabaseConnected = false;
     let currentUser = null;
+    let portalUsers = [];
     let menuGroups = [];
     let blogPosts = [];
     let activeThemeId = 'finance';
     let activeViewId = 'finance-dash';
     let blogFilterCategory = '전체';
 
-    function initApp() {
-      // Load Supabase Config
-      const sbUrl = localStorage.getItem('clp_sb_url');
-      const sbKey = localStorage.getItem('clp_sb_key');
+    async function initApp() {
+      // 1. Initialize Supabase with provided credentials
+      const sbUrl = localStorage.getItem('clp_sb_url') || DEFAULT_SUPABASE_URL;
+      const sbKey = localStorage.getItem('clp_sb_key') || DEFAULT_SUPABASE_KEY;
+
       if (sbUrl && sbKey && window.supabase) {
         try {
           supabaseClient = window.supabase.createClient(sbUrl, sbKey);
-          updateSupabaseStatusUI(true);
+          supabaseConnected = true;
         } catch (e) {
-          console.warn('Supabase init failed:', e);
-          updateSupabaseStatusUI(false);
+          console.warn('Supabase client init warning:', e);
+          supabaseConnected = false;
         }
-      } else {
-        updateSupabaseStatusUI(false);
       }
 
-      // Load Menu Groups
-      const savedMenus = localStorage.getItem('clp_menu_groups_v2');
+      // 2. Load Users (LocalStorage + Supabase sync)
+      const savedUsers = localStorage.getItem('clp_portal_users_v3');
+      if (savedUsers) {
+        try {
+          portalUsers = JSON.parse(savedUsers);
+        } catch {
+          portalUsers = JSON.parse(JSON.stringify(INITIAL_USERS));
+        }
+      } else {
+        portalUsers = JSON.parse(JSON.stringify(INITIAL_USERS));
+        localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
+      }
+
+      // Try syncing users from Supabase table `portal_users` if exists
+      if (supabaseClient) {
+        try {
+          const { data, error } = await supabaseClient.from('portal_users').select('*').order('created_at', { ascending: true });
+          if (!error && data && data.length > 0) {
+            portalUsers = data.map(u => ({
+              id: u.id,
+              email: u.email,
+              password: u.password_hash || 'password123',
+              name: u.full_name,
+              department: u.department || '병원사업부',
+              role: u.role || 'staff',
+              status: u.status || 'active',
+              createdAt: (u.created_at || '').substring(0, 10)
+            }));
+            localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
+          }
+        } catch (e) {}
+      }
+
+      // 3. Load Menu Groups
+      const savedMenus = localStorage.getItem('clp_menu_groups_v3');
       if (savedMenus) {
         try {
           menuGroups = JSON.parse(savedMenus);
@@ -617,10 +579,11 @@
         }
       } else {
         menuGroups = JSON.parse(JSON.stringify(DEFAULT_MENU_GROUPS));
+        localStorage.setItem('clp_menu_groups_v3', JSON.stringify(menuGroups));
       }
 
-      // Load Blog Posts
-      const savedPosts = localStorage.getItem('clp_blog_posts_v2');
+      // 4. Load Blog Posts
+      const savedPosts = localStorage.getItem('clp_blog_posts_v3');
       if (savedPosts) {
         try {
           blogPosts = JSON.parse(savedPosts);
@@ -629,13 +592,34 @@
         }
       } else {
         blogPosts = JSON.parse(JSON.stringify(DEFAULT_BLOG_POSTS));
+        localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
       }
 
-      // Check Saved Login Session
-      const savedUser = localStorage.getItem('clp_session_user');
-      if (savedUser) {
+      if (supabaseClient) {
         try {
-          currentUser = JSON.parse(savedUser);
+          const { data, error } = await supabaseClient.from('blog_posts').select('*').order('created_at', { ascending: false });
+          if (!error && data && data.length > 0) {
+            blogPosts = data.map(p => ({
+              id: p.id,
+              title: p.title,
+              category: p.category || '공지',
+              author: p.author_name || '관리자',
+              date: (p.created_at || '').substring(0, 10),
+              summary: p.summary || p.title,
+              content: p.content || '',
+              views: p.view_count || 1,
+              tags: p.tags || ['업무공유']
+            }));
+            localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
+          }
+        } catch (e) {}
+      }
+
+      // 5. Restore Session
+      const savedSession = localStorage.getItem('clp_session_user_v3');
+      if (savedSession) {
+        try {
+          currentUser = JSON.parse(savedSession);
           enterPortal();
         } catch {
           showLoginScreen();
@@ -645,64 +629,90 @@
       }
     }
 
-    function updateSupabaseStatusUI(connected) {
-      const loginDot = document.getElementById('login-sb-dot');
-      const loginText = document.getElementById('login-sb-text');
-      const gnbDot = document.getElementById('gnb-sb-dot');
-      const gnbLabel = document.getElementById('gnb-sb-label');
-
-      if (connected) {
-        if (loginDot) loginDot.className = 'w-2 h-2 rounded-full bg-[#059669]';
-        if (loginText) loginText.innerText = 'Supabase 클라우드 실시간 연동됨';
-        if (gnbDot) gnbDot.className = 'w-1.5 h-1.5 rounded-full bg-[#10b981]';
-        if (gnbLabel) gnbLabel.innerText = 'Supabase 연결됨';
-      } else {
-        if (loginDot) loginDot.className = 'w-2 h-2 rounded-full bg-[#2563eb]';
-        if (loginText) loginText.innerText = '하이브리드 스토리지 인증 활성화';
-        if (gnbDot) gnbDot.className = 'w-1.5 h-1.5 rounded-full bg-[#60a5fa]';
-        if (gnbLabel) gnbLabel.innerText = 'DB 연동 설정';
-      }
+    // -------------------------------------------------------------------------
+    // 3. LOGIN & AUTHENTICATION (이메일 / 비밀번호 검증)
+    // -------------------------------------------------------------------------
+    function fillLogin(email, pw) {
+      document.getElementById('input-email').value = email;
+      document.getElementById('input-password').value = pw;
+      document.getElementById('login-error').classList.add('hidden');
+      handleFormLogin();
     }
 
-    // -------------------------------------------------------------------------
-    // 3. AUTHENTICATION FLOW
-    // -------------------------------------------------------------------------
     async function handleFormLogin() {
-      const email = document.getElementById('input-email').value.trim();
+      const email = document.getElementById('input-email').value.trim().toLowerCase();
       const pw = document.getElementById('input-password').value;
+      const errBox = document.getElementById('login-error');
+      errBox.classList.add('hidden');
 
+      // 1. Check in managed portalUsers list
+      const found = portalUsers.find(u => u.email.toLowerCase() === email);
+      if (found) {
+        if (found.status === 'locked') {
+          errBox.innerText = '잠금(비활성화) 처리된 계정입니다. 내부관리자에게 문의하세요.';
+          errBox.classList.remove('hidden');
+          return;
+        }
+        if (found.password !== pw) {
+          errBox.innerText = '비밀번호가 일치하지 않습니다. 다시 확인해 주세요.';
+          errBox.classList.remove('hidden');
+          return;
+        }
+
+        // Also attempt Supabase Auth sign-in silently if configured
+        if (supabaseClient) {
+          try {
+            await supabaseClient.auth.signInWithPassword({ email, password: pw });
+          } catch (e) {}
+        }
+
+        loginSuccess(found);
+        return;
+      }
+
+      // 2. If not in local list, check Supabase Auth directly
       if (supabaseClient) {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pw });
         if (!error && data?.user) {
-          quickLogin(
-            data.user.email,
-            data.user.user_metadata?.full_name || '인증 사용자',
-            data.user.user_metadata?.role || 'finance_manager',
-            data.user.user_metadata?.department || '병원사업부'
-          );
+          const sbUser = {
+            id: data.user.id,
+            email: data.user.email,
+            password: pw,
+            name: data.user.user_metadata?.full_name || email.split('@')[0],
+            department: data.user.user_metadata?.department || '병원사업부',
+            role: data.user.user_metadata?.role || 'staff',
+            status: 'active',
+            createdAt: new Date().toISOString().substring(0, 10)
+          };
+          portalUsers.push(sbUser);
+          localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
+          loginSuccess(sbUser);
           return;
         }
       }
 
-      // Fallback / Demo login
-      const isAdm = email.includes('admin');
-      quickLogin(
-        email,
-        isAdm ? '시스템 관리자' : '이창환',
-        isAdm ? 'admin' : 'finance_manager',
-        isAdm ? 'IT 인프라팀' : '병원사업부 / 정산총괄'
-      );
+      errBox.innerText = '등록되지 않은 업무 이메일이거나 비밀번호가 올바르지 않습니다.';
+      errBox.classList.remove('hidden');
     }
 
-    function quickLogin(email, name, role, dept) {
-      currentUser = { email, name, role, dept };
-      localStorage.setItem('clp_session_user', JSON.stringify(currentUser));
+    function loginSuccess(userObj) {
+      currentUser = {
+        id: userObj.id,
+        email: userObj.email,
+        name: userObj.name,
+        dept: userObj.department,
+        role: userObj.role
+      };
+      localStorage.setItem('clp_session_user_v3', JSON.stringify(currentUser));
+      activeThemeId = 'finance';
       enterPortal();
     }
 
     function logoutPortal() {
-      if (supabaseClient) supabaseClient.auth.signOut();
-      localStorage.removeItem('clp_session_user');
+      if (supabaseClient) {
+        try { supabaseClient.auth.signOut(); } catch (e) {}
+      }
+      localStorage.removeItem('clp_session_user_v3');
       currentUser = null;
       showLoginScreen();
     }
@@ -719,32 +729,87 @@
       document.getElementById('gnb-user-name').innerText = currentUser.name;
       document.getElementById('gnb-user-dept').innerText = currentUser.dept;
       document.getElementById('gnb-user-avatar').innerText = currentUser.name.charAt(0);
-      document.getElementById('gnb-role-select').value = currentUser.role;
+      document.getElementById('lnb-user-email').innerText = currentUser.email;
+
+      const roleBadge = document.getElementById('gnb-user-role-badge');
+      if (currentUser.role === 'admin') {
+        roleBadge.innerText = '내부관리자';
+        roleBadge.className = 'text-[10px] px-1.5 py-0.2 rounded bg-[#eff6ff] text-[#2563eb] font-bold';
+      } else if (currentUser.role === 'finance_manager') {
+        roleBadge.innerText = '총괄매니저';
+        roleBadge.className = 'text-[10px] px-1.5 py-0.2 rounded bg-[#ecfdf5] text-[#059669] font-bold';
+      } else {
+        roleBadge.innerText = '일반임직원';
+        roleBadge.className = 'text-[10px] px-1.5 py-0.2 rounded bg-white/15 text-[#dae2fd] font-semibold';
+      }
 
       renderGNB();
       selectTheme(activeThemeId);
     }
 
-    function changeUserRole(newRole) {
-      currentUser.role = newRole;
-      localStorage.setItem('clp_session_user', JSON.stringify(currentUser));
-      renderLNB();
-      renderViewport(activeViewId);
+    // -------------------------------------------------------------------------
+    // 4. MY PASSWORD CHANGE MODAL (본인 비밀번호 변경)
+    // -------------------------------------------------------------------------
+    function openMyPasswordModal() {
+      document.getElementById('mp-email').value = `${currentUser.name} (${currentUser.email})`;
+      document.getElementById('mp-new-pw').value = '';
+      document.getElementById('mp-confirm-pw').value = '';
+      document.getElementById('modal-my-password').classList.remove('hidden');
+    }
+
+    function closeMyPasswordModal() {
+      document.getElementById('modal-my-password').classList.add('hidden');
+    }
+
+    async function handleUpdateMyPassword() {
+      const newPw = document.getElementById('mp-new-pw').value;
+      const confirmPw = document.getElementById('mp-confirm-pw').value;
+
+      if (newPw !== confirmPw) {
+        alert('새 비밀번호와 확인 비밀번호가 일치하지 않습니다.');
+        return;
+      }
+
+      const idx = portalUsers.findIndex(u => u.email.toLowerCase() === currentUser.email.toLowerCase());
+      if (idx > -1) {
+        portalUsers[idx].password = newPw;
+        localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
+      }
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.auth.updateUser({ password: newPw });
+          await supabaseClient.from('portal_users').update({ password_hash: newPw }).eq('email', currentUser.email);
+        } catch (e) {}
+      }
+
+      closeMyPasswordModal();
+      alert('비밀번호가 성공적으로 변경되었습니다. 다음 로그인부터 새 비밀번호가 적용됩니다.');
     }
 
     // -------------------------------------------------------------------------
-    // 4. NAVIGATION (GNB & LNB) RENDERING
+    // 5. NAVIGATION (GNB & LNB) RENDERING — 내부관리 계정 분리 적용
     // -------------------------------------------------------------------------
+    function getVisibleMenuGroups() {
+      return menuGroups.filter(g => !g.adminOnly || currentUser.role === 'admin');
+    }
+
     function renderGNB() {
       const nav = document.getElementById('gnb-theme-tabs');
       nav.innerHTML = '';
 
-      menuGroups.forEach(group => {
+      const visibleGroups = getVisibleMenuGroups();
+      visibleGroups.forEach(group => {
         const isActive = group.themeId === activeThemeId;
+        const isInternalAdmin = group.themeId === 'internal-admin';
         const btn = document.createElement('button');
         btn.className = `px-3.5 py-1.5 rounded-md text-xs font-bold whitespace-nowrap transition cursor-pointer ${
           isActive
-            ? 'bg-[#1e3a8a] text-white shadow-inner border border-[#3b82f6]/50'
+            ? isInternalAdmin
+              ? 'bg-[#dc2626] text-white shadow-inner border border-red-400'
+              : 'bg-[#1e3a8a] text-white shadow-inner border border-[#3b82f6]/50'
+            : isInternalAdmin
+            ? 'text-amber-300 hover:bg-white/10 hover:text-amber-200 border border-amber-400/30'
             : 'text-white/80 hover:bg-white/10 hover:text-white'
         }`;
         btn.innerText = group.themeTitle;
@@ -754,7 +819,8 @@
     }
 
     function selectTheme(themeId) {
-      const group = menuGroups.find(g => g.themeId === themeId) || menuGroups[0];
+      const visibleGroups = getVisibleMenuGroups();
+      const group = visibleGroups.find(g => g.themeId === themeId) || visibleGroups[0];
       activeThemeId = group.themeId;
       renderGNB();
       renderLNB();
@@ -762,7 +828,8 @@
     }
 
     function renderLNB() {
-      const group = menuGroups.find(g => g.themeId === activeThemeId) || menuGroups[0];
+      const visibleGroups = getVisibleMenuGroups();
+      const group = visibleGroups.find(g => g.themeId === activeThemeId) || visibleGroups[0];
       document.getElementById('lnb-theme-title').innerText = group.themeTitle;
       document.getElementById('lnb-theme-desc').innerText = group.themeDesc;
       document.getElementById('lnb-menu-count').innerText = `${group.subMenus.length + 1}개 메뉴`;
@@ -801,7 +868,7 @@
             <span class="truncate">🔒 ${sub.title}</span>
             <span class="text-[10px] px-1.5 py-0.2 rounded bg-red-50 text-red-600 font-bold">Admin</span>
           `;
-          btn.onclick = () => alert('이 메뉴는 시스템 관리자(Admin) 전용입니다.\n상단 우측 [권한] 선택기를 Admin으로 변경해 보세요!');
+          btn.onclick = () => alert('이 메뉴는 내부관리자(Admin) 전용입니다.');
         } else {
           const badgeClasses = isActive
             ? 'bg-white/20 text-white'
@@ -830,10 +897,11 @@
     }
 
     // -------------------------------------------------------------------------
-    // 5. MAIN VIEWPORT RENDERING (ALL DASHBOARDS & SUBMENUS)
+    // 6. MAIN VIEWPORT RENDERING (ALL DASHBOARDS & INTERNAL ADMIN VIEWS)
     // -------------------------------------------------------------------------
     function renderViewport(viewId) {
-      const group = menuGroups.find(g => g.themeId === activeThemeId) || menuGroups[0];
+      const visibleGroups = getVisibleMenuGroups();
+      const group = visibleGroups.find(g => g.themeId === activeThemeId) || visibleGroups[0];
       let currentItem = group.dashboard.id === viewId
         ? group.dashboard
         : group.subMenus.find(s => s.id === viewId) || group.dashboard;
@@ -845,7 +913,7 @@
       const body = document.getElementById('viewport-body');
       actionsSlot.innerHTML = '';
 
-      // 1. Iframe External / Internal HTML Integration (reconcile_ui, savings-simulator, business-card, custom html)
+      // A. Iframe External / Internal HTML Integration
       if (currentItem.type === 'iframe') {
         actionsSlot.innerHTML = `
           <a href="${currentItem.url}" target="_blank" rel="noopener"
@@ -865,7 +933,25 @@
         return;
       }
 
-      // 2. Built-in Finance Dashboard
+      // B. [내부관리 1] 업무 계정 및 비밀번호 관리 (Account & Password Management)
+      if (currentItem.type === 'builtin-admin-users') {
+        renderAdminUsersView(body, actionsSlot);
+        return;
+      }
+
+      // C. [내부관리 2] 포털 메뉴 및 테마 그룹 관리 (Menu & Theme Group Management)
+      if (currentItem.type === 'builtin-admin-menus') {
+        renderAdminMenusView(body, actionsSlot);
+        return;
+      }
+
+      // D. [내부관리 3] Supabase 클라우드 DB 연동 관리
+      if (currentItem.type === 'builtin-admin-supabase') {
+        renderAdminSupabaseView(body, actionsSlot);
+        return;
+      }
+
+      // E. Built-in Finance Dashboard
       if (currentItem.type === 'builtin-finance-dash') {
         actionsSlot.innerHTML = `
           <button onclick="openView('reconcile-ui');" class="px-3.5 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
@@ -877,16 +963,13 @@
             <!-- Hero Welcome -->
             <div class="bg-gradient-to-r from-[#00236f] via-[#1e3a8a] to-[#2563eb] rounded-xl text-white p-6 shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-white/15 text-[#dae2fd]">Clinical Ledger Precision v2.5</span>
+                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-white/15 text-[#dae2fd]">Clinical Ledger Precision v2.6</span>
                 <h1 class="text-xl sm:text-2xl font-bold font-headline mt-2">병원부 미결 정산 총괄 대시보드</h1>
                 <p class="text-xs text-[#dae2fd] mt-1">기준월 2026년 11월 | 주요 수탁 병원 예정금액 대비 실집행 원장 대사 및 미결 현황</p>
               </div>
               <div class="flex gap-2">
                 <button onclick="openView('reconcile-ui');" class="px-4 py-2 bg-white text-[#00236f] text-xs font-bold rounded-md shadow hover:bg-[#eaedff] transition cursor-pointer">
                   원장 대사 엔진 실행
-                </button>
-                <button onclick="openMenuManagerModal();" class="px-4 py-2 bg-[#1e3a8a] border border-white/30 text-white text-xs font-bold rounded-md hover:bg-white/10 transition cursor-pointer">
-                  + 하위메뉴 추가
                 </button>
               </div>
             </div>
@@ -983,14 +1066,14 @@
         return;
       }
 
-      // 3. Built-in Variance Submenu
+      // F. Built-in Variance Submenu
       if (currentItem.type === 'builtin-variance') {
         body.innerHTML = `
           <div class="space-y-5 fade-in">
             <div class="bg-white rounded-xl border border-[#cbd5e1] p-5 shadow-sm flex justify-between items-center">
               <div>
                 <span class="text-[11px] font-bold text-[#d97706]">DISCREPANCY & VARIANCE AUDIT</span>
-                <h1 class="text-lg font-bold font-headline text-[#00236f]">월별 미결 차액 소명 관리 (신규 코딩 하위메뉴)</h1>
+                <h1 class="text-lg font-bold font-headline text-[#00236f]">월별 미결 차액 소명 관리</h1>
                 <p class="text-xs text-[#444651] mt-0.5">약정 할인율, 반품 검수 지연으로 발생한 병원별 미결 차액 추적</p>
               </div>
               <button onclick="openView('reconcile-ui');" class="px-3 py-1.5 bg-[#00236f] text-white text-xs font-bold rounded">원장 대사로 이동</button>
@@ -1018,7 +1101,7 @@
         return;
       }
 
-      // 4. Built-in Tools Dashboard
+      // G. Built-in Tools Dashboard
       if (currentItem.type === 'builtin-tools-dash') {
         body.innerHTML = `
           <div class="space-y-5 fade-in">
@@ -1032,27 +1115,14 @@
                 🧮 적금 시뮬레이터 바로 열기 →
               </button>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="bg-white p-5 rounded-xl border border-[#cbd5e1] flex flex-col justify-between">
-                <div>
-                  <h3 class="font-bold text-sm text-[#00236f]">적금/수익 정밀 시뮬레이터 (savings-simulator.html)</h3>
-                  <p class="text-xs text-[#444651] mt-2 leading-relaxed">
-                    월 적립금, 거치 기간, 금리 방식(단리/월복리) 및 세금 우대 조건을 조합하여 세후 실수령액과 월별 이자 적립 추이를 차트로 즉시 확인합니다.
-                  </p>
-                </div>
-                <button onclick="openView('savings-sim');" class="mt-4 py-2 bg-[#f2f3ff] hover:bg-[#1e3a8a] hover:text-white text-[#1e3a8a] text-xs font-bold rounded transition">
+            <div class="bg-white p-6 rounded-xl border border-[#cbd5e1] space-y-3">
+              <h3 class="font-bold text-sm text-[#00236f]">적금/수익 정밀 시뮬레이터 (savings-simulator.html)</h3>
+              <p class="text-xs text-[#444651] leading-relaxed">
+                월 적립금, 거치 기간, 금리 방식(단리/월복리) 및 세금 우대 조건(일반과세 15.4%, 세금우대 9.5%, 비과세 0%)을 조합하여 세후 실수령액과 월별 이자 적립 추이를 차트로 즉시 확인합니다.
+              </p>
+              <div class="pt-2">
+                <button onclick="openView('savings-sim');" class="px-4 py-2 bg-[#f2f3ff] hover:bg-[#1e3a8a] hover:text-white text-[#1e3a8a] text-xs font-bold rounded transition">
                   시뮬레이터 실행하기
-                </button>
-              </div>
-              <div class="bg-white p-5 rounded-xl border border-[#cbd5e1] flex flex-col justify-between">
-                <div>
-                  <h3 class="font-bold text-sm text-[#00236f]">신규 금융 계산기 추가 안내</h3>
-                  <p class="text-xs text-[#444651] mt-2 leading-relaxed">
-                    환율 계산기, 할부 원리금 계산기 등 새로운 도구가 필요하면 상단 <strong>[➕ 메뉴 추가/관리]</strong> 버튼으로 언제든 이 테마 그룹 하위에 추가할 수 있습니다.
-                  </p>
-                </div>
-                <button onclick="openMenuManagerModal();" class="mt-4 py-2 bg-[#ecfdf5] hover:bg-[#059669] hover:text-white text-[#059669] text-xs font-bold rounded transition">
-                  + 새 금융 도구 메뉴 등록
                 </button>
               </div>
             </div>
@@ -1061,73 +1131,30 @@
         return;
       }
 
-      // 5. Built-in Blog Hub
+      // H. Built-in Blog Hub
       if (currentItem.type === 'builtin-blog') {
         renderBlogHub(body, actionsSlot);
         return;
       }
 
-      // 6. Built-in Extension Guide
-      if (currentItem.type === 'builtin-guide') {
-        actionsSlot.innerHTML = `
-          <button onclick="openMenuManagerModal();" class="px-3.5 py-1.5 bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold rounded shadow cursor-pointer">
-            ➕ 지금 바로 새 메뉴 추가해보기
-          </button>
-        `;
-        body.innerHTML = `
-          <div class="space-y-5 fade-in">
-            <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm">
-              <span class="text-[11px] font-bold text-[#2563eb]">EASY EXTENSION SYSTEM</span>
-              <h1 class="text-xl font-bold font-headline text-[#00236f] mt-1">더 쉽고 효율적인 신규 대시보드 & 하위메뉴 추가 방안</h1>
-              <p class="text-xs text-[#444651] mt-1">복잡한 프레임워크 빌드 없이 누구나 10초 만에 메뉴를 확장할 수 있는 2-Track 방식을 제공합니다.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div class="bg-white p-5 rounded-xl border-2 border-[#059669] shadow-sm space-y-3">
-                <div class="inline-block px-2.5 py-0.5 rounded bg-[#ecfdf5] text-[#059669] text-[11px] font-bold">방안 1 (가장 빠름 • 코드 수정 0줄)</div>
-                <h3 class="text-base font-bold text-[#00236f]">포털 화면 내 [➕ 메뉴 추가/관리] 모달 사용</h3>
-                <p class="text-xs text-[#444651] leading-relaxed">
-                  상단 우측의 <strong>[➕ 메뉴 추가/관리]</strong> 버튼을 클릭하여 소속 테마, 메뉴명, 연결할 파일(또는 자동 대시보드 템플릿)을 선택하면 즉시 좌측 사이드바와 상단 테마에 등록됩니다.
-                </p>
-                <button onclick="openMenuManagerModal();" class="w-full py-2 bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold rounded shadow cursor-pointer">
-                  ➕ 메뉴 추가 매니저 열기
-                </button>
-              </div>
-
-              <div class="bg-white p-5 rounded-xl border border-[#cbd5e1] shadow-sm space-y-3">
-                <div class="inline-block px-2.5 py-0.5 rounded bg-[#eff6ff] text-[#2563eb] text-[11px] font-bold">방안 2 (신규 코딩 시 • 단일 HTML 파일)</div>
-                <h3 class="text-base font-bold text-[#00236f]"><code>template-page.html</code> 복사 후 파일 연결</h3>
-                <p class="text-xs text-[#444651] leading-relaxed">
-                  리포지토리에 준비된 <code>template-page.html</code>(Stitch 디자인 적용 완료)을 복사해 새 화면을 코딩한 뒤, 메뉴 매니저에서 파일명만 적어주면 기존 <code>reconcile_ui.html</code>처럼 완벽하게 통합됩니다.
-                </p>
-                <button onclick="openView('sample-template-html');" class="w-full py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
-                  📄 template-page.html 실행 화면 보기
-                </button>
-              </div>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      // 7. Built-in Admin Console / Auto-generated Template
+      // I. Generic Auto-generated Template
       body.innerHTML = `
         <div class="space-y-5 fade-in">
           <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm flex justify-between items-center">
             <div>
-              <span class="text-[11px] font-bold text-[#1e3a8a]">AUTO-GENERATED WORKSPACE</span>
+              <span class="text-[11px] font-bold text-[#1e3a8a]">CUSTOM WORKSPACE</span>
               <h1 class="text-xl font-bold font-headline text-[#00236f] mt-0.5">${currentItem.title}</h1>
-              <p class="text-xs text-[#444651] mt-1">메뉴 매니저를 통해 그룹화된 표준 업무 대시보드 화면입니다.</p>
+              <p class="text-xs text-[#444651] mt-1">내부관리 메뉴 매니저를 통해 그룹화된 업무 대시보드 화면입니다.</p>
             </div>
-            <span class="px-3 py-1 rounded bg-[#eff6ff] text-[#2563eb] text-xs font-bold border border-[#bfdbfe]">정상 작동 중</span>
+            <span class="px-3 py-1 rounded bg-[#eff6ff] text-[#2563eb] text-xs font-bold border border-[#bfdbfe]">활성 메뉴</span>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="bg-white p-5 rounded-lg border border-[#cbd5e1]">
-              <div class="text-xs text-[#757682]">일일 처리 건수</div>
+              <div class="text-xs text-[#757682]">데이터 처리 건수</div>
               <div class="text-2xl font-bold num-font text-[#00236f] mt-1">1,240 건</div>
             </div>
             <div class="bg-white p-5 rounded-lg border border-[#cbd5e1]">
-              <div class="text-xs text-[#757682]">데이터 동기화 상태</div>
+              <div class="text-xs text-[#757682]">동기화 상태</div>
               <div class="text-2xl font-bold num-font text-[#059669] mt-1">100% 정상</div>
             </div>
             <div class="bg-white p-5 rounded-lg border border-[#cbd5e1]">
@@ -1140,7 +1167,497 @@
     }
 
     // -------------------------------------------------------------------------
-    // 6. BLOG MODULE FUNCTIONS
+    // 7. [내부관리 1] 업무 계정 및 비밀번호 관리 화면
+    // -------------------------------------------------------------------------
+    function renderAdminUsersView(container, actionsSlot) {
+      container.innerHTML = `
+        <div class="space-y-6 fade-in">
+          <!-- Header -->
+          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <span class="text-[11px] font-bold text-[#dc2626] uppercase tracking-wider">INTERNAL ADMIN • ACCOUNT & PASSWORD CONTROL</span>
+              <h1 class="text-xl font-bold font-headline text-[#00236f] mt-0.5">업무 이메일 및 비밀번호 계정 관리</h1>
+              <p class="text-xs text-[#444651] mt-1">포털 접속 권한을 가진 임직원 이메일 계정 발급, 비밀번호 재설정, 권한(Admin/Manager/Staff) 및 계정 잠금을 통합 관리합니다.</p>
+            </div>
+            <span class="px-3 py-1 rounded bg-[#fef2f2] text-[#dc2626] border border-[#fecaca] text-xs font-bold shrink-0">
+              🔒 내부관리자 전용
+            </span>
+          </div>
+
+          <!-- Create New Account Form -->
+          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm">
+            <h2 class="text-sm font-bold font-headline text-[#00236f] mb-4 pb-2 border-b border-[#e2e8f0]">
+              ➕ 신규 업무 이메일 계정 발급
+            </h2>
+            <form onsubmit="event.preventDefault(); handleAdminCreateUser();" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
+              <div class="lg:col-span-1">
+                <label class="block text-xs font-bold text-[#131b2e] mb-1">성명 *</label>
+                <input type="text" id="au-name" required placeholder="예: 박재무 과장" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+              </div>
+              <div class="lg:col-span-2">
+                <label class="block text-xs font-bold text-[#131b2e] mb-1">업무용 이메일 (로그인 ID) *</label>
+                <input type="email" id="au-email" required placeholder="park@hospital.com" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded num-font">
+              </div>
+              <div class="lg:col-span-1">
+                <label class="block text-xs font-bold text-[#131b2e] mb-1">초기 비밀번호 *</label>
+                <input type="text" id="au-password" required value="welcome123" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded num-font">
+              </div>
+              <div class="lg:col-span-1">
+                <label class="block text-xs font-bold text-[#131b2e] mb-1">소속 부서 & 권한</label>
+                <select id="au-role" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+                  <option value="finance_manager">정산총괄 (Manager)</option>
+                  <option value="staff">일반임직원 (Staff)</option>
+                  <option value="admin">내부관리자 (Admin)</option>
+                </select>
+              </div>
+              <div class="lg:col-span-1">
+                <button type="submit" class="w-full py-2 px-3 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
+                  + 계정 즉시 발급
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- User Account List Table -->
+          <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-sm overflow-hidden">
+            <div class="p-4 bg-[#f2f3ff] border-b border-[#cbd5e1] flex items-center justify-between">
+              <span class="font-bold text-xs text-[#00236f]">등록된 전체 업무 계정 목록 (${portalUsers.length}명)</span>
+              <span class="text-[11px] text-[#059669] font-semibold">✓ Supabase Auth & 로컬 하이브리드 동기화</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-[#cbd5e1] text-[#1e3a8a] font-bold">
+                    <th class="py-2.5 px-4">성명 / 부서</th>
+                    <th class="py-2.5 px-4">업무 이메일 (ID)</th>
+                    <th class="py-2.5 px-4">설정된 비밀번호</th>
+                    <th class="py-2.5 px-4 text-center">계정 권한</th>
+                    <th class="py-2.5 px-4 text-center">상태</th>
+                    <th class="py-2.5 px-4 text-center">비밀번호 재설정 / 제어</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-[#e2e8f0]">
+                  ${portalUsers.map((u, idx) => `
+                    <tr class="hover:bg-[#faf8ff]">
+                      <td class="py-3 px-4">
+                        <div class="font-bold text-[#131b2e]">${u.name}</div>
+                        <div class="text-[11px] text-[#757682]">${u.department}</div>
+                      </td>
+                      <td class="py-3 px-4 num-font font-semibold text-[#00236f]">${u.email}</td>
+                      <td class="py-3 px-4">
+                        <div class="flex items-center gap-1.5">
+                          <code class="px-2 py-0.5 rounded bg-slate-100 text-[#131b2e] num-font text-[11px]">${u.password}</code>
+                        </div>
+                      </td>
+                      <td class="py-3 px-4 text-center">
+                        <select onchange="handleAdminChangeUserRole(${idx}, this.value);"
+                          class="px-2 py-1 rounded border border-[#cbd5e1] text-[11px] font-bold bg-white">
+                          <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>내부관리자 (Admin)</option>
+                          <option value="finance_manager" ${u.role === 'finance_manager' ? 'selected' : ''}>정산총괄 (Manager)</option>
+                          <option value="staff" ${u.role === 'staff' ? 'selected' : ''}>일반임직원 (Staff)</option>
+                        </select>
+                      </td>
+                      <td class="py-3 px-4 text-center">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
+                          u.status === 'active'
+                            ? 'bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0]'
+                            : 'bg-[#fef2f2] text-[#dc2626] border border-[#fecaca]'
+                        }">
+                          ${u.status === 'active' ? '정상(Active)' : '잠김(Locked)'}
+                        </span>
+                      </td>
+                      <td class="py-3 px-4 text-center space-x-1.5">
+                        <button onclick="handleAdminResetPassword(${idx});"
+                          class="px-2 py-1 rounded bg-[#eff6ff] hover:bg-[#dbeafe] text-[#2563eb] font-bold text-[11px] border border-[#bfdbfe]">
+                          비밀번호 변경
+                        </button>
+                        <button onclick="handleAdminToggleStatus(${idx});"
+                          class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-[#444651] font-semibold text-[11px]">
+                          ${u.status === 'active' ? '잠금' : '잠금해제'}
+                        </button>
+                        ${u.email !== 'admin@hospital.com' ? `
+                          <button onclick="handleAdminDeleteUser(${idx});"
+                            class="px-2 py-1 rounded bg-[#fef2f2] hover:bg-red-100 text-[#dc2626] font-semibold text-[11px]">
+                            삭제
+                          </button>
+                        ` : ''}
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function handleAdminCreateUser() {
+      const name = document.getElementById('au-name').value.trim();
+      const email = document.getElementById('au-email').value.trim().toLowerCase();
+      const password = document.getElementById('au-password').value.trim();
+      const role = document.getElementById('au-role').value;
+
+      if (!name || !email || !password) return;
+      if (portalUsers.some(u => u.email.toLowerCase() === email)) {
+        alert('이미 등록된 업무 이메일입니다.');
+        return;
+      }
+
+      const department = role === 'admin' ? '내부관리팀' : role === 'finance_manager' ? '병원사업부 / 정산' : '일반업무팀';
+      const newUser = {
+        id: 'usr-' + Date.now(),
+        email,
+        password,
+        name,
+        department,
+        role,
+        status: 'active',
+        createdAt: new Date().toISOString().substring(0, 10)
+      };
+
+      // Sync with Supabase Auth & portal_users table
+      if (supabaseClient) {
+        try {
+          await supabaseClient.auth.signUp({
+            email,
+            password,
+            options: { data: { full_name: name, role, department } }
+          });
+          await supabaseClient.from('portal_users').insert([{
+            email,
+            password_hash: password,
+            full_name: name,
+            department,
+            role,
+            status: 'active'
+          }]);
+        } catch (e) {
+          console.warn('Supabase user sync fallback:', e);
+        }
+      }
+
+      portalUsers.push(newUser);
+      localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
+      renderViewport(activeViewId);
+      alert(`[${name} (${email})] 업무 계정이 생성되었습니다.`);
+    }
+
+    async function handleAdminResetPassword(idx) {
+      const user = portalUsers[idx];
+      const newPw = prompt(`[${user.name} (${user.email})] 계정의 새 비밀번호를 입력하세요:`, user.password);
+      if (!newPw || !newPw.trim()) return;
+
+      portalUsers[idx].password = newPw.trim();
+      localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('portal_users').update({ password_hash: newPw.trim() }).eq('email', user.email);
+        } catch (e) {}
+      }
+
+      renderViewport(activeViewId);
+      alert('비밀번호가 변경되었습니다.');
+    }
+
+    async function handleAdminChangeUserRole(idx, newRole) {
+      portalUsers[idx].role = newRole;
+      localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('portal_users').update({ role: newRole }).eq('email', portalUsers[idx].email);
+        } catch (e) {}
+      }
+      renderViewport(activeViewId);
+    }
+
+    async function handleAdminToggleStatus(idx) {
+      const target = portalUsers[idx];
+      if (target.email === 'admin@hospital.com') {
+        alert('기본 내부관리자 계정은 잠글 수 없습니다.');
+        return;
+      }
+      target.status = target.status === 'active' ? 'locked' : 'active';
+      localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('portal_users').update({ status: target.status }).eq('email', target.email);
+        } catch (e) {}
+      }
+      renderViewport(activeViewId);
+    }
+
+    async function handleAdminDeleteUser(idx) {
+      const target = portalUsers[idx];
+      if (!confirm(`[${target.name} (${target.email})] 계정을 정말 삭제하시겠습니까?`)) return;
+      portalUsers.splice(idx, 1);
+      localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('portal_users').delete().eq('email', target.email);
+        } catch (e) {}
+      }
+      renderViewport(activeViewId);
+    }
+
+    // -------------------------------------------------------------------------
+    // 8. [내부관리 2] 포털 메뉴 및 테마 그룹 관리 화면 (기존 상단 모달을 내부관리 메뉴로 이전)
+    // -------------------------------------------------------------------------
+    function renderAdminMenusView(container, actionsSlot) {
+      const nonAdminGroups = menuGroups;
+      container.innerHTML = `
+        <div class="space-y-6 fade-in">
+          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <span class="text-[11px] font-bold text-[#059669] uppercase tracking-wider">INTERNAL ADMIN • MENU & THEME GROUP BUILDER</span>
+              <h1 class="text-xl font-bold font-headline text-[#00236f] mt-0.5">포털 메뉴 및 테마 그룹 관리</h1>
+              <p class="text-xs text-[#444651] mt-1">상단 업무 테마 및 좌측 하위메뉴를 신규 추가하거나 불필요한 메뉴를 삭제합니다.</p>
+            </div>
+            <button onclick="resetDefaultMenus();" class="px-3 py-1.5 border border-[#cbd5e1] bg-white hover:bg-red-50 text-[#dc2626] text-xs font-bold rounded">
+              초기 기본 메뉴로 복원
+            </button>
+          </div>
+
+          <!-- Add Menu Form -->
+          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm">
+            <h2 class="text-sm font-bold font-headline text-[#00236f] mb-4 pb-2 border-b border-[#e2e8f0]">
+              ➕ 신규 하위메뉴 또는 업무 테마 추가
+            </h2>
+            <form onsubmit="event.preventDefault(); handleAdminAddMenu();" class="space-y-4">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-[#131b2e] mb-1">소속될 대상 테마 그룹</label>
+                  <select id="mm-theme-select" onchange="toggleNewThemeInputs();" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+                    ${nonAdminGroups.map(g => `<option value="${g.themeId}">${g.themeTitle}</option>`).join('')}
+                    <option value="__new__">+ 새로운 상단 업무 테마 만들기</option>
+                  </select>
+                </div>
+                <div id="mm-new-theme-box" class="hidden">
+                  <label class="block text-xs font-bold text-[#2563eb] mb-1">신규 업무 테마명 입력 *</label>
+                  <input type="text" id="mm-new-theme-title" placeholder="예: 인사/총무 관리" class="w-full px-3 py-2 text-xs bg-white border border-[#2563eb] rounded">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-[#131b2e] mb-1">신규 하위메뉴 제목 *</label>
+                  <input type="text" id="mm-menu-title" required placeholder="예: 분기별 약품 재고 실사" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-[#131b2e] mb-1">화면 연결 방식</label>
+                  <select id="mm-menu-type" onchange="toggleMenuUrlInput();" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+                    <option value="iframe">HTML 파일 / 외부 URL 연결</option>
+                    <option value="template">표준 대시보드 자동 생성</option>
+                  </select>
+                </div>
+                <div id="mm-url-box" class="sm:col-span-2">
+                  <label class="block text-xs font-bold text-[#131b2e] mb-1">연결할 HTML 파일명 또는 URL *</label>
+                  <input type="text" id="mm-menu-url" value="template-page.html" placeholder="예: template-page.html" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded num-font">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-[#131b2e] mb-1">배지 텍스트</label>
+                  <input type="text" id="mm-menu-badge" value="신규" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+                </div>
+              </div>
+
+              <div class="flex justify-end pt-2">
+                <button type="submit" class="px-5 py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
+                  + 포털 메뉴 트리에 즉시 반영
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Current Menu Structure Tree -->
+          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm">
+            <h2 class="text-sm font-bold font-headline text-[#00236f] mb-4">현재 포털 테마 및 하위메뉴 구성 현황</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              ${menuGroups.map(g => `
+                <div class="p-4 rounded-lg border border-[#e2e8f0] bg-[#faf8ff]">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="font-bold text-xs text-[#00236f]">${g.themeTitle}</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded bg-white border border-[#cbd5e1] text-[#444651]">대시보드: ${g.dashboard.title}</span>
+                  </div>
+                  <div class="space-y-1.5 pl-3 border-l-2 border-[#cbd5e1]">
+                    ${g.subMenus.map(s => `
+                      <div class="flex items-center justify-between text-xs bg-white px-2.5 py-1.5 rounded border border-[#e2e8f0]">
+                        <span>• ${s.title} <code class="text-[10px] text-[#757682]">${s.url ? '(' + s.url + ')' : '(내장화면)'}</code></span>
+                        ${g.themeId !== 'internal-admin' ? `
+                          <button onclick="deleteSubMenu('${g.themeId}', '${s.id}');" class="text-[11px] text-[#dc2626] hover:underline font-semibold">삭제</button>
+                        ` : '<span class="text-[10px] text-[#757682]">시스템 고정</span>'}
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleNewThemeInputs() {
+      const val = document.getElementById('mm-theme-select').value;
+      const box = document.getElementById('mm-new-theme-box');
+      if (val === '__new__') box.classList.remove('hidden');
+      else box.classList.add('hidden');
+    }
+
+    function toggleMenuUrlInput() {
+      const type = document.getElementById('mm-menu-type').value;
+      const box = document.getElementById('mm-url-box');
+      if (type === 'iframe') box.classList.remove('hidden');
+      else box.classList.add('hidden');
+    }
+
+    function handleAdminAddMenu() {
+      const targetTheme = document.getElementById('mm-theme-select').value;
+      const newThemeTitle = document.getElementById('mm-new-theme-title').value.trim();
+      const menuTitle = document.getElementById('mm-menu-title').value.trim();
+      const menuType = document.getElementById('mm-menu-type').value;
+      const menuUrl = document.getElementById('mm-menu-url').value.trim() || 'template-page.html';
+      const menuBadge = document.getElementById('mm-menu-badge').value.trim() || '신규';
+
+      if (!menuTitle) return;
+
+      const newSubItem = {
+        id: 'menu-' + Date.now(),
+        title: menuTitle,
+        type: menuType === 'iframe' ? 'iframe' : 'builtin-template',
+        url: menuType === 'iframe' ? menuUrl : '',
+        badge: menuBadge,
+        badgeColor: 'green',
+        role: 'all'
+      };
+
+      if (targetTheme === '__new__') {
+        if (!newThemeTitle) {
+          alert('신규 업무 테마 이름을 입력해주세요.');
+          return;
+        }
+        const newThemeId = 'theme-' + Date.now();
+        // Insert before internal-admin
+        const adminIdx = menuGroups.findIndex(g => g.themeId === 'internal-admin');
+        const newGroupObj = {
+          themeId: newThemeId,
+          themeTitle: '📁 ' + newThemeTitle,
+          themeDesc: `${newThemeTitle} 통합 대시보드 및 하위메뉴 그룹`,
+          adminOnly: false,
+          dashboard: {
+            id: 'dash-' + Date.now(),
+            title: `${newThemeTitle} 메인 대시보드`,
+            type: 'builtin-template'
+          },
+          subMenus: [newSubItem]
+        };
+        if (adminIdx > -1) menuGroups.splice(adminIdx, 0, newGroupObj);
+        else menuGroups.push(newGroupObj);
+      } else {
+        const grp = menuGroups.find(g => g.themeId === targetTheme);
+        if (grp) grp.subMenus.push(newSubItem);
+      }
+
+      localStorage.setItem('clp_menu_groups_v3', JSON.stringify(menuGroups));
+      renderGNB();
+      renderLNB();
+      renderViewport(activeViewId);
+      alert(`[${menuTitle}] 메뉴가 추가되었습니다.`);
+    }
+
+    function deleteSubMenu(themeId, subId) {
+      const grp = menuGroups.find(g => g.themeId === themeId);
+      if (!grp) return;
+      grp.subMenus = grp.subMenus.filter(s => s.id !== subId);
+      localStorage.setItem('clp_menu_groups_v3', JSON.stringify(menuGroups));
+      renderGNB();
+      renderLNB();
+      renderViewport(activeViewId);
+    }
+
+    function resetDefaultMenus() {
+      if (!confirm('메뉴 구성을 초기 기본 상태로 복원하시겠습니까?')) return;
+      menuGroups = JSON.parse(JSON.stringify(DEFAULT_MENU_GROUPS));
+      localStorage.setItem('clp_menu_groups_v3', JSON.stringify(menuGroups));
+      renderGNB();
+      renderLNB();
+      renderViewport(activeViewId);
+    }
+
+    // -------------------------------------------------------------------------
+    // 9. [내부관리 3] SUPABASE 클라우드 연동 관리 화면
+    // -------------------------------------------------------------------------
+    function renderAdminSupabaseView(container, actionsSlot) {
+      const currentUrl = localStorage.getItem('clp_sb_url') || DEFAULT_SUPABASE_URL;
+      const currentKey = localStorage.getItem('clp_sb_key') || DEFAULT_SUPABASE_KEY;
+
+      container.innerHTML = `
+        <div class="space-y-6 fade-in">
+          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <span class="text-[11px] font-bold text-[#2563eb] uppercase tracking-wider">INTERNAL ADMIN • SUPABASE CLOUD CONNECTION</span>
+              <h1 class="text-xl font-bold font-headline text-[#00236f] mt-0.5">Supabase 클라우드 DB 연동 관리</h1>
+              <p class="text-xs text-[#444651] mt-1">제공해주신 Supabase Project URL 및 Publishable Public Key가 기본 탑재되어 있습니다.</p>
+            </div>
+            <span class="px-3 py-1 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] text-xs font-bold">
+              ● Supabase 연결 활성화됨
+            </span>
+          </div>
+
+          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm space-y-4">
+            <h2 class="text-sm font-bold font-headline text-[#00236f] pb-2 border-b border-[#e2e8f0]">연동된 Supabase 프로젝트 자격증명</h2>
+            <form onsubmit="event.preventDefault(); saveAdminSupabaseConfig();" class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-[#131b2e] mb-1">Supabase Project URL</label>
+                <input type="url" id="admin-sb-url" value="${currentUrl}" required class="w-full px-3.5 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded num-font">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-[#131b2e] mb-1">Supabase Anon Public Key</label>
+                <input type="text" id="admin-sb-key" value="${currentKey}" required class="w-full px-3.5 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded num-font">
+              </div>
+              <div class="flex justify-end gap-2">
+                <button type="submit" class="px-5 py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
+                  연동 설정 업데이트
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm space-y-3">
+            <h2 class="text-sm font-bold font-headline text-[#00236f]">Supabase SQL Editor 초기 테이블 생성 스크립트</h2>
+            <p class="text-xs text-[#444651]">
+              Supabase 대시보드의 <strong>SQL Editor</strong>에 아래 쿼리를 실행해 두시면, 포털 계정(<code>portal_users</code>)과 블로그 게시글(<code>blog_posts</code>)이 클라우드 DB에 영구 보관됩니다.
+            </p>
+            <pre class="p-4 rounded-lg bg-[#0f172a] text-[#dae2fd] text-[11px] num-font overflow-x-auto leading-relaxed">create table if not exists public.portal_users (
+  id uuid default gen_random_uuid() primary key,
+  email text unique not null,
+  password_hash text not null,
+  full_name text not null,
+  department text default '병원사업부',
+  role text default 'finance_manager',
+  status text default 'active',
+  created_at timestamp with time zone default now()
+);
+alter table public.portal_users enable row level security;
+create policy "Allow all portal_users" on public.portal_users for all using (true);</pre>
+          </div>
+        </div>
+      `;
+    }
+
+    function saveAdminSupabaseConfig() {
+      const url = document.getElementById('admin-sb-url').value.trim();
+      const key = document.getElementById('admin-sb-key').value.trim();
+      localStorage.setItem('clp_sb_url', url);
+      localStorage.setItem('clp_sb_key', key);
+      if (window.supabase) {
+        supabaseClient = window.supabase.createClient(url, key);
+      }
+      alert('Supabase 클라우드 연동 정보가 저장되었습니다.');
+    }
+
+    // -------------------------------------------------------------------------
+    // 10. BLOG MODULE FUNCTIONS
     // -------------------------------------------------------------------------
     function renderBlogHub(container, actionsSlot) {
       actionsSlot.innerHTML = `
@@ -1218,7 +1735,7 @@
         id: 'post-' + Date.now(),
         title,
         category,
-        author: `${currentUser.name} (${currentUser.role})`,
+        author: `${currentUser.name}`,
         date: new Date().toISOString().substring(0, 10),
         summary,
         content,
@@ -1237,13 +1754,11 @@
             content,
             tags
           }]);
-        } catch (e) {
-          console.warn('Supabase blog insert fallback:', e);
-        }
+        } catch (e) {}
       }
 
       blogPosts.unshift(newPost);
-      localStorage.setItem('clp_blog_posts_v2', JSON.stringify(blogPosts));
+      localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
       closeBlogWriteModal();
       renderViewport(activeViewId);
     }
@@ -1252,7 +1767,7 @@
       const post = blogPosts.find(p => p.id === postId);
       if (!post) return;
       post.views += 1;
-      localStorage.setItem('clp_blog_posts_v2', JSON.stringify(blogPosts));
+      localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
 
       document.getElementById('bd-category').innerText = post.category;
       document.getElementById('bd-date').innerText = post.date;
@@ -1265,7 +1780,7 @@
       delBtn.onclick = () => {
         if (confirm('이 게시글을 삭제하시겠습니까?')) {
           blogPosts = blogPosts.filter(p => p.id !== postId);
-          localStorage.setItem('clp_blog_posts_v2', JSON.stringify(blogPosts));
+          localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
           closeBlogDetailModal();
           renderViewport(activeViewId);
         }
@@ -1277,156 +1792,6 @@
 
     function closeBlogDetailModal() {
       document.getElementById('modal-blog-detail').classList.add('hidden');
-    }
-
-    // -------------------------------------------------------------------------
-    // 7. NO-CODE MENU MANAGER FUNCTIONS
-    // -------------------------------------------------------------------------
-    function openMenuManagerModal() {
-      const sel = document.getElementById('mm-theme-select');
-      sel.innerHTML = menuGroups.map(g => `<option value="${g.themeId}">${g.themeTitle}</option>`).join('') +
-        `<option value="__new__">+ 새로운 상단 업무 테마 만들기</option>`;
-      sel.value = activeThemeId;
-      toggleNewThemeInputs();
-      renderCurrentMenusInModal();
-      document.getElementById('modal-menu-manager').classList.remove('hidden');
-    }
-
-    function closeMenuManagerModal() {
-      document.getElementById('modal-menu-manager').classList.add('hidden');
-    }
-
-    function toggleNewThemeInputs() {
-      const val = document.getElementById('mm-theme-select').value;
-      const box = document.getElementById('mm-new-theme-box');
-      if (val === '__new__') box.classList.remove('hidden');
-      else box.classList.add('hidden');
-    }
-
-    function toggleMenuUrlInput() {
-      const type = document.getElementById('mm-menu-type').value;
-      const box = document.getElementById('mm-url-box');
-      if (type === 'iframe') box.classList.remove('hidden');
-      else box.classList.add('hidden');
-    }
-
-    function handleAddMenu() {
-      const targetTheme = document.getElementById('mm-theme-select').value;
-      const newThemeTitle = document.getElementById('mm-new-theme-title').value.trim();
-      const menuTitle = document.getElementById('mm-menu-title').value.trim();
-      const menuType = document.getElementById('mm-menu-type').value;
-      const menuUrl = document.getElementById('mm-menu-url').value.trim() || 'template-page.html';
-      const menuBadge = document.getElementById('mm-menu-badge').value.trim() || '신규';
-      const menuRole = document.getElementById('mm-menu-role').value;
-
-      if (!menuTitle) return;
-
-      const newSubItem = {
-        id: 'menu-' + Date.now(),
-        title: menuTitle,
-        type: menuType === 'iframe' ? 'iframe' : 'builtin-template',
-        url: menuType === 'iframe' ? menuUrl : '',
-        badge: menuBadge,
-        badgeColor: menuRole === 'admin' ? 'red' : 'green',
-        role: menuRole
-      };
-
-      if (targetTheme === '__new__') {
-        if (!newThemeTitle) {
-          alert('신규 업무 테마 이름을 입력해주세요.');
-          return;
-        }
-        const newThemeId = 'theme-' + Date.now();
-        menuGroups.push({
-          themeId: newThemeId,
-          themeTitle: '📁 ' + newThemeTitle,
-          themeDesc: `${newThemeTitle} 통합 대시보드 및 하위메뉴 그룹`,
-          dashboard: {
-            id: 'dash-' + Date.now(),
-            title: `${newThemeTitle} 메인 대시보드`,
-            type: 'builtin-template'
-          },
-          subMenus: [newSubItem]
-        });
-        activeThemeId = newThemeId;
-      } else {
-        const grp = menuGroups.find(g => g.themeId === targetTheme);
-        if (grp) grp.subMenus.push(newSubItem);
-        activeThemeId = targetTheme;
-      }
-
-      localStorage.setItem('clp_menu_groups_v2', JSON.stringify(menuGroups));
-      renderGNB();
-      renderLNB();
-      openView(newSubItem.id);
-      closeMenuManagerModal();
-    }
-
-    function deleteSubMenu(themeId, subId) {
-      const grp = menuGroups.find(g => g.themeId === themeId);
-      if (!grp) return;
-      grp.subMenus = grp.subMenus.filter(s => s.id !== subId);
-      localStorage.setItem('clp_menu_groups_v2', JSON.stringify(menuGroups));
-      renderCurrentMenusInModal();
-      renderLNB();
-    }
-
-    function resetDefaultMenus() {
-      if (!confirm('메뉴 구성을 초기 기본 상태로 되돌리시겠습니까?')) return;
-      menuGroups = JSON.parse(JSON.stringify(DEFAULT_MENU_GROUPS));
-      localStorage.setItem('clp_menu_groups_v2', JSON.stringify(menuGroups));
-      renderGNB();
-      selectTheme('finance');
-      closeMenuManagerModal();
-    }
-
-    function renderCurrentMenusInModal() {
-      const list = document.getElementById('mm-current-list');
-      list.innerHTML = menuGroups.map(g => `
-        <div class="p-3 rounded border border-[#e2e8f0] bg-white">
-          <div class="font-bold text-xs text-[#00236f] mb-1.5">${g.themeTitle} <span class="text-[10px] font-normal text-[#757682]">(대시보드: ${g.dashboard.title})</span></div>
-          <div class="space-y-1 pl-3 border-l-2 border-[#dae2fd]">
-            ${g.subMenus.map(s => `
-              <div class="flex items-center justify-between text-xs py-0.5">
-                <span>• ${s.title} <code class="text-[10px] text-[#757682]">${s.url ? '(' + s.url + ')' : '(내장화면)'}</code></span>
-                <button onclick="deleteSubMenu('${g.themeId}', '${s.id}');" class="text-[10px] text-red-500 hover:underline">삭제</button>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // -------------------------------------------------------------------------
-    // 8. SUPABASE CONFIG MODAL
-    // -------------------------------------------------------------------------
-    function openSupabaseModal() {
-      document.getElementById('sb-url').value = localStorage.getItem('clp_sb_url') || '';
-      document.getElementById('sb-key').value = localStorage.getItem('clp_sb_key') || '';
-      document.getElementById('modal-supabase').classList.remove('hidden');
-    }
-
-    function closeSupabaseModal() {
-      document.getElementById('modal-supabase').classList.add('hidden');
-    }
-
-    function saveSupabaseConfig() {
-      const url = document.getElementById('sb-url').value.trim();
-      const key = document.getElementById('sb-key').value.trim();
-      if (url && key) {
-        localStorage.setItem('clp_sb_url', url);
-        localStorage.setItem('clp_sb_key', key);
-      }
-      closeSupabaseModal();
-      initApp();
-    }
-
-    function clearSupabaseConfig() {
-      localStorage.removeItem('clp_sb_url');
-      localStorage.removeItem('clp_sb_key');
-      supabaseClient = null;
-      updateSupabaseStatusUI(false);
-      closeSupabaseModal();
     }
 
     // Start Portal

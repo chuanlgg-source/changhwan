@@ -1,46 +1,36 @@
 -- ==============================================================================
--- Clinical Ledger Precision — Supabase Database Schema & RLS Setup
+-- Clinical Ledger Precision — Supabase Database Schema & Account Management
+-- Project URL: https://cbarfruyknhfjvvhcmgu.supabase.co
 -- ==============================================================================
 
--- 1. 사용자 프로필 및 역할 관리 테이블 (Supabase Auth와 1:1 연동)
-create table if not exists public.profiles (
-  id uuid references auth.users on delete cascade primary key,
-  email text not null,
-  full_name text default '사용자',
-  role text default 'staff' check (role in ('admin', 'finance_manager', 'staff')),
+-- 1. 포털 업무 계정 관리 테이블 (이메일/비밀번호/권한/부서/상태 통합 관리)
+create table if not exists public.portal_users (
+  id uuid default gen_random_uuid() primary key,
+  email text unique not null,
+  password_hash text not null, -- 초기/변경 비밀번호 (내부관리용)
+  full_name text not null,
   department text default '병원사업부',
+  role text default 'finance_manager' check (role in ('admin', 'finance_manager', 'staff')),
+  status text default 'active' check (status in ('active', 'locked')),
+  last_login timestamp with time zone,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- Profiles RLS 활성화
-alter table public.profiles enable row level security;
+alter table public.portal_users enable row level security;
 
-create policy "프로필은 누구나 조회 가능" on public.profiles
+create policy "포털 계정 조회 허용" on public.portal_users
   for select using (true);
 
-create policy "본인 프로필만 수정 가능" on public.profiles
-  for update using (auth.uid() = id);
+create policy "포털 계정 추가/수정/삭제 허용" on public.portal_users
+  for all using (true);
 
--- 회원가입 시 자동으로 profiles 레코드 생성하는 트리거
-create or replace function public.handle_new_user()
-returns trigger as $$
-begin
-  insert into public.profiles (id, email, full_name, role, department)
-  values (
-    new.id,
-    new.email,
-    coalesce(new.raw_user_meta_data->>'full_name', '정산 담당자'),
-    coalesce(new.raw_user_meta_data->>'role', 'finance_manager'),
-    coalesce(new.raw_user_meta_data->>'department', '병원사업본부')
-  );
-  return new;
-end;
-$$ language plpgsql security definer;
-
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();
+-- 기본 초기 관리자 및 총괄 매니저 계정 시드 데이터
+insert into public.portal_users (email, password_hash, full_name, department, role, status)
+values
+  ('admin@hospital.com', 'admin1234', '시스템 관리자', 'IT 인프라팀 / 내부관리', 'admin', 'active'),
+  ('chuan@hospital.com', 'password123', '이창환', '병원사업부 / 정산총괄', 'finance_manager', 'active'),
+  ('staff@hospital.com', 'staff1234', '김정산 주임', '재무관리팀', 'staff', 'active')
+on conflict (email) do nothing;
 
 
 -- 2. 업무 지식 블로그 & 공지사항 테이블
@@ -60,14 +50,20 @@ create table if not exists public.blog_posts (
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- Blog Posts RLS 활성화
 alter table public.blog_posts enable row level security;
 
-create policy "발행된 글은 누구나 조회 가능" on public.blog_posts
-  for select using (is_published = true);
+create policy "블로그 글 전체 조회 및 관리 허용" on public.blog_posts
+  for all using (true);
 
-create policy "인증된 사용자는 글 작성 가능" on public.blog_posts
-  for insert with check (auth.role() = 'authenticated');
 
-create policy "인증된 사용자는 본인 글 수정 가능" on public.blog_posts
-  for update using (auth.role() = 'authenticated');
+-- 3. 포털 동적 메뉴 설정 저장 테이블
+create table if not exists public.portal_menus (
+  id text primary key default 'default_config',
+  menu_json jsonb not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.portal_menus enable row level security;
+
+create policy "메뉴 설정 조회 및 업데이트 허용" on public.portal_menus
+  for all using (true);
