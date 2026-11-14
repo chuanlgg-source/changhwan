@@ -602,21 +602,32 @@
       }
 
       // Version Cache Invalidation
-      const APP_BUILD_ID = 'v2.7.2';
+      const APP_BUILD_ID = 'v2.7.3';
       const storedBuild = localStorage.getItem('clp_build_id');
       if (storedBuild !== APP_BUILD_ID) {
         localStorage.removeItem('clp_menu_groups_v3');
         localStorage.setItem('clp_build_id', APP_BUILD_ID);
       }
 
+      function normalizeGroup(g) {
+        return {
+          themeId: g.themeId || g.id,
+          themeTitle: g.themeTitle || g.title || '업무 메뉴',
+          themeDesc: g.themeDesc || g.description || '',
+          adminOnly: Boolean(g.adminOnly),
+          dashboard: g.dashboard || { id: 'dash', title: '대시보드', type: 'builtin-template' },
+          subMenus: Array.isArray(g.subMenus) ? g.subMenus : []
+        };
+      }
+
       // 3. Load Menu Groups from portal-spec.json (Single Source of Truth) or LocalStorage
-      menuGroups = JSON.parse(JSON.stringify(DEFAULT_MENU_GROUPS));
+      menuGroups = DEFAULT_MENU_GROUPS.map(normalizeGroup);
       try {
         const specResp = await fetch('portal-spec.json?v=' + Date.now());
         if (specResp.ok) {
           const specData = await specResp.json();
           if (specData && specData.themes && Array.isArray(specData.themes)) {
-            menuGroups = specData.themes;
+            menuGroups = specData.themes.map(normalizeGroup);
             localStorage.setItem('clp_menu_groups_v3', JSON.stringify(menuGroups));
           }
         }
@@ -842,8 +853,10 @@
 
       const visibleGroups = getVisibleMenuGroups();
       visibleGroups.forEach(group => {
-        const isActive = group.themeId === activeThemeId;
-        const isInternalAdmin = group.themeId === 'internal-admin';
+        const tId = group.themeId || group.id;
+        const tTitle = group.themeTitle || group.title || '업무 메뉴';
+        const isActive = tId === activeThemeId;
+        const isInternalAdmin = tId === 'internal-admin';
         const btn = document.createElement('button');
         btn.className = `px-3.5 py-1.5 rounded-md text-xs font-bold whitespace-nowrap transition cursor-pointer ${
           isActive
@@ -854,16 +867,16 @@
             ? 'text-amber-300 hover:bg-white/10 hover:text-amber-200 border border-amber-400/30'
             : 'text-white/80 hover:bg-white/10 hover:text-white'
         }`;
-        btn.innerText = group.themeTitle;
-        btn.onclick = () => selectTheme(group.themeId);
+        btn.innerText = tTitle;
+        btn.onclick = () => selectTheme(tId);
         nav.appendChild(btn);
       });
     }
 
     function selectTheme(themeId) {
       const visibleGroups = getVisibleMenuGroups();
-      const group = visibleGroups.find(g => g.themeId === themeId) || visibleGroups[0];
-      activeThemeId = group.themeId;
+      const group = visibleGroups.find(g => (g.themeId || g.id) === themeId) || visibleGroups[0];
+      activeThemeId = group.themeId || group.id;
       renderGNB();
       renderLNB();
       openView(group.dashboard.id);
@@ -871,10 +884,10 @@
 
     function renderLNB() {
       const visibleGroups = getVisibleMenuGroups();
-      const group = visibleGroups.find(g => g.themeId === activeThemeId) || visibleGroups[0];
-      document.getElementById('lnb-theme-title').innerText = group.themeTitle;
-      document.getElementById('lnb-theme-desc').innerText = group.themeDesc;
-      document.getElementById('lnb-menu-count').innerText = `${group.subMenus.length + 1}개 메뉴`;
+      const group = visibleGroups.find(g => (g.themeId || g.id) === activeThemeId) || visibleGroups[0];
+      document.getElementById('lnb-theme-title').innerText = group.themeTitle || group.title || '업무 메뉴';
+      document.getElementById('lnb-theme-desc').innerText = group.themeDesc || group.description || '';
+      document.getElementById('lnb-menu-count').innerText = `${(group.subMenus || []).length + 1}개 메뉴`;
 
       // Dashboard Button
       const dashSlot = document.getElementById('lnb-dashboard-slot');
@@ -943,13 +956,13 @@
     // -------------------------------------------------------------------------
     function renderViewport(viewId) {
       const visibleGroups = getVisibleMenuGroups();
-      const group = visibleGroups.find(g => g.themeId === activeThemeId) || visibleGroups[0];
+      const group = visibleGroups.find(g => (g.themeId || g.id) === activeThemeId) || visibleGroups[0];
       let currentItem = group.dashboard.id === viewId
         ? group.dashboard
-        : group.subMenus.find(s => s.id === viewId) || group.dashboard;
+        : (group.subMenus || []).find(s => s.id === viewId) || group.dashboard;
 
-      document.getElementById('crumb-theme').innerText = group.themeTitle;
-      document.getElementById('crumb-page').innerText = currentItem.title;
+      document.getElementById('crumb-theme').innerText = group.themeTitle || group.title || '업무 메뉴';
+      document.getElementById('crumb-page').innerText = currentItem.title || '대시보드';
 
       const actionsSlot = document.getElementById('viewport-actions');
       const body = document.getElementById('viewport-body');
