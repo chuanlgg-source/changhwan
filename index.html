@@ -372,7 +372,7 @@
       {
         themeId: 'tools',
         themeTitle: '📊 금융/자산',
-        themeDesc: '금일 주식시장·환율 동향, 주요 종목 지수 및 5대 뉴스',
+        themeDesc: '금일 주식시장·환율 동향, 주요 종목 지수, 5대 뉴스 및 수익 시뮬레이션',
         adminOnly: false,
         dashboard: {
           id: 'financial-info',
@@ -380,7 +380,17 @@
           type: 'iframe',
           url: 'financial-info.html'
         },
-        subMenus: []
+        subMenus: [
+          {
+            id: 'savings-sim',
+            title: '적금/수익 정밀 시뮬레이터',
+            type: 'iframe',
+            url: 'savings-simulator.html',
+            badge: '계산기',
+            badgeColor: 'green',
+            role: 'all'
+          }
+        ]
       },
       {
         themeId: 'knowledge',
@@ -548,7 +558,7 @@
       }
 
       // Version Cache Invalidation
-      const APP_BUILD_ID = 'v2.9.7';
+      const APP_BUILD_ID = 'v2.9.8';
       const storedBuild = localStorage.getItem('clp_build_id');
       if (storedBuild !== APP_BUILD_ID) {
         localStorage.removeItem('clp_menu_groups_v3');

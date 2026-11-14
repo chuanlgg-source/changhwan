@@ -1,6 +1,6 @@
 {
   "$schema": "./schema/portal-spec.schema.json",
-  "version": "2.9.7",
+  "version": "2.9.8",
   "systemTitle": "Clinical Ledger Precision",
   "systemSubtitle": "병원부 미결 원장 대사 및 업무 통합 포털",
   "themes": [
@@ -45,8 +45,8 @@
       "themeId": "tools",
       "title": "📊 금융/자산",
       "themeTitle": "📊 금융/자산",
-      "description": "금일 주식시장·환율 동향, 주요 종목 지수 및 5대 뉴스",
-      "themeDesc": "금일 주식시장·환율 동향, 주요 종목 지수 및 5대 뉴스",
+      "description": "금일 주식시장·환율 동향, 주요 종목 지수, 5대 뉴스 및 수익 시뮬레이션",
+      "themeDesc": "금일 주식시장·환율 동향, 주요 종목 지수, 5대 뉴스 및 수익 시뮬레이션",
       "adminOnly": false,
       "dashboard": {
         "id": "financial-info",
@@ -54,7 +54,18 @@
         "type": "iframe",
         "url": "financial-info.html"
       },
-      "subMenus": []
+      "subMenus": [
+        {
+          "id": "savings-sim",
+          "title": "적금/수익 정밀 시뮬레이터",
+          "type": "iframe",
+          "url": "savings-simulator.html",
+          "badge": "계산기",
+          "badgeColor": "green",
+          "role": "all",
+          "description": "일일 저축 및 복리 자산 증식 시뮬레이터"
+        }
+      ]
     },
     {
       "id": "knowledge",

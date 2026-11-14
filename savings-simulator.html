@@ -45,27 +45,27 @@
     }
 
     [data-theme="light"] {
-      --bg: #f8fafc;
-      --bg-glow-1: rgba(99, 102, 241, 0.08);
-      --bg-glow-2: rgba(16, 185, 129, 0.06);
-      --card-bg: rgba(255, 255, 255, 0.94);
+      --bg: #faf8ff;
+      --bg-glow-1: rgba(30, 58, 138, 0.05);
+      --bg-glow-2: rgba(5, 150, 105, 0.04);
+      --card-bg: #ffffff;
       --card-elevated: #ffffff;
-      --card-border: rgba(203, 213, 225, 0.85);
+      --card-border: #cbd5e1;
       --card-hover: #ffffff;
-      --primary: #4f46e5;
-      --primary-light: #4f46e5;
-      --primary-glow: rgba(79, 70, 229, 0.14);
+      --primary: #00236f;
+      --primary-light: #1e3a8a;
+      --primary-glow: rgba(0, 35, 111, 0.14);
       --profit: #059669;
       --profit-strong: #059669;
       --profit-glow: rgba(5, 150, 105, 0.14);
       --accent: #0284c7;
-      --text-main: #0f172a;
-      --text-strong: #0f172a;
-      --text-muted: #475569;
-      --text-dim: #64748b;
-      --input-bg: #f1f5f9;
+      --text-main: #131b2e;
+      --text-strong: #00236f;
+      --text-muted: #444651;
+      --text-dim: #757682;
+      --input-bg: #faf8ff;
       --table-head-bg: #f8fafc;
-      --row-hover: rgba(79, 70, 229, 0.04);
+      --row-hover: rgba(0, 35, 111, 0.04);
       --grid-line: rgba(15, 23, 42, 0.07);
       --tick-color: #475569;
       --legend-color: #334155;
@@ -829,10 +829,6 @@
       </div>
 
       <div class="header-actions">
-        <a href="index.html" class="btn-icon" title="내 웹 명함 보기">
-          <i data-lucide="user"></i>
-          <span>내 명함</span>
-        </a>
         <button class="btn-icon" id="shareBtn" title="시뮬레이션 공유">
           <i data-lucide="share-2"></i>
           <span>공유</span>
@@ -1525,10 +1521,10 @@
       showToast('기본 시뮬레이션 조건으로 초기화되었습니다.');
     });
 
-    // Theme Toggle
+    // Theme Toggle (포털 디자인과 일관된 라이트 테마 기본 적용)
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     const themeIcon = document.getElementById('themeIcon');
-    let isLight = localStorage.getItem('sim_theme') === 'light';
+    let isLight = localStorage.getItem('sim_theme') !== 'dark';
 
     function applyTheme() {
       if (isLight) {
