@@ -3,1265 +3,1434 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>이창환 | Digital Business Card</title>
-  
-  <!-- Pretendard & Inter Web Fonts -->
-  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <title>Clinical Ledger Precision — 업무 통합 포털 시스템</title>
+  <!-- Google Fonts: Plus Jakarta Sans, Noto Sans KR, JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-  
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- QRCode.js for generating QR codes on the fly -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS & Supabase JS SDK -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --primary: #4f46e5;
-      --primary-light: #818cf8;
-      --primary-glow: rgba(99, 102, 241, 0.35);
-      --accent: #06b6d4;
-      --bg-gradient: radial-gradient(circle at 20% 20%, #1e1e38 0%, #0f1021 60%, #080914 100%);
-      --card-bg: rgba(255, 255, 255, 0.05);
-      --card-border: rgba(255, 255, 255, 0.12);
-      --card-inner: rgba(18, 20, 36, 0.75);
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --text-dim: #64748b;
-      --tag-bg: rgba(255, 255, 255, 0.07);
-      --shadow-color: rgba(0, 0, 0, 0.45);
-      --transition-speed: 0.3s;
+      --surface: #faf8ff;
+      --surface-lowest: #ffffff;
+      --surface-low: #f2f3ff;
+      --surface-container: #eaedff;
+      --primary: #00236f;
+      --primary-container: #1e3a8a;
     }
-
-    [data-theme="light"] {
-      --primary: #4338ca;
-      --primary-light: #6366f1;
-      --primary-glow: rgba(79, 70, 229, 0.2);
-      --accent: #0284c7;
-      --bg-gradient: radial-gradient(circle at 20% 20%, #e0e7ff 0%, #f1f5f9 60%, #f8fafc 100%);
-      --card-bg: rgba(255, 255, 255, 0.85);
-      --card-border: rgba(226, 232, 240, 0.8);
-      --card-inner: rgba(255, 255, 255, 0.9);
-      --text-main: #0f172a;
-      --text-muted: #475569;
-      --text-dim: #94a3b8;
-      --tag-bg: rgba(0, 0, 0, 0.05);
-      --shadow-color: rgba(0, 0, 0, 0.08);
-    }
-
-    * {
-      box-sizing: border-box;
+    body {
+      background-color: #faf8ff;
+      color: #131b2e;
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 13px;
       margin: 0;
       padding: 0;
-      font-family: 'Pretendard', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
       -webkit-font-smoothing: antialiased;
     }
-
-    body {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start; /* Changed from center to prevent top/bottom clipping on smaller screens */
-      background: var(--bg-gradient);
-      color: var(--text-main);
-      padding: 70px 16px 40px;
-      overflow-x: hidden;
-      overflow-y: auto;
-      perspective: 1200px;
-      transition: background 0.5s ease, color 0.3s ease;
-    }
-
-    /* Ambient dynamic glow background */
-    .ambient-sphere {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(100px);
-      z-index: 0;
-      pointer-events: none;
-      opacity: 0.5;
-      animation: floatAmbient 12s ease-in-out infinite alternate;
-    }
-    .ambient-1 {
-      width: 450px;
-      height: 450px;
-      background: linear-gradient(135deg, #6366f1, #a855f7);
-      top: 5%;
-      left: 15%;
-    }
-    .ambient-2 {
-      width: 400px;
-      height: 400px;
-      background: linear-gradient(135deg, #06b6d4, #3b82f6);
-      bottom: 5%;
-      right: 15%;
-      animation-delay: -6s;
-    }
-
-    @keyframes floatAmbient {
-      0% { transform: translate(0, 0) scale(1); }
-      100% { transform: translate(60px, 40px) scale(1.15); }
-    }
-
-    /* Top Action Bar */
-    .top-nav {
-      position: fixed;
-      top: 14px;
-      display: flex;
-      gap: 8px;
-      z-index: 30;
-      background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      padding: 6px 14px;
-      border-radius: 40px;
-      border: 1px solid var(--card-border);
-      box-shadow: 0 10px 30px var(--shadow-color);
-    }
-
-    .nav-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12.5px;
-      font-weight: 600;
-      padding: 5px 10px;
-      border-radius: 20px;
-      transition: all 0.2s ease;
-    }
-    .nav-btn:hover {
-      color: var(--text-main);
-      background: var(--tag-bg);
-    }
-    .nav-btn svg {
-      width: 15px;
-      height: 15px;
-    }
-
-    /* Card Container with 3D Flip */
-    .card-scene {
-      width: 100%;
-      max-width: 420px;
-      min-height: 560px;
-      height: fit-content;
-      position: relative;
-      z-index: 10;
-      perspective: 1600px;
-      margin: 10px auto;
-    }
-
-    .business-card {
-      width: 100%;
-      min-height: 560px;
-      position: relative;
-      transform-style: preserve-3d;
-      transition: transform 0.75s cubic-bezier(0.34, 1.56, 0.64, 1);
-      cursor: default;
-    }
-
-    .business-card.is-flipped {
-      transform: rotateY(180deg);
-    }
-
-    /* Common Card Face */
-    .card-face {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      min-height: 100%;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-      border-radius: 24px;
-      background: var(--card-inner);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid var(--card-border);
-      box-shadow: 0 20px 50px -10px var(--shadow-color),
-                  0 0 0 1px var(--card-border) inset;
-      padding: 24px 22px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      overflow-y: auto; /* Allow scrolling inside card if viewport is very short */
-      scrollbar-width: thin;
-      scrollbar-color: rgba(255,255,255,0.2) transparent;
-    }
-
-    .card-face::-webkit-scrollbar {
-      width: 4px;
-    }
-    .card-face::-webkit-scrollbar-thumb {
-      background: rgba(255,255,255,0.2);
-      border-radius: 4px;
-    }
-
-    /* Holographic sheen highlight */
-    .card-face::before {
-      content: "";
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.12) 0%, transparent 65%);
-      pointer-events: none;
-      transform: rotate(35deg);
-      opacity: 0.7;
-    }
-
-    /* Back Face specific */
-    .card-back {
-      transform: rotateY(180deg);
-    }
-
-    /* Card Header */
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: relative;
-      z-index: 2;
-    }
-
-    .avatar-wrapper {
-      position: relative;
-      width: 72px;
-      height: 72px;
-    }
-
-    .avatar-img {
-      width: 100%;
-      height: 100%;
-      border-radius: 20px;
-      object-fit: cover;
-      border: 2px solid rgba(255, 255, 255, 0.25);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      font-weight: 800;
-      color: #fff;
-    }
-
-    .status-badge {
-      position: absolute;
-      bottom: -2px;
-      right: -2px;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: #10b981;
-      border: 2.5px solid #14172b;
-      box-shadow: 0 0 8px #10b981;
-    }
-
-    .flip-btn-trigger {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      padding: 6px 12px;
-      background: var(--tag-bg);
-      border: 1px solid var(--card-border);
-      color: var(--text-muted);
-      border-radius: 100px;
-      font-size: 11.5px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .flip-btn-trigger:hover {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-      transform: scale(1.04);
-    }
-    .flip-btn-trigger svg {
-      width: 14px;
-      height: 14px;
-    }
-
-    /* Identity Section */
-    .identity {
-      margin-top: 14px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .name-row {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .full-name {
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, #ffffff 40%, var(--primary-light) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    [data-theme="light"] .full-name {
-      background: linear-gradient(135deg, #0f172a 40%, var(--primary) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .eng-name {
-      font-size: 13.5px;
-      color: var(--text-dim);
-      font-weight: 500;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .job-title {
-      font-size: 14.5px;
-      font-weight: 600;
-      color: var(--primary-light);
-      margin-top: 3px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .bio-text {
-      margin-top: 10px;
-      font-size: 13px;
-      line-height: 1.5;
-      color: var(--text-muted);
-    }
-
-    /* Skills & Keywords */
-    .tags-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 12px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .tag {
-      font-size: 11px;
-      font-weight: 500;
-      padding: 4px 9px;
-      border-radius: 6px;
-      background: var(--tag-bg);
-      border: 1px solid var(--card-border);
-      color: var(--text-muted);
-      transition: all 0.2s ease;
-    }
-    .tag:hover {
-      border-color: var(--primary-light);
-      color: var(--text-main);
-      transform: translateY(-2px);
-    }
-
-    /* Contact Details on Front */
-    .contact-list {
-      margin-top: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .contact-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-      border-radius: 10px;
-      background: var(--tag-bg);
-      border: 1px solid var(--card-border);
-      color: var(--text-main);
-      text-decoration: none;
-      font-size: 12.5px;
-      transition: all 0.2s ease;
-    }
-
-    .contact-item:hover {
-      background: rgba(99, 102, 241, 0.15);
-      border-color: var(--primary-light);
-      transform: translateX(4px);
-    }
-
-    .contact-icon {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--primary-light);
-      flex-shrink: 0;
-    }
-    .contact-icon svg {
-      width: 16px;
-      height: 16px;
-    }
-
-    .contact-val {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      flex: 1;
-    }
-
-    /* Primary Action Buttons (vCard & Share) */
-    .action-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 16px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 10px 14px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      border: none;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      text-decoration: none;
-    }
-
-    .btn svg {
-      width: 16px;
-      height: 16px;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--primary), #6366f1);
-      color: #ffffff;
-      box-shadow: 0 4px 16px var(--primary-glow);
-    }
-    .btn-primary:hover {
-      background: linear-gradient(135deg, #4338ca, #4f46e5);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px var(--primary-glow);
-    }
-
-    .btn-secondary {
-      background: var(--tag-bg);
-      border: 1px solid var(--card-border);
-      color: var(--text-main);
-    }
-    .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.12);
-      transform: translateY(-2px);
-    }
-
-    /* Back Face Layout */
-    .back-content {
-      display: flex;
-      flex-direction: column;
-      min-height: 100%;
-      justify-content: space-between;
-      position: relative;
-      z-index: 2;
-    }
-
-    .back-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 8px;
-    }
-
-    .timeline {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 6px;
-    }
-
-    .timeline-item {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      padding-left: 12px;
-      border-left: 2px solid var(--primary-light);
-    }
-
-    .timeline-date {
-      font-size: 10.5px;
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--accent);
-      font-weight: 600;
-    }
-
-    .timeline-role {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    .timeline-desc {
-      font-size: 11.5px;
-      color: var(--text-muted);
-    }
-
-    /* Social Icons Row */
-    .social-row {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-top: 12px;
-    }
-
-    .social-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      background: var(--tag-bg);
-      border: 1px solid var(--card-border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-main);
-      text-decoration: none;
-      transition: all 0.2s ease;
-    }
-    .social-btn:hover {
-      background: var(--primary);
-      color: #fff;
-      transform: translateY(-2px) scale(1.04);
-      border-color: var(--primary);
-    }
-    .social-btn svg {
-      width: 18px;
-      height: 18px;
-    }
-
-    /* QR Code Display area */
-    .qr-card-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-top: 10px;
-      padding: 10px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--card-border);
-      border-radius: 14px;
-    }
-
-    .qr-box {
-      background: #ffffff;
-      padding: 6px;
-      border-radius: 8px;
-      display: inline-block;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    }
-
-    .qr-desc {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 6px;
-    }
-
-    /* Compact Viewport Optimization (For small laptop screens or split browser windows) */
-    @media (max-height: 720px) {
-      body {
-        padding-top: 60px;
-      }
-      .card-scene, .business-card {
-        min-height: 500px;
-      }
-      .card-face {
-        padding: 18px 18px;
-      }
-      .avatar-wrapper {
-        width: 60px;
-        height: 60px;
-      }
-      .avatar-img {
-        font-size: 22px;
-      }
-      .full-name {
-        font-size: 22px;
-      }
-      .identity {
-        margin-top: 8px;
-      }
-      .bio-text {
-        font-size: 12px;
-        margin-top: 6px;
-      }
-      .contact-list {
-        margin-top: 10px;
-        gap: 6px;
-      }
-      .action-grid {
-        margin-top: 12px;
-      }
-    }
-
-    /* Toast Notification */
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: #10b981;
-      color: #fff;
-      padding: 10px 20px;
-      border-radius: 30px;
-      font-size: 13.5px;
-      font-weight: 600;
-      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.35);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      opacity: 0;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      z-index: 999;
-      pointer-events: none;
-    }
-    .toast.show {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
-    .toast svg {
-      width: 16px;
-      height: 16px;
-    }
-
-    /* Edit Profile Modal */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.65);
-      backdrop-filter: blur(8px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-      padding: 16px;
-    }
-
-    .modal-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .modal-card {
-      background: var(--card-inner);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--card-border);
-      border-radius: 24px;
-      width: 100%;
-      max-width: 480px;
-      max-height: 85vh;
-      overflow-y: auto;
-      padding: 24px;
-      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
-      transform: scale(0.95);
-      transition: transform 0.3s ease;
-    }
-
-    .modal-overlay.active .modal-card {
-      transform: scale(1);
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .modal-title {
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    .close-modal-btn {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-    }
-
-    .form-group {
-      margin-bottom: 14px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 12.5px;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      font-weight: 600;
-    }
-
-    .form-control {
-      width: 100%;
-      padding: 10px 14px;
-      border-radius: 10px;
-      background: var(--tag-bg);
-      border: 1px solid var(--card-border);
-      color: var(--text-main);
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .form-control:focus {
-      border-color: var(--primary-light);
-    }
-
-    .footer-credit {
-      margin-top: 16px;
-      font-size: 12px;
-      color: var(--text-dim);
-      text-align: center;
-      z-index: 10;
-    }
-
-    /* Print Style for physical business card printing */
-    @media print {
-      body {
-        background: #fff;
-        padding: 0;
-      }
-      .top-nav, .ambient-sphere, .flip-btn-trigger, .action-grid, .footer-credit {
-        display: none !important;
-      }
-      .card-scene {
-        perspective: none;
-      }
-      .card-face {
-        box-shadow: none;
-        border: 1px solid #ccc;
-        page-break-after: always;
-      }
+    .font-headline { font-family: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif; }
+    .num-font { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+    .fade-in { animation: fadeIn 0.2s ease-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col">
 
-  <!-- Ambient light orbs -->
-  <div class="ambient-sphere ambient-1"></div>
-  <div class="ambient-sphere ambient-2"></div>
+  <!-- ========================================================================= -->
+  <!-- 1. LOGIN SCREEN                                                           -->
+  <!-- ========================================================================= -->
+  <div id="screen-login" class="flex-1 flex flex-col justify-center items-center p-4 sm:p-6 bg-[#faf8ff] relative overflow-hidden">
+    <div class="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-3xl h-72 bg-gradient-to-b from-[#eaedff] to-transparent rounded-full blur-3xl pointer-events-none opacity-70"></div>
 
-  <!-- Top Utilities Bar -->
-  <div class="top-nav">
-    <a href="reconcile_ui.html" class="nav-btn" title="병원부 미결 통합 관리 및 리포트 시스템 열기" style="text-decoration: none; border-color: rgba(59, 130, 246, 0.4); background: rgba(59, 130, 246, 0.15); color: #93c5fd;">
-      <i data-lucide="file-spreadsheet"></i>
-      <span>미결 대사 시스템</span>
-    </a>
-    <a href="savings-simulator.html" class="nav-btn" title="일일 저축 & 복리 시뮬레이터 열기" style="text-decoration: none;">
-      <i data-lucide="calculator"></i>
-      <span>저축 시뮬레이터</span>
-    </a>
-    <button class="nav-btn" id="themeToggleBtn" title="화면 테마 변경">
-      <i data-lucide="moon" id="themeIcon"></i>
-      <span id="themeText">다크</span>
-    </button>
-    <button class="nav-btn" id="editModalBtn" title="명함 정보 수정">
-      <i data-lucide="edit-3"></i>
-      <span>정보 수정</span>
-    </button>
-    <button class="nav-btn" id="flipQuickBtn" title="명함 뒤집기">
-      <i data-lucide="refresh-cw"></i>
-      <span>뒷면 보기</span>
-    </button>
-  </div>
+    <div class="w-full max-w-md relative z-10 fade-in">
+      <!-- Title Header -->
+      <div class="text-center mb-7">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1e3a8a]/10 border border-[#1e3a8a]/20 text-[#1e3a8a] text-[11px] font-bold tracking-wider mb-2.5">
+          <span>CLINICAL LEDGER PRECISION</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold font-headline text-[#00236f] tracking-tight">
+          업무 통합 포털 시스템
+        </h1>
+        <p class="text-xs sm:text-sm text-[#444651] mt-1.5">
+          병원부 미결 원장 대사, 금융 시뮬레이터, 업무 지식 블로그 통합 공간
+        </p>
+      </div>
 
-  <!-- 3D Card Scene -->
-  <div class="card-scene" id="cardScene">
-    <div class="business-card" id="businessCard">
-      
-      <!-- CARD FRONT -->
-      <div class="card-face card-front">
-        <div>
-          <!-- Header (Avatar + Flip trigger) -->
-          <div class="card-header">
-            <div class="avatar-wrapper">
-              <div class="avatar-img" id="displayAvatarInitials">창환</div>
-              <div class="status-badge" title="상태: 연락 가능"></div>
-            </div>
-            <button class="flip-btn-trigger" id="flipToBackBtn" title="뒷면 상세 소개 보기">
-              <i data-lucide="arrow-right-left"></i>
-              <span>뒷면 소개</span>
+      <!-- Login Box -->
+      <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-lg p-6 sm:p-8">
+        <!-- Connection Badge -->
+        <div class="mb-5 p-3 rounded-lg border text-xs flex items-center justify-between bg-[#f2f3ff] border-[#dae2fd]">
+          <div class="flex items-center gap-2">
+            <span id="login-sb-dot" class="w-2 h-2 rounded-full bg-[#2563eb] animate-pulse"></span>
+            <span id="login-sb-text" class="font-semibold text-[#131b2e]">포털 인증 시스템 준비 완료</span>
+          </div>
+          <button onclick="openSupabaseModal();" class="text-[11px] px-2 py-0.5 rounded bg-white hover:bg-[#eaedff] text-[#1e3a8a] font-bold border border-[#c5c5d3] transition">
+            ⚙️ DB 설정
+          </button>
+        </div>
+
+        <form onsubmit="event.preventDefault(); handleFormLogin();" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-[#131b2e] mb-1">업무용 이메일</label>
+            <input type="email" id="input-email" value="chuan@hospital.com" required
+              class="w-full px-3.5 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#131b2e] mb-1">비밀번호</label>
+            <input type="password" id="input-password" value="password123" required
+              class="w-full px-3.5 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white">
+          </div>
+          <div id="login-error" class="hidden p-2.5 rounded bg-[#fef2f2] border border-[#fecaca] text-[#dc2626] text-xs font-medium"></div>
+          <button type="submit" class="w-full py-2.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-md shadow transition cursor-pointer">
+            포털 시스템 로그인 →
+          </button>
+        </form>
+
+        <!-- One-click Quick Login -->
+        <div class="mt-6 pt-5 border-t border-[#e2e8f0]">
+          <div class="text-xs font-bold text-[#444651] mb-2.5 flex items-center justify-between">
+            <span>⚡ 원클릭 빠른 접속 계정</span>
+            <span class="text-[10px] font-normal text-[#757682]">클릭 시 즉시 입장</span>
+          </div>
+          <div class="space-y-2">
+            <button onclick="quickLogin('chuan@hospital.com', '이창환', 'finance_manager', '병원사업부 / 정산총괄');"
+              class="w-full text-left p-2.5 rounded-md border border-[#cbd5e1] bg-[#faf8ff] hover:bg-[#eaedff] transition flex items-center justify-between">
+              <div>
+                <div class="font-bold text-[#00236f] text-xs">이창환 (정산 총괄 매니저)</div>
+                <div class="text-[11px] text-[#757682]">chuan@hospital.com • 병원사업부</div>
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0]">Finance Manager</span>
+            </button>
+
+            <button onclick="quickLogin('admin@hospital.com', '시스템 관리자', 'admin', 'IT 인프라팀');"
+              class="w-full text-left p-2.5 rounded-md border border-[#cbd5e1] bg-[#faf8ff] hover:bg-[#eaedff] transition flex items-center justify-between">
+              <div>
+                <div class="font-bold text-[#00236f] text-xs">시스템 관리자 (전체 권한)</div>
+                <div class="text-[11px] text-[#757682]">admin@hospital.com • 메뉴 추가/관리</div>
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]">Admin</span>
             </button>
           </div>
-
-          <!-- Identity & Title -->
-          <div class="identity">
-            <div class="name-row">
-              <h1 class="full-name" id="displayName">이창환</h1>
-              <span class="eng-name" id="displayEngName">Changhwan Lee</span>
-            </div>
-            <div class="job-title" id="displayJobTitle">
-              <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i>
-              <span id="jobTitleText">Software Engineer & Creator</span>
-            </div>
-            <p class="bio-text" id="displayBio">
-              기술을 통해 복잡한 문제를 단순하게 풀고, 사용자에게 영감을 주는 혁신적인 디지털 경험을 만들어갑니다.
-            </p>
-          </div>
-
-          <!-- Tags / Specialties -->
-          <div class="tags-container" id="tagsContainer">
-            <span class="tag">#FullStack</span>
-            <span class="tag">#AI_Engineering</span>
-            <span class="tag">#UI/UX</span>
-            <span class="tag">#ProblemSolver</span>
-          </div>
-
-          <!-- Quick Contacts -->
-          <div class="contact-list">
-            <a href="mailto:changhwan@example.com" class="contact-item" id="displayEmailLink">
-              <div class="contact-icon"><i data-lucide="mail"></i></div>
-              <span class="contact-val" id="displayEmail">changhwan@example.com</span>
-            </a>
-            <a href="tel:010-1234-5678" class="contact-item" id="displayPhoneLink">
-              <div class="contact-icon"><i data-lucide="phone"></i></div>
-              <span class="contact-val" id="displayPhone">010-1234-5678</span>
-            </a>
-            <div class="contact-item">
-              <div class="contact-icon"><i data-lucide="map-pin"></i></div>
-              <span class="contact-val" id="displayLocation">Seoul, Republic of Korea</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="action-grid">
-          <button class="btn btn-primary" id="saveContactBtn">
-            <i data-lucide="user-plus"></i>
-            <span>연락처 저장</span>
-          </button>
-          <button class="btn btn-secondary" id="shareCardBtn">
-            <i data-lucide="share-2"></i>
-            <span>명함 공유</span>
-          </button>
         </div>
       </div>
 
-      <!-- CARD BACK -->
-      <div class="card-face card-back">
-        <div class="back-content">
+      <div class="text-center mt-5 text-xs text-[#757682]">
+        © 2026 Clinical Ledger Precision. All rights reserved.
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 2. PORTAL MAIN WORKSPACE                                                  -->
+  <!-- ========================================================================= -->
+  <div id="screen-portal" class="hidden flex-1 flex flex-col min-h-screen">
+    <!-- TOP GNB -->
+    <header class="sticky top-0 z-40 bg-[#00236f] text-white border-b border-[#1e3a8a] shadow-sm">
+      <div class="max-w-[1800px] mx-auto px-4 h-14 flex items-center justify-between gap-3">
+        <!-- Brand -->
+        <div class="flex items-center gap-3 cursor-pointer" onclick="selectTheme('finance');">
+          <span class="bg-[#1e3a8a] border border-[#3b82f6]/40 text-[#90a8ff] px-2 py-0.5 rounded text-xs font-headline font-bold tracking-wider">CLP</span>
+          <span class="font-headline font-bold text-sm tracking-tight hidden sm:inline">Clinical Ledger Precision</span>
+          <span class="text-[11px] text-[#dae2fd] hidden xl:inline border-l border-white/20 pl-2.5">업무 통합 포털</span>
+        </div>
+
+        <!-- Dynamic Theme Tabs (GNB) -->
+        <nav id="gnb-theme-tabs" class="flex items-center gap-1 overflow-x-auto py-1">
+          <!-- Populated dynamically -->
+        </nav>
+
+        <!-- Right Controls -->
+        <div class="flex items-center gap-2.5 shrink-0">
+          <button onclick="openMenuManagerModal();"
+            class="px-2.5 py-1 rounded bg-[#059669] hover:bg-[#047857] text-white text-[11px] font-bold flex items-center gap-1 shadow transition cursor-pointer"
+            title="코딩 없이 화면에서 새 메뉴/하위메뉴 추가">
+            <span>➕ 메뉴 추가/관리</span>
+          </button>
+
+          <button onclick="openSupabaseModal();"
+            id="gnb-sb-btn"
+            class="hidden md:flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded bg-[#1e3a8a]/80 hover:bg-[#1e3a8a] border border-[#3b82f6]/30 text-[#dae2fd] cursor-pointer">
+            <span id="gnb-sb-dot" class="w-1.5 h-1.5 rounded-full bg-[#60a5fa]"></span>
+            <span id="gnb-sb-label">DB 설정</span>
+          </button>
+
+          <!-- Role Switcher -->
+          <div class="hidden sm:flex items-center gap-1 bg-[#131b2e] px-2 py-1 rounded border border-white/10 text-[11px]">
+            <span class="text-white/60">권한:</span>
+            <select id="gnb-role-select" onchange="changeUserRole(this.value);" class="bg-transparent text-[#90a8ff] font-bold focus:outline-none cursor-pointer">
+              <option value="finance_manager" class="bg-[#131b2e] text-white">Finance Manager</option>
+              <option value="admin" class="bg-[#131b2e] text-white">Admin</option>
+              <option value="staff" class="bg-[#131b2e] text-white">Staff</option>
+            </select>
+          </div>
+
+          <!-- User Profile & Logout -->
+          <div class="flex items-center gap-2 pl-2 border-l border-white/15">
+            <div id="gnb-user-avatar" class="w-7 h-7 rounded-full bg-[#1e3a8a] border border-[#90a8ff]/40 flex items-center justify-center font-bold text-xs text-white">이</div>
+            <div class="hidden lg:block text-left leading-tight">
+              <div id="gnb-user-name" class="text-xs font-bold">이창환</div>
+              <div id="gnb-user-dept" class="text-[10px] text-[#dae2fd]/75">병원사업부</div>
+            </div>
+            <button onclick="logoutPortal();" class="text-xs text-white/75 hover:text-white px-2 py-1 rounded hover:bg-white/10 transition ml-1">
+              로그아웃
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- WORKSPACE BODY: SIDEBAR + CONTENT -->
+    <div class="max-w-[1800px] w-full mx-auto flex-1 flex flex-col lg:flex-row">
+      <!-- LNB SIDEBAR -->
+      <aside class="w-full lg:w-64 shrink-0 bg-white border-b lg:border-b-0 lg:border-r border-[#e2e8f0] flex flex-col justify-between">
+        <div class="p-4 space-y-5">
+          <!-- Active Theme Box -->
+          <div class="p-3.5 rounded-lg bg-[#f2f3ff] border border-[#dae2fd]">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold text-[#1e3a8a] uppercase tracking-wider">선택된 업무 테마</span>
+              <span id="lnb-menu-count" class="text-[10px] font-bold px-1.5 py-0.2 bg-white text-[#00236f] rounded border border-[#cbd5e1]">3개 메뉴</span>
+            </div>
+            <div id="lnb-theme-title" class="text-sm font-bold text-[#00236f] mt-1">병원부 정산/재무</div>
+            <p id="lnb-theme-desc" class="text-[11px] text-[#444651] mt-1 leading-snug">병원 제약 공급망 정산 원장 대사 및 미결 금액 관리</p>
+          </div>
+
+          <!-- Dashboard Item -->
           <div>
-            <!-- Header for back -->
-            <div class="card-header">
-              <h2 class="back-title">
-                <i data-lucide="briefcase" style="width: 20px; height: 20px; color: var(--primary-light);"></i>
-                이력 및 활동
-              </h2>
-              <button class="flip-btn-trigger" id="flipToFrontBtn" title="앞면으로 돌아가기">
-                <i data-lucide="arrow-right-left"></i>
-                <span>앞면 보기</span>
+            <div class="text-[11px] font-bold text-[#757682] px-2 mb-1.5 uppercase tracking-wider">메인 대시보드</div>
+            <div id="lnb-dashboard-slot"></div>
+          </div>
+
+          <!-- Submenus Tree -->
+          <div>
+            <div class="flex items-center justify-between text-[11px] font-bold text-[#757682] px-2 mb-1.5 uppercase tracking-wider">
+              <span>하위 세부메뉴 그룹</span>
+              <button onclick="openMenuManagerModal();" class="text-[10px] text-[#2563eb] hover:underline font-bold">+ 메뉴 추가</button>
+            </div>
+            <div id="lnb-submenus-slot" class="space-y-1"></div>
+          </div>
+        </div>
+
+        <!-- LNB Bottom Quick Add Box -->
+        <div class="p-3 border-t border-[#e2e8f0] bg-[#faf8ff] space-y-2">
+          <button onclick="openMenuManagerModal();"
+            class="w-full p-2.5 rounded-lg border border-[#cbd5e1] bg-white hover:bg-[#eaedff] transition text-left flex items-center justify-between">
+            <div>
+              <div class="text-xs font-bold text-[#00236f]">➕ 간편 메뉴 추가/그룹 관리</div>
+              <div class="text-[10px] text-[#757682]">코딩 없이 화면에서 즉시 메뉴 등록</div>
+            </div>
+            <span class="text-xs font-bold text-[#2563eb]">→</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT VIEWPORT -->
+      <main class="flex-1 flex flex-col min-w-0 bg-[#faf8ff] p-4 sm:p-6 overflow-y-auto">
+        <!-- Breadcrumb & Top Bar -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-4 mb-4 border-b border-[#e2e8f0]">
+          <div class="flex items-center gap-1.5 text-xs text-[#757682]">
+            <span class="cursor-pointer hover:text-[#00236f]" onclick="selectTheme('finance');">포털 홈</span>
+            <span>›</span>
+            <span id="crumb-theme" class="font-semibold text-[#1e3a8a]">병원부 정산/재무</span>
+            <span>›</span>
+            <span id="crumb-page" class="font-bold text-[#00236f]">미결 정산 총괄 대시보드</span>
+          </div>
+
+          <div id="viewport-actions" class="flex items-center gap-2"></div>
+        </div>
+
+        <!-- Dynamic Content Container -->
+        <div id="viewport-body" class="flex-1 flex flex-col"></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 3. MODAL: NO-CODE MENU & THEME GROUP MANAGER                              -->
+  <!-- ========================================================================= -->
+  <div id="modal-menu-manager" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-2xl w-full max-w-2xl p-6 fade-in max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-[#e2e8f0] mb-4">
+        <div>
+          <span class="text-[10px] font-bold text-[#059669] uppercase tracking-wider">NO-CODE MENU BUILDER</span>
+          <h2 class="text-lg font-bold font-headline text-[#00236f]">신규 대시보드 & 하위메뉴 그룹화 매니저</h2>
+        </div>
+        <button onclick="closeMenuManagerModal();" class="text-gray-400 hover:text-gray-700 text-xl font-bold">&times;</button>
+      </div>
+
+      <!-- Guide Notice -->
+      <div class="p-3.5 rounded-lg bg-[#f2f3ff] border border-[#dae2fd] text-xs text-[#131b2e] mb-5 space-y-1">
+        <div class="font-bold text-[#00236f]">💡 가장 쉽고 효율적인 신규 메뉴 추가 방법 (2가지 방식)</div>
+        <div>1. <strong>외부/내부 HTML 파일 연결</strong>: 새로 코딩한 HTML 파일명(예: <code>template-page.html</code>) 또는 URL을 입력하면 포털 내부 화면으로 즉시 통합됩니다.</div>
+        <div>2. <strong>내장 표준 대시보드 생성</strong>: 별도 파일 없이도 즉시 KPI 카드와 테이블이 있는 신규 대시보드/서브메뉴를 자동 생성합니다.</div>
+      </div>
+
+      <!-- Add Menu Form -->
+      <form onsubmit="event.preventDefault(); handleAddMenu();" class="space-y-4 bg-[#faf8ff] p-4 rounded-lg border border-[#cbd5e1]">
+        <div class="font-bold text-xs text-[#00236f] border-b border-[#e2e8f0] pb-2">➕ 새 하위메뉴 또는 신규 테마 추가</div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-[#131b2e] mb-1">추가할 대상 테마 그룹</label>
+            <select id="mm-theme-select" onchange="toggleNewThemeInputs();" class="w-full px-3 py-2 text-xs bg-white border border-[#cbd5e1] rounded">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div id="mm-new-theme-box" class="hidden">
+            <label class="block text-xs font-bold text-[#2563eb] mb-1">신규 업무 테마명 입력 *</label>
+            <input type="text" id="mm-new-theme-title" placeholder="예: 인사/총무 관리" class="w-full px-3 py-2 text-xs bg-white border border-[#2563eb] rounded">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#131b2e] mb-1">신규 메뉴 제목 *</label>
+            <input type="text" id="mm-menu-title" required placeholder="예: 분기별 약품 재고 실사" class="w-full px-3 py-2 text-xs bg-white border border-[#cbd5e1] rounded">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-[#131b2e] mb-1">화면 연결 방식</label>
+            <select id="mm-menu-type" onchange="toggleMenuUrlInput();" class="w-full px-3 py-2 text-xs bg-white border border-[#cbd5e1] rounded">
+              <option value="iframe">HTML 파일 / 외부 URL 연결</option>
+              <option value="template">표준 대시보드/테이블 자동 생성</option>
+            </select>
+          </div>
+          <div id="mm-url-box" class="sm:col-span-2">
+            <label class="block text-xs font-bold text-[#131b2e] mb-1">연결할 파일 경로 또는 URL *</label>
+            <input type="text" id="mm-menu-url" value="template-page.html" placeholder="예: template-page.html 또는 https://..." class="w-full px-3 py-2 text-xs bg-white border border-[#cbd5e1] rounded">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-[#131b2e] mb-1">배지 텍스트 (선택)</label>
+            <input type="text" id="mm-menu-badge" value="신규" placeholder="예: 신규, 핵심, Beta" class="w-full px-3 py-2 text-xs bg-white border border-[#cbd5e1] rounded">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#131b2e] mb-1">접근 허용 권한</label>
+            <select id="mm-menu-role" class="w-full px-3 py-2 text-xs bg-white border border-[#cbd5e1] rounded">
+              <option value="all">모든 임직원 (전체 허용)</option>
+              <option value="admin">시스템 관리자 전용 (Admin)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="resetDefaultMenus();" class="px-3 py-1.5 border border-[#cbd5e1] bg-white text-[#757682] hover:text-[#dc2626] text-xs font-semibold rounded">
+            초기 메뉴로 리셋
+          </button>
+          <button type="submit" class="px-4 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
+            + 포털에 즉시 추가하기
+          </button>
+        </div>
+      </form>
+
+      <!-- Current Custom Menus List -->
+      <div class="mt-5">
+        <div class="text-xs font-bold text-[#00236f] mb-2">현재 등록된 전체 테마 및 하위메뉴 트리</div>
+        <div id="mm-current-list" class="space-y-2 max-h-52 overflow-y-auto pr-1"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 4. MODAL: BLOG WRITE & DETAIL                                             -->
+  <!-- ========================================================================= -->
+  <div id="modal-blog-write" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-2xl w-full max-w-xl p-6 fade-in">
+      <div class="flex items-center justify-between pb-3 border-b border-[#e2e8f0] mb-4">
+        <h2 class="text-base font-bold font-headline text-[#00236f]">새 업무 지식 / 공지사항 등록</h2>
+        <button onclick="closeBlogWriteModal();" class="text-gray-400 hover:text-gray-700 text-xl font-bold">&times;</button>
+      </div>
+      <form onsubmit="event.preventDefault(); saveBlogPost();" class="space-y-4">
+        <div class="grid grid-cols-3 gap-3">
+          <div class="col-span-2">
+            <label class="block text-xs font-bold text-[#131b2e] mb-1">제목 *</label>
+            <input type="text" id="bw-title" required placeholder="게시글 제목을 입력하세요" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#131b2e] mb-1">카테고리</label>
+            <select id="bw-category" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+              <option value="공지">공지</option>
+              <option value="업무가이드">업무가이드</option>
+              <option value="정산리포트">정산리포트</option>
+              <option value="시스템개선">시스템개선</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-[#131b2e] mb-1">목록 요약 설명</label>
+          <input type="text" id="bw-summary" placeholder="목록에 표시될 1~2줄 요약" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-[#131b2e] mb-1">태그 (쉼표로 구분)</label>
+          <input type="text" id="bw-tags" value="병원부, 정산, 업무공유" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-[#131b2e] mb-1">본문 내용 *</label>
+          <textarea id="bw-content" rows="7" required placeholder="공유할 업무 지식이나 공지 내용을 입력해 주세요..." class="w-full p-3 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded leading-relaxed"></textarea>
+        </div>
+        <div class="flex justify-end gap-2 pt-3 border-t border-[#e2e8f0]">
+          <button type="button" onclick="closeBlogWriteModal();" class="px-4 py-1.5 border border-[#cbd5e1] text-xs font-semibold rounded">취소</button>
+          <button type="submit" class="px-5 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow">저장 및 게시</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-blog-detail" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-2xl w-full max-w-2xl p-6 fade-in max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-[#e2e8f0] mb-3">
+        <div class="flex items-center gap-2">
+          <span id="bd-category" class="text-[10px] font-bold px-2.5 py-0.5 rounded bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]">공지</span>
+          <span id="bd-date" class="text-xs text-[#757682]">2026-11-13</span>
+        </div>
+        <button onclick="closeBlogDetailModal();" class="text-gray-400 hover:text-gray-700 text-xl font-bold">&times;</button>
+      </div>
+      <h2 id="bd-title" class="text-lg font-bold font-headline text-[#00236f] mb-2">제목</h2>
+      <div class="flex items-center justify-between text-xs text-[#757682] pb-3 mb-4 border-b border-[#f1f5f9]">
+        <span id="bd-author">작성자: 이창환</span>
+        <span id="bd-views">조회 100</span>
+      </div>
+      <div id="bd-content" class="text-xs text-[#131b2e] leading-relaxed whitespace-pre-line bg-[#faf8ff] p-4 rounded-lg border border-[#e2e8f0]"></div>
+      <div class="flex justify-between items-center pt-4 mt-4 border-t border-[#e2e8f0]">
+        <button id="bd-delete-btn" class="text-xs text-[#dc2626] hover:underline font-semibold">게시글 삭제</button>
+        <button onclick="closeBlogDetailModal();" class="px-4 py-1.5 bg-[#00236f] text-white text-xs font-bold rounded">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 5. MODAL: SUPABASE CLOUD CONNECTION CONFIG                                -->
+  <!-- ========================================================================= -->
+  <div id="modal-supabase" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-2xl w-full max-w-lg p-6 fade-in">
+      <div class="flex items-center justify-between pb-3 border-b border-[#e2e8f0] mb-4">
+        <div>
+          <span class="text-[10px] font-bold text-[#2563eb] uppercase tracking-wider">SUPABASE BAAS INTEGRATION</span>
+          <h2 class="text-base font-bold font-headline text-[#00236f]">Supabase 클라우드 DB & Auth 연동 설정</h2>
+        </div>
+        <button onclick="closeSupabaseModal();" class="text-gray-400 hover:text-gray-700 text-xl font-bold">&times;</button>
+      </div>
+      <p class="text-xs text-[#444651] mb-4 leading-relaxed">
+        Supabase Project URL과 Anon Key를 입력하면 실제 클라우드 PostgreSQL DB 및 Auth와 실시간 연동됩니다. 비워두면 브라우저 영구 스토리지(LocalStorage) 모드로 즉시 동작합니다.
+      </p>
+      <form onsubmit="event.preventDefault(); saveSupabaseConfig();" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-[#131b2e] mb-1">Supabase Project URL</label>
+          <input type="url" id="sb-url" placeholder="https://your-project.supabase.co" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-[#131b2e] mb-1">Supabase Anon Public Key</label>
+          <input type="text" id="sb-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded font-mono">
+        </div>
+        <div class="flex justify-end gap-2 pt-3 border-t border-[#e2e8f0]">
+          <button type="button" onclick="clearSupabaseConfig();" class="px-3 py-1.5 border border-[#cbd5e1] text-xs font-semibold rounded text-[#757682]">연동 해제 (로컬모드)</button>
+          <button type="submit" class="px-4 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow">연동 저장</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PORTAL ENGINE SCRIPT                                                      -->
+  <!-- ========================================================================= -->
+  <script>
+    // -------------------------------------------------------------------------
+    // 1. DEFAULT MENU GROUPS (기존 통합 메뉴 무결성 100% 보장)
+    // -------------------------------------------------------------------------
+    const DEFAULT_MENU_GROUPS = [
+      {
+        themeId: 'finance',
+        themeTitle: '🏥 병원부 정산/재무',
+        themeDesc: '병원 제약 공급망 정산 원장 대사 및 미결 금액 관리',
+        dashboard: {
+          id: 'finance-dash',
+          title: '미결 정산 총괄 대시보드',
+          type: 'builtin-finance-dash'
+        },
+        subMenus: [
+          {
+            id: 'reconcile-ui',
+            title: '병원부 미결 통합 원장 (Engine)',
+            type: 'iframe',
+            url: 'reconcile_ui.html',
+            badge: '원장엔진',
+            badgeColor: 'blue',
+            role: 'all'
+          },
+          {
+            id: 'variance-audit',
+            title: '월별 미결 차액 소명 관리',
+            type: 'builtin-variance',
+            badge: '신규코딩',
+            badgeColor: 'amber',
+            role: 'all'
+          }
+        ]
+      },
+      {
+        themeId: 'tools',
+        themeTitle: '📊 금융/자산 도구',
+        themeDesc: '단리/복리 이자율 시뮬레이션 및 만기 수령액 분석',
+        dashboard: {
+          id: 'tools-dash',
+          title: '금융 시뮬레이션 종합 안내',
+          type: 'builtin-tools-dash'
+        },
+        subMenus: [
+          {
+            id: 'savings-sim',
+            title: '적금/수익 정밀 시뮬레이터',
+            type: 'iframe',
+            url: 'savings-simulator.html',
+            badge: '통합완료',
+            badgeColor: 'green',
+            role: 'all'
+          }
+        ]
+      },
+      {
+        themeId: 'knowledge',
+        themeTitle: '📖 소통/블로그 허브',
+        themeDesc: '사내 공지사항, 정산 매뉴얼 블로그 및 담당자 디지털 명함',
+        dashboard: {
+          id: 'blog-main',
+          title: '업무 지식 블로그 & 공지',
+          type: 'builtin-blog'
+        },
+        subMenus: [
+          {
+            id: 'business-card',
+            title: '이창환 디지털 명함 (Profile)',
+            type: 'iframe',
+            url: 'business-card.html',
+            badge: '명함/QR',
+            badgeColor: 'blue',
+            role: 'all'
+          }
+        ]
+      },
+      {
+        themeId: 'custom',
+        themeTitle: '🧩 신규 메뉴 확장 샘플',
+        themeDesc: '화면에서 버튼 클릭 또는 HTML 파일로 즉시 추가 가능한 그룹',
+        dashboard: {
+          id: 'custom-guide',
+          title: '신규 메뉴 그룹화 가이드',
+          type: 'builtin-guide'
+        },
+        subMenus: [
+          {
+            id: 'sample-template-html',
+            title: '신규 업무 화면 (template-page)',
+            type: 'iframe',
+            url: 'template-page.html',
+            badge: 'HTML템플릿',
+            badgeColor: 'green',
+            role: 'all'
+          },
+          {
+            id: 'admin-console',
+            title: '시스템 보안 감사 콘솔',
+            type: 'builtin-admin',
+            badge: 'Admin전용',
+            badgeColor: 'red',
+            role: 'admin'
+          }
+        ]
+      }
+    ];
+
+    const DEFAULT_BLOG_POSTS = [
+      {
+        id: 'post-101',
+        title: '2026년 하반기 병원부 미결 정산 마감 일정 및 원장 대사 안내',
+        category: '공지',
+        author: '이창환 (총괄 매니저)',
+        date: '2026-11-10',
+        summary: '하반기 제약 공급망 정산 원장 대사(reconcile_ui) 및 미결 금액 확정을 위한 마감 기한과 체크리스트를 안내합니다.',
+        content: "1. 정산 마감 일정 안내\n병원부 미결 통합 관리 시스템을 통한 하반기 정산 마감이 진행됩니다.\n- 1차 원장 업로드 마감: 2026년 11월 25일 18:00\n- 차액 소명 및 최종 확정: 2026년 11월 30일 15:00\n\n2. 핵심 체크리스트\n- 좌측 메뉴 [병원부 미결 통합 원장]에서 당월 엑셀 파일을 업로드하여 자동 대사를 수행하세요.\n- 미결 잔액이 남은 거래선은 [월별 미결 차액 소명 관리] 메뉴에서 사유를 기입해 주시기 바랍니다.",
+        views: 158,
+        tags: ['정산마감', '병원부', '공지사항']
+      },
+      {
+        id: 'post-102',
+        title: '[가이드] 코딩 없이 10초 만에 신규 대시보드 및 하위메뉴 추가하기',
+        category: '업무가이드',
+        author: '시스템 관리자',
+        date: '2026-11-12',
+        summary: '상단 [➕ 메뉴 추가/관리] 버튼을 이용해 새로운 업무 테마나 하위메뉴를 즉시 그룹화하여 등록하는 방법입니다.',
+        content: "신규 대시보드 및 하위메뉴 그룹화 방법\n\n방법 1: 화면에서 버튼 클릭으로 즉시 추가 (No-Code)\n- 상단 우측 또는 좌측 하단의 [➕ 메뉴 추가/관리] 버튼을 클릭합니다.\n- 소속될 테마를 고르고 메뉴 이름과 연결할 HTML 파일명(예: template-page.html) 또는 자동 대시보드 템플릿을 선택하면 즉시 반영됩니다.\n\n방법 2: 신규 HTML 파일 코딩 연동\n- 제공된 template-page.html 파일을 복사하여 원하는 화면을 코딩한 뒤 파일명만 등록하면 포털 내부 화면으로 완벽히 동작합니다.",
+        views: 112,
+        tags: ['메뉴추가', '그룹화가이드', '포털매뉴얼']
+      },
+      {
+        id: 'post-103',
+        title: '적금 수익 시뮬레이터 v2.0 통합 및 자금 운용 팁',
+        category: '정산리포트',
+        author: '이창환 (총괄 매니저)',
+        date: '2026-11-13',
+        summary: '단리/복리 및 비과세 조건별 만기 수령액을 계산하는 시뮬레이터가 [금융/자산 도구] 테마에 통합되었습니다.',
+        content: "금융/자산 도구 테마의 [적금/수익 정밀 시뮬레이터]를 통해 월 적립액, 금리, 과세 유형별 수익을 시뮬레이션할 수 있습니다.\n- 새 탭에서 열기 및 전체화면 모드를 모두 지원합니다.",
+        views: 84,
+        tags: ['금융도구', '시뮬레이터', '자금운용']
+      }
+    ];
+
+    // -------------------------------------------------------------------------
+    // 2. STATE & STORAGE INITIALIZATION
+    // -------------------------------------------------------------------------
+    let supabaseClient = null;
+    let currentUser = null;
+    let menuGroups = [];
+    let blogPosts = [];
+    let activeThemeId = 'finance';
+    let activeViewId = 'finance-dash';
+    let blogFilterCategory = '전체';
+
+    function initApp() {
+      // Load Supabase Config
+      const sbUrl = localStorage.getItem('clp_sb_url');
+      const sbKey = localStorage.getItem('clp_sb_key');
+      if (sbUrl && sbKey && window.supabase) {
+        try {
+          supabaseClient = window.supabase.createClient(sbUrl, sbKey);
+          updateSupabaseStatusUI(true);
+        } catch (e) {
+          console.warn('Supabase init failed:', e);
+          updateSupabaseStatusUI(false);
+        }
+      } else {
+        updateSupabaseStatusUI(false);
+      }
+
+      // Load Menu Groups
+      const savedMenus = localStorage.getItem('clp_menu_groups_v2');
+      if (savedMenus) {
+        try {
+          menuGroups = JSON.parse(savedMenus);
+        } catch {
+          menuGroups = JSON.parse(JSON.stringify(DEFAULT_MENU_GROUPS));
+        }
+      } else {
+        menuGroups = JSON.parse(JSON.stringify(DEFAULT_MENU_GROUPS));
+      }
+
+      // Load Blog Posts
+      const savedPosts = localStorage.getItem('clp_blog_posts_v2');
+      if (savedPosts) {
+        try {
+          blogPosts = JSON.parse(savedPosts);
+        } catch {
+          blogPosts = JSON.parse(JSON.stringify(DEFAULT_BLOG_POSTS));
+        }
+      } else {
+        blogPosts = JSON.parse(JSON.stringify(DEFAULT_BLOG_POSTS));
+      }
+
+      // Check Saved Login Session
+      const savedUser = localStorage.getItem('clp_session_user');
+      if (savedUser) {
+        try {
+          currentUser = JSON.parse(savedUser);
+          enterPortal();
+        } catch {
+          showLoginScreen();
+        }
+      } else {
+        showLoginScreen();
+      }
+    }
+
+    function updateSupabaseStatusUI(connected) {
+      const loginDot = document.getElementById('login-sb-dot');
+      const loginText = document.getElementById('login-sb-text');
+      const gnbDot = document.getElementById('gnb-sb-dot');
+      const gnbLabel = document.getElementById('gnb-sb-label');
+
+      if (connected) {
+        if (loginDot) loginDot.className = 'w-2 h-2 rounded-full bg-[#059669]';
+        if (loginText) loginText.innerText = 'Supabase 클라우드 실시간 연동됨';
+        if (gnbDot) gnbDot.className = 'w-1.5 h-1.5 rounded-full bg-[#10b981]';
+        if (gnbLabel) gnbLabel.innerText = 'Supabase 연결됨';
+      } else {
+        if (loginDot) loginDot.className = 'w-2 h-2 rounded-full bg-[#2563eb]';
+        if (loginText) loginText.innerText = '하이브리드 스토리지 인증 활성화';
+        if (gnbDot) gnbDot.className = 'w-1.5 h-1.5 rounded-full bg-[#60a5fa]';
+        if (gnbLabel) gnbLabel.innerText = 'DB 연동 설정';
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 3. AUTHENTICATION FLOW
+    // -------------------------------------------------------------------------
+    async function handleFormLogin() {
+      const email = document.getElementById('input-email').value.trim();
+      const pw = document.getElementById('input-password').value;
+
+      if (supabaseClient) {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pw });
+        if (!error && data?.user) {
+          quickLogin(
+            data.user.email,
+            data.user.user_metadata?.full_name || '인증 사용자',
+            data.user.user_metadata?.role || 'finance_manager',
+            data.user.user_metadata?.department || '병원사업부'
+          );
+          return;
+        }
+      }
+
+      // Fallback / Demo login
+      const isAdm = email.includes('admin');
+      quickLogin(
+        email,
+        isAdm ? '시스템 관리자' : '이창환',
+        isAdm ? 'admin' : 'finance_manager',
+        isAdm ? 'IT 인프라팀' : '병원사업부 / 정산총괄'
+      );
+    }
+
+    function quickLogin(email, name, role, dept) {
+      currentUser = { email, name, role, dept };
+      localStorage.setItem('clp_session_user', JSON.stringify(currentUser));
+      enterPortal();
+    }
+
+    function logoutPortal() {
+      if (supabaseClient) supabaseClient.auth.signOut();
+      localStorage.removeItem('clp_session_user');
+      currentUser = null;
+      showLoginScreen();
+    }
+
+    function showLoginScreen() {
+      document.getElementById('screen-portal').classList.add('hidden');
+      document.getElementById('screen-login').classList.remove('hidden');
+    }
+
+    function enterPortal() {
+      document.getElementById('screen-login').classList.add('hidden');
+      document.getElementById('screen-portal').classList.remove('hidden');
+
+      document.getElementById('gnb-user-name').innerText = currentUser.name;
+      document.getElementById('gnb-user-dept').innerText = currentUser.dept;
+      document.getElementById('gnb-user-avatar').innerText = currentUser.name.charAt(0);
+      document.getElementById('gnb-role-select').value = currentUser.role;
+
+      renderGNB();
+      selectTheme(activeThemeId);
+    }
+
+    function changeUserRole(newRole) {
+      currentUser.role = newRole;
+      localStorage.setItem('clp_session_user', JSON.stringify(currentUser));
+      renderLNB();
+      renderViewport(activeViewId);
+    }
+
+    // -------------------------------------------------------------------------
+    // 4. NAVIGATION (GNB & LNB) RENDERING
+    // -------------------------------------------------------------------------
+    function renderGNB() {
+      const nav = document.getElementById('gnb-theme-tabs');
+      nav.innerHTML = '';
+
+      menuGroups.forEach(group => {
+        const isActive = group.themeId === activeThemeId;
+        const btn = document.createElement('button');
+        btn.className = `px-3.5 py-1.5 rounded-md text-xs font-bold whitespace-nowrap transition cursor-pointer ${
+          isActive
+            ? 'bg-[#1e3a8a] text-white shadow-inner border border-[#3b82f6]/50'
+            : 'text-white/80 hover:bg-white/10 hover:text-white'
+        }`;
+        btn.innerText = group.themeTitle;
+        btn.onclick = () => selectTheme(group.themeId);
+        nav.appendChild(btn);
+      });
+    }
+
+    function selectTheme(themeId) {
+      const group = menuGroups.find(g => g.themeId === themeId) || menuGroups[0];
+      activeThemeId = group.themeId;
+      renderGNB();
+      renderLNB();
+      openView(group.dashboard.id);
+    }
+
+    function renderLNB() {
+      const group = menuGroups.find(g => g.themeId === activeThemeId) || menuGroups[0];
+      document.getElementById('lnb-theme-title').innerText = group.themeTitle;
+      document.getElementById('lnb-theme-desc').innerText = group.themeDesc;
+      document.getElementById('lnb-menu-count').innerText = `${group.subMenus.length + 1}개 메뉴`;
+
+      // Dashboard Button
+      const dashSlot = document.getElementById('lnb-dashboard-slot');
+      const isDashActive = activeViewId === group.dashboard.id;
+      dashSlot.innerHTML = `
+        <button onclick="openView('${group.dashboard.id}');"
+          class="w-full text-left px-3 py-2 rounded-md text-xs font-bold flex items-center justify-between transition cursor-pointer ${
+            isDashActive ? 'bg-[#00236f] text-white shadow-sm' : 'text-[#131b2e] hover:bg-[#eaedff]'
+          }">
+          <span class="truncate">📊 ${group.dashboard.title}</span>
+        </button>
+      `;
+
+      // Submenus List
+      const subSlot = document.getElementById('lnb-submenus-slot');
+      subSlot.innerHTML = '';
+
+      group.subMenus.forEach(sub => {
+        const isLocked = sub.role === 'admin' && currentUser.role !== 'admin';
+        const isActive = activeViewId === sub.id;
+
+        const btn = document.createElement('button');
+        btn.className = `w-full text-left px-3 py-2 rounded-md text-xs font-medium flex items-center justify-between transition ${
+          isActive
+            ? 'bg-[#00236f] text-white font-bold shadow-sm'
+            : isLocked
+            ? 'bg-slate-50 text-slate-400 cursor-not-allowed border border-dashed border-slate-200'
+            : 'text-[#334155] hover:bg-[#eaedff] hover:text-[#00236f] cursor-pointer'
+        }`;
+
+        if (isLocked) {
+          btn.innerHTML = `
+            <span class="truncate">🔒 ${sub.title}</span>
+            <span class="text-[10px] px-1.5 py-0.2 rounded bg-red-50 text-red-600 font-bold">Admin</span>
+          `;
+          btn.onclick = () => alert('이 메뉴는 시스템 관리자(Admin) 전용입니다.\n상단 우측 [권한] 선택기를 Admin으로 변경해 보세요!');
+        } else {
+          const badgeClasses = isActive
+            ? 'bg-white/20 text-white'
+            : sub.badgeColor === 'green'
+            ? 'bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0]'
+            : sub.badgeColor === 'red'
+            ? 'bg-[#fef2f2] text-[#dc2626] border border-[#fecaca]'
+            : sub.badgeColor === 'amber'
+            ? 'bg-[#fffbeb] text-[#d97706] border border-[#fde68a]'
+            : 'bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]';
+
+          btn.innerHTML = `
+            <span class="truncate">• ${sub.title}</span>
+            ${sub.badge ? `<span class="text-[10px] px-1.5 py-0.2 rounded font-bold shrink-0 ml-1 ${badgeClasses}">${sub.badge}</span>` : ''}
+          `;
+          btn.onclick = () => openView(sub.id);
+        }
+        subSlot.appendChild(btn);
+      });
+    }
+
+    function openView(viewId) {
+      activeViewId = viewId;
+      renderLNB();
+      renderViewport(viewId);
+    }
+
+    // -------------------------------------------------------------------------
+    // 5. MAIN VIEWPORT RENDERING (ALL DASHBOARDS & SUBMENUS)
+    // -------------------------------------------------------------------------
+    function renderViewport(viewId) {
+      const group = menuGroups.find(g => g.themeId === activeThemeId) || menuGroups[0];
+      let currentItem = group.dashboard.id === viewId
+        ? group.dashboard
+        : group.subMenus.find(s => s.id === viewId) || group.dashboard;
+
+      document.getElementById('crumb-theme').innerText = group.themeTitle;
+      document.getElementById('crumb-page').innerText = currentItem.title;
+
+      const actionsSlot = document.getElementById('viewport-actions');
+      const body = document.getElementById('viewport-body');
+      actionsSlot.innerHTML = '';
+
+      // 1. Iframe External / Internal HTML Integration (reconcile_ui, savings-simulator, business-card, custom html)
+      if (currentItem.type === 'iframe') {
+        actionsSlot.innerHTML = `
+          <a href="${currentItem.url}" target="_blank" rel="noopener"
+            class="px-3 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow flex items-center gap-1.5 transition">
+            <span>↗ 독립 전체화면(새 탭)으로 열기</span>
+          </a>
+        `;
+        body.innerHTML = `
+          <div class="flex-1 bg-white rounded-xl border border-[#cbd5e1] shadow-sm overflow-hidden flex flex-col min-h-[760px] fade-in">
+            <div class="px-4 py-2 bg-[#f2f3ff] border-b border-[#cbd5e1] flex items-center justify-between text-xs">
+              <span class="font-bold text-[#00236f]">🔗 통합 실행 모듈: <code>${currentItem.url}</code></span>
+              <span class="text-[11px] text-[#059669] font-semibold">✓ 원본 엔진 및 상대경로 무결성 100% 유지</span>
+            </div>
+            <iframe src="${currentItem.url}" class="w-full flex-1 border-0 min-h-[720px]"></iframe>
+          </div>
+        `;
+        return;
+      }
+
+      // 2. Built-in Finance Dashboard
+      if (currentItem.type === 'builtin-finance-dash') {
+        actionsSlot.innerHTML = `
+          <button onclick="openView('reconcile-ui');" class="px-3.5 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
+            📑 병원부 미결 원장 대사 바로가기 →
+          </button>
+        `;
+        body.innerHTML = `
+          <div class="space-y-6 fade-in">
+            <!-- Hero Welcome -->
+            <div class="bg-gradient-to-r from-[#00236f] via-[#1e3a8a] to-[#2563eb] rounded-xl text-white p-6 shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-white/15 text-[#dae2fd]">Clinical Ledger Precision v2.5</span>
+                <h1 class="text-xl sm:text-2xl font-bold font-headline mt-2">병원부 미결 정산 총괄 대시보드</h1>
+                <p class="text-xs text-[#dae2fd] mt-1">기준월 2026년 11월 | 주요 수탁 병원 예정금액 대비 실집행 원장 대사 및 미결 현황</p>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="openView('reconcile-ui');" class="px-4 py-2 bg-white text-[#00236f] text-xs font-bold rounded-md shadow hover:bg-[#eaedff] transition cursor-pointer">
+                  원장 대사 엔진 실행
+                </button>
+                <button onclick="openMenuManagerModal();" class="px-4 py-2 bg-[#1e3a8a] border border-white/30 text-white text-xs font-bold rounded-md hover:bg-white/10 transition cursor-pointer">
+                  + 하위메뉴 추가
+                </button>
+              </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div class="bg-white p-5 rounded-lg border border-[#cbd5e1] border-l-4 border-l-[#00236f] shadow-sm">
+                <div class="text-xs text-[#757682] font-semibold">하반기 총 정산 예정금</div>
+                <div class="text-xl font-bold num-font text-[#00236f] mt-1.5">₩ 1,482,900,000</div>
+                <div class="text-[11px] text-[#059669] font-semibold mt-1">↑ 전월 대비 8.4% 증가</div>
+              </div>
+              <div class="bg-white p-5 rounded-lg border border-[#cbd5e1] border-l-4 border-l-[#059669] shadow-sm">
+                <div class="text-xs text-[#757682] font-semibold">집행 확정액 (완결)</div>
+                <div class="text-xl font-bold num-font text-[#059669] mt-1.5">₩ 1,439,700,000</div>
+                <div class="text-[11px] text-[#757682] mt-1">정산 완결률 97.1% (324건)</div>
+              </div>
+              <div class="bg-white p-5 rounded-lg border border-[#cbd5e1] border-l-4 border-l-[#dc2626] shadow-sm">
+                <div class="text-xs text-[#757682] font-semibold">미결 잔액 (대사 대기)</div>
+                <div class="text-xl font-bold num-font text-[#dc2626] mt-1.5">₩ 43,200,000</div>
+                <div class="text-[11px] text-[#dc2626] font-semibold mt-1">2개 주요 병원 소명 필요</div>
+              </div>
+              <div class="bg-white p-5 rounded-lg border border-[#cbd5e1] border-l-4 border-l-[#2563eb] shadow-sm">
+                <div class="text-xs text-[#757682] font-semibold">사내 지식 블로그 / 공지</div>
+                <div class="text-xl font-bold num-font text-[#1e3a8a] mt-1.5">${blogPosts.length} 건</div>
+                <div class="text-[11px] text-[#2563eb] font-semibold mt-1 cursor-pointer hover:underline" onclick="selectTheme('knowledge');">공지사항 바로가기 →</div>
+              </div>
+            </div>
+
+            <!-- High Density Ledger Table -->
+            <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-sm overflow-hidden">
+              <div class="p-4 bg-[#f2f3ff] border-b border-[#cbd5e1] flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 class="text-sm font-bold font-headline text-[#00236f]">주요 병원별 11월 정산 대사 요약 원장</h2>
+                  <p class="text-[11px] text-[#757682]">Stitch Clinical Ledger Precision 고밀도 수치 정렬 적용</p>
+                </div>
+                <button onclick="openView('reconcile-ui');" class="text-xs font-bold text-[#1e3a8a] hover:underline">전체 원장 대사 열기 →</button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr class="bg-slate-50 border-b border-[#cbd5e1] text-[#1e3a8a] font-bold uppercase text-[11px]">
+                      <th class="py-2.5 px-4">기관코드</th>
+                      <th class="py-2.5 px-4">병원명</th>
+                      <th class="py-2.5 px-4 text-right">예정금액</th>
+                      <th class="py-2.5 px-4 text-right">집행금액</th>
+                      <th class="py-2.5 px-4 text-right">미결차액</th>
+                      <th class="py-2.5 px-4 text-center">정산상태</th>
+                      <th class="py-2.5 px-4 text-center">원장작업</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-[#e2e8f0]">
+                    <tr class="hover:bg-[#faf8ff] h-9">
+                      <td class="px-4 num-font font-bold text-[#1e3a8a]">H01</td>
+                      <td class="px-4 font-bold">서울대학교병원</td>
+                      <td class="px-4 text-right num-font">₩ 320,000,000</td>
+                      <td class="px-4 text-right num-font font-bold text-[#00236f]">₩ 320,000,000</td>
+                      <td class="px-4 text-right num-font font-bold text-[#059669]">₩ 0</td>
+                      <td class="px-4 text-center"><span class="px-2 py-0.5 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] text-[10px] font-bold">완결</span></td>
+                      <td class="px-4 text-center"><button onclick="openView('reconcile-ui');" class="text-[#1e3a8a] font-bold hover:underline">상세</button></td>
+                    </tr>
+                    <tr class="hover:bg-[#faf8ff] h-9">
+                      <td class="px-4 num-font font-bold text-[#1e3a8a]">H02</td>
+                      <td class="px-4 font-bold">세브란스병원</td>
+                      <td class="px-4 text-right num-font">₩ 285,000,000</td>
+                      <td class="px-4 text-right num-font font-bold text-[#00236f]">₩ 260,000,000</td>
+                      <td class="px-4 text-right num-font font-bold text-[#dc2626]">₩ 25,000,000</td>
+                      <td class="px-4 text-center"><span class="px-2 py-0.5 rounded bg-[#fef2f2] text-[#dc2626] border border-[#fecaca] text-[10px] font-bold">미결잔액</span></td>
+                      <td class="px-4 text-center"><button onclick="openView('reconcile-ui');" class="text-[#1e3a8a] font-bold hover:underline">대사처리</button></td>
+                    </tr>
+                    <tr class="hover:bg-[#faf8ff] h-9">
+                      <td class="px-4 num-font font-bold text-[#1e3a8a]">H03</td>
+                      <td class="px-4 font-bold">서울아산병원</td>
+                      <td class="px-4 text-right num-font">₩ 410,000,000</td>
+                      <td class="px-4 text-right num-font font-bold text-[#00236f]">₩ 410,000,000</td>
+                      <td class="px-4 text-right num-font font-bold text-[#059669]">₩ 0</td>
+                      <td class="px-4 text-center"><span class="px-2 py-0.5 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] text-[10px] font-bold">완결</span></td>
+                      <td class="px-4 text-center"><button onclick="openView('reconcile-ui');" class="text-[#1e3a8a] font-bold hover:underline">상세</button></td>
+                    </tr>
+                    <tr class="hover:bg-[#faf8ff] h-9">
+                      <td class="px-4 num-font font-bold text-[#1e3a8a]">H04</td>
+                      <td class="px-4 font-bold">삼성서울병원</td>
+                      <td class="px-4 text-right num-font">₩ 345,000,000</td>
+                      <td class="px-4 text-right num-font font-bold text-[#00236f]">₩ 326,800,000</td>
+                      <td class="px-4 text-right num-font font-bold text-[#d97706]">₩ 18,200,000</td>
+                      <td class="px-4 text-center"><span class="px-2 py-0.5 rounded bg-[#fffbeb] text-[#d97706] border border-[#fde68a] text-[10px] font-bold">수정됨</span></td>
+                      <td class="px-4 text-center"><button onclick="openView('variance-audit');" class="text-[#1e3a8a] font-bold hover:underline">차액소명</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // 3. Built-in Variance Submenu
+      if (currentItem.type === 'builtin-variance') {
+        body.innerHTML = `
+          <div class="space-y-5 fade-in">
+            <div class="bg-white rounded-xl border border-[#cbd5e1] p-5 shadow-sm flex justify-between items-center">
+              <div>
+                <span class="text-[11px] font-bold text-[#d97706]">DISCREPANCY & VARIANCE AUDIT</span>
+                <h1 class="text-lg font-bold font-headline text-[#00236f]">월별 미결 차액 소명 관리 (신규 코딩 하위메뉴)</h1>
+                <p class="text-xs text-[#444651] mt-0.5">약정 할인율, 반품 검수 지연으로 발생한 병원별 미결 차액 추적</p>
+              </div>
+              <button onclick="openView('reconcile-ui');" class="px-3 py-1.5 bg-[#00236f] text-white text-xs font-bold rounded">원장 대사로 이동</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-white p-5 rounded-xl border border-[#fecaca] bg-[#fef2f2]/40 space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="font-bold text-sm text-[#00236f]">세브란스병원 (H02)</span>
+                  <span class="px-2 py-0.5 rounded bg-[#fef2f2] text-[#dc2626] text-[10px] font-bold border border-[#fecaca]">소명 진행 중</span>
+                </div>
+                <div class="text-xl font-bold num-font text-[#dc2626]">₩ 25,000,000 차액</div>
+                <p class="text-xs text-[#444651]">사유: 10월 납품분 단가 변경 소급 적용 승인 대기 중 (담당자: 이창환)</p>
+              </div>
+              <div class="bg-white p-5 rounded-xl border border-[#fde68a] bg-[#fffbeb]/40 space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="font-bold text-sm text-[#00236f]">삼성서울병원 (H04)</span>
+                  <span class="px-2 py-0.5 rounded bg-[#fffbeb] text-[#d97706] text-[10px] font-bold border border-[#fde68a]">검토 완료</span>
+                </div>
+                <div class="text-xl font-bold num-font text-[#d97706]">₩ 18,200,000 차액</div>
+                <p class="text-xs text-[#444651]">사유: 분기 약정 할인율 3.2% 사후 정산 차감분 반영 예정</p>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // 4. Built-in Tools Dashboard
+      if (currentItem.type === 'builtin-tools-dash') {
+        body.innerHTML = `
+          <div class="space-y-5 fade-in">
+            <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <span class="text-[11px] font-bold text-[#059669]">FINANCIAL SIMULATION SUITE</span>
+                <h1 class="text-xl font-bold font-headline text-[#00236f]">금융 시뮬레이션 및 자산 운용 도구</h1>
+                <p class="text-xs text-[#444651] mt-1">적금 만기 수령액(단리/복리), 비과세 한도 계산 및 여유 자금 운용 시뮬레이터</p>
+              </div>
+              <button onclick="openView('savings-sim');" class="px-4 py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
+                🧮 적금 시뮬레이터 바로 열기 →
               </button>
             </div>
-
-            <!-- Career / Milestone Timeline -->
-            <div class="timeline" id="timelineList">
-              <div class="timeline-item">
-                <span class="timeline-date">2024 - PRESENT</span>
-                <span class="timeline-role">Tech Lead / AI Service Architect</span>
-                <p class="timeline-desc">차세대 웹 & 생성형 AI 솔루션 아키텍처 설계 및 프로덕트 개발 총괄</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-white p-5 rounded-xl border border-[#cbd5e1] flex flex-col justify-between">
+                <div>
+                  <h3 class="font-bold text-sm text-[#00236f]">적금/수익 정밀 시뮬레이터 (savings-simulator.html)</h3>
+                  <p class="text-xs text-[#444651] mt-2 leading-relaxed">
+                    월 적립금, 거치 기간, 금리 방식(단리/월복리) 및 세금 우대 조건을 조합하여 세후 실수령액과 월별 이자 적립 추이를 차트로 즉시 확인합니다.
+                  </p>
+                </div>
+                <button onclick="openView('savings-sim');" class="mt-4 py-2 bg-[#f2f3ff] hover:bg-[#1e3a8a] hover:text-white text-[#1e3a8a] text-xs font-bold rounded transition">
+                  시뮬레이터 실행하기
+                </button>
               </div>
-              <div class="timeline-item">
-                <span class="timeline-date">2021 - 2023</span>
-                <span class="timeline-role">Senior Full-Stack Developer</span>
-                <p class="timeline-desc">고성능 클라우드 웹 애플리케이션 및 디자인 시스템 구축</p>
+              <div class="bg-white p-5 rounded-xl border border-[#cbd5e1] flex flex-col justify-between">
+                <div>
+                  <h3 class="font-bold text-sm text-[#00236f]">신규 금융 계산기 추가 안내</h3>
+                  <p class="text-xs text-[#444651] mt-2 leading-relaxed">
+                    환율 계산기, 할부 원리금 계산기 등 새로운 도구가 필요하면 상단 <strong>[➕ 메뉴 추가/관리]</strong> 버튼으로 언제든 이 테마 그룹 하위에 추가할 수 있습니다.
+                  </p>
+                </div>
+                <button onclick="openMenuManagerModal();" class="mt-4 py-2 bg-[#ecfdf5] hover:bg-[#059669] hover:text-white text-[#059669] text-xs font-bold rounded transition">
+                  + 새 금융 도구 메뉴 등록
+                </button>
               </div>
-              <div class="timeline-item">
-                <span class="timeline-date">PASSION</span>
-                <span class="timeline-role">Open Source & Tech Community</span>
-                <p class="timeline-desc">오픈소스 컨트리뷰션 및 지속 가능한 개발 문화 탐구</p>
-              </div>
-            </div>
-
-            <!-- QR Code Section -->
-            <div class="qr-card-section">
-              <div class="qr-box" id="qrcode"></div>
-              <p class="qr-desc">스마트폰 카메라로 스캔하여 명함 열기</p>
             </div>
           </div>
+        `;
+        return;
+      }
 
-          <!-- Social Links -->
-          <div>
-            <div class="social-row">
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="social-btn" title="GitHub">
-                <i data-lucide="github"></i>
-              </a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-btn" title="LinkedIn">
-                <i data-lucide="linkedin"></i>
-              </a>
-              <a href="https://velog.io" target="_blank" rel="noopener noreferrer" class="social-btn" title="Tech Blog">
-                <i data-lucide="book-open"></i>
-              </a>
-              <a href="mailto:changhwan@example.com" class="social-btn" title="Send Email">
-                <i data-lucide="send"></i>
-              </a>
+      // 5. Built-in Blog Hub
+      if (currentItem.type === 'builtin-blog') {
+        renderBlogHub(body, actionsSlot);
+        return;
+      }
+
+      // 6. Built-in Extension Guide
+      if (currentItem.type === 'builtin-guide') {
+        actionsSlot.innerHTML = `
+          <button onclick="openMenuManagerModal();" class="px-3.5 py-1.5 bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold rounded shadow cursor-pointer">
+            ➕ 지금 바로 새 메뉴 추가해보기
+          </button>
+        `;
+        body.innerHTML = `
+          <div class="space-y-5 fade-in">
+            <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm">
+              <span class="text-[11px] font-bold text-[#2563eb]">EASY EXTENSION SYSTEM</span>
+              <h1 class="text-xl font-bold font-headline text-[#00236f] mt-1">더 쉽고 효율적인 신규 대시보드 & 하위메뉴 추가 방안</h1>
+              <p class="text-xs text-[#444651] mt-1">복잡한 프레임워크 빌드 없이 누구나 10초 만에 메뉴를 확장할 수 있는 2-Track 방식을 제공합니다.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div class="bg-white p-5 rounded-xl border-2 border-[#059669] shadow-sm space-y-3">
+                <div class="inline-block px-2.5 py-0.5 rounded bg-[#ecfdf5] text-[#059669] text-[11px] font-bold">방안 1 (가장 빠름 • 코드 수정 0줄)</div>
+                <h3 class="text-base font-bold text-[#00236f]">포털 화면 내 [➕ 메뉴 추가/관리] 모달 사용</h3>
+                <p class="text-xs text-[#444651] leading-relaxed">
+                  상단 우측의 <strong>[➕ 메뉴 추가/관리]</strong> 버튼을 클릭하여 소속 테마, 메뉴명, 연결할 파일(또는 자동 대시보드 템플릿)을 선택하면 즉시 좌측 사이드바와 상단 테마에 등록됩니다.
+                </p>
+                <button onclick="openMenuManagerModal();" class="w-full py-2 bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold rounded shadow cursor-pointer">
+                  ➕ 메뉴 추가 매니저 열기
+                </button>
+              </div>
+
+              <div class="bg-white p-5 rounded-xl border border-[#cbd5e1] shadow-sm space-y-3">
+                <div class="inline-block px-2.5 py-0.5 rounded bg-[#eff6ff] text-[#2563eb] text-[11px] font-bold">방안 2 (신규 코딩 시 • 단일 HTML 파일)</div>
+                <h3 class="text-base font-bold text-[#00236f]"><code>template-page.html</code> 복사 후 파일 연결</h3>
+                <p class="text-xs text-[#444651] leading-relaxed">
+                  리포지토리에 준비된 <code>template-page.html</code>(Stitch 디자인 적용 완료)을 복사해 새 화면을 코딩한 뒤, 메뉴 매니저에서 파일명만 적어주면 기존 <code>reconcile_ui.html</code>처럼 완벽하게 통합됩니다.
+                </p>
+                <button onclick="openView('sample-template-html');" class="w-full py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
+                  📄 template-page.html 실행 화면 보기
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // 7. Built-in Admin Console / Auto-generated Template
+      body.innerHTML = `
+        <div class="space-y-5 fade-in">
+          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm flex justify-between items-center">
+            <div>
+              <span class="text-[11px] font-bold text-[#1e3a8a]">AUTO-GENERATED WORKSPACE</span>
+              <h1 class="text-xl font-bold font-headline text-[#00236f] mt-0.5">${currentItem.title}</h1>
+              <p class="text-xs text-[#444651] mt-1">메뉴 매니저를 통해 그룹화된 표준 업무 대시보드 화면입니다.</p>
+            </div>
+            <span class="px-3 py-1 rounded bg-[#eff6ff] text-[#2563eb] text-xs font-bold border border-[#bfdbfe]">정상 작동 중</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white p-5 rounded-lg border border-[#cbd5e1]">
+              <div class="text-xs text-[#757682]">일일 처리 건수</div>
+              <div class="text-2xl font-bold num-font text-[#00236f] mt-1">1,240 건</div>
+            </div>
+            <div class="bg-white p-5 rounded-lg border border-[#cbd5e1]">
+              <div class="text-xs text-[#757682]">데이터 동기화 상태</div>
+              <div class="text-2xl font-bold num-font text-[#059669] mt-1">100% 정상</div>
+            </div>
+            <div class="bg-white p-5 rounded-lg border border-[#cbd5e1]">
+              <div class="text-xs text-[#757682]">접근 권한 등급</div>
+              <div class="text-2xl font-bold num-font text-[#1e3a8a] mt-1">${currentUser.role.toUpperCase()}</div>
             </div>
           </div>
         </div>
-      </div>
+      `;
+    }
 
-    </div>
-  </div>
-
-  <p class="footer-credit">© 2026 Digital Business Card • Tap card or use buttons to interact</p>
-
-  <!-- Toast Notification -->
-  <div class="toast" id="toastMessage">
-    <i data-lucide="check-circle-2"></i>
-    <span id="toastText">링크가 클립보드에 복사되었습니다!</span>
-  </div>
-
-  <!-- Information Edit Modal -->
-  <div class="modal-overlay" id="editModal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3 class="modal-title">내 명함 정보 수정하기</h3>
-        <button class="close-modal-btn" id="closeModalBtn">
-          <i data-lucide="x"></i>
+    // -------------------------------------------------------------------------
+    // 6. BLOG MODULE FUNCTIONS
+    // -------------------------------------------------------------------------
+    function renderBlogHub(container, actionsSlot) {
+      actionsSlot.innerHTML = `
+        <button onclick="openBlogWriteModal();" class="px-3.5 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
+          ✍️ 새 글 작성하기
         </button>
-      </div>
+      `;
 
-      <div class="form-group">
-        <label>한글 이름</label>
-        <input type="text" class="form-control" id="inputName" value="이창환">
-      </div>
-      <div class="form-group">
-        <label>영문 이름</label>
-        <input type="text" class="form-control" id="inputEngName" value="Changhwan Lee">
-      </div>
-      <div class="form-group">
-        <label>직함 / 한 줄 역할</label>
-        <input type="text" class="form-control" id="inputJobTitle" value="Software Engineer & Creator">
-      </div>
-      <div class="form-group">
-        <label>자기소개 요약</label>
-        <textarea class="form-control" id="inputBio" rows="3">기술을 통해 복잡한 문제를 단순하게 풀고, 사용자에게 영감을 주는 혁신적인 디지털 경험을 만들어갑니다.</textarea>
-      </div>
-      <div class="form-group">
-        <label>이메일</label>
-        <input type="email" class="form-control" id="inputEmail" value="changhwan@example.com">
-      </div>
-      <div class="form-group">
-        <label>전화번호</label>
-        <input type="tel" class="form-control" id="inputPhone" value="010-1234-5678">
-      </div>
-      <div class="form-group">
-        <label>위치 / 지역</label>
-        <input type="text" class="form-control" id="inputLocation" value="Seoul, Republic of Korea">
-      </div>
-      <div class="form-group">
-        <label>키워드 태그 (쉼표로 구분)</label>
-        <input type="text" class="form-control" id="inputTags" value="FullStack, AI_Engineering, UI/UX, ProblemSolver">
-      </div>
+      const categories = ['전체', '공지', '업무가이드', '정산리포트', '시스템개선'];
+      const filtered = blogFilterCategory === '전체'
+        ? blogPosts
+        : blogPosts.filter(p => p.category === blogFilterCategory);
 
-      <div style="display: flex; gap: 10px; margin-top: 20px;">
-        <button class="btn btn-primary" id="saveInfoBtn" style="flex: 1;">저장 및 적용</button>
-        <button class="btn btn-secondary" id="resetInfoBtn">초기화</button>
-      </div>
-    </div>
-  </div>
+      container.innerHTML = `
+        <div class="space-y-5 fade-in">
+          <div class="bg-white rounded-xl border border-[#cbd5e1] p-5 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <span class="text-[11px] font-bold text-[#1e3a8a]">KNOWLEDGE & BLOG ARCHIVE</span>
+              <h1 class="text-xl font-bold font-headline text-[#00236f]">업무 지식 블로그 & 사내 공지사항</h1>
+              <p class="text-xs text-[#444651] mt-0.5">정산 마감 공지, 원장 대사 매뉴얼 및 업무 노하우를 기록하고 공유합니다.</p>
+            </div>
+            <div class="flex gap-1.5 flex-wrap">
+              ${categories.map(cat => `
+                <button onclick="blogFilterCategory='${cat}'; renderViewport(activeViewId);"
+                  class="px-3 py-1 rounded-md text-xs font-bold transition cursor-pointer ${
+                    blogFilterCategory === cat ? 'bg-[#1e3a8a] text-white' : 'bg-[#f2f3ff] text-[#444651] hover:bg-[#eaedff]'
+                  }">${cat}</button>
+              `).join('')}
+            </div>
+          </div>
 
-  <script>
-    // Initialize Lucide Icons
-    lucide.createIcons();
+          <div class="space-y-3">
+            ${filtered.map(post => `
+              <div onclick="openBlogDetailModal('${post.id}');"
+                class="bg-white rounded-xl border border-[#cbd5e1] p-5 shadow-sm hover:border-[#1e3a8a] transition cursor-pointer">
+                <div class="flex items-center justify-between text-xs text-[#757682] mb-1.5">
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]">${post.category}</span>
+                    <span>${post.date}</span>
+                    <span>• ${post.author}</span>
+                  </div>
+                  <span class="num-font">조회 ${post.views}</span>
+                </div>
+                <h2 class="text-base font-bold font-headline text-[#00236f] hover:underline">${post.title}</h2>
+                <p class="text-xs text-[#444651] mt-1.5 line-clamp-2">${post.summary}</p>
+                <div class="flex items-center gap-1.5 mt-3 pt-2.5 border-t border-[#f1f5f9]">
+                  ${(post.tags || []).map(t => `<span class="text-[10px] px-2 py-0.5 rounded-full bg-[#f8fafc] border border-[#e2e8f0] text-[#475569]">#${t}</span>`).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
 
-    // Default Profile Data
-    const defaultData = {
-      name: "이창환",
-      engName: "Changhwan Lee",
-      jobTitle: "Software Engineer & Creator",
-      bio: "기술을 통해 복잡한 문제를 단순하게 풀고, 사용자에게 영감을 주는 혁신적인 디지털 경험을 만들어갑니다.",
-      email: "changhwan@example.com",
-      phone: "010-1234-5678",
-      location: "Seoul, Republic of Korea",
-      tags: ["FullStack", "AI_Engineering", "UI/UX", "ProblemSolver"]
-    };
+    function openBlogWriteModal() {
+      document.getElementById('bw-title').value = '';
+      document.getElementById('bw-summary').value = '';
+      document.getElementById('bw-content').value = '';
+      document.getElementById('modal-blog-write').classList.remove('hidden');
+    }
 
-    // Load Profile Data from LocalStorage or default
-    function getStoredData() {
-      const stored = localStorage.getItem("user_biz_card_data");
-      if (stored) {
+    function closeBlogWriteModal() {
+      document.getElementById('modal-blog-write').classList.add('hidden');
+    }
+
+    async function saveBlogPost() {
+      const title = document.getElementById('bw-title').value.trim();
+      const category = document.getElementById('bw-category').value;
+      const summary = document.getElementById('bw-summary').value.trim() || title;
+      const tags = document.getElementById('bw-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+      const content = document.getElementById('bw-content').value.trim();
+
+      const newPost = {
+        id: 'post-' + Date.now(),
+        title,
+        category,
+        author: `${currentUser.name} (${currentUser.role})`,
+        date: new Date().toISOString().substring(0, 10),
+        summary,
+        content,
+        views: 1,
+        tags
+      };
+
+      if (supabaseClient) {
         try {
-          return JSON.parse(stored);
+          await supabaseClient.from('blog_posts').insert([{
+            title,
+            slug: newPost.id,
+            category,
+            author_name: currentUser.name,
+            summary,
+            content,
+            tags
+          }]);
         } catch (e) {
-          return defaultData;
+          console.warn('Supabase blog insert fallback:', e);
         }
       }
-      return defaultData;
+
+      blogPosts.unshift(newPost);
+      localStorage.setItem('clp_blog_posts_v2', JSON.stringify(blogPosts));
+      closeBlogWriteModal();
+      renderViewport(activeViewId);
     }
 
-    function applyDataToUI(data) {
-      document.getElementById('displayName').innerText = data.name;
-      document.getElementById('displayEngName').innerText = data.engName;
-      document.getElementById('jobTitleText').innerText = data.jobTitle;
-      document.getElementById('displayBio').innerText = data.bio;
-      document.getElementById('displayEmail').innerText = data.email;
-      document.getElementById('displayEmailLink').href = `mailto:${data.email}`;
-      document.getElementById('displayPhone').innerText = data.phone;
-      document.getElementById('displayPhoneLink').href = `tel:${data.phone.replace(/[^0-9+]/g, '')}`;
-      document.getElementById('displayLocation').innerText = data.location;
-      
-      // Avatar Initials (e.g., '창환' or first letters)
-      const initials = data.name.length >= 2 ? data.name.slice(-2) : data.name;
-      document.getElementById('displayAvatarInitials').innerText = initials;
+    function openBlogDetailModal(postId) {
+      const post = blogPosts.find(p => p.id === postId);
+      if (!post) return;
+      post.views += 1;
+      localStorage.setItem('clp_blog_posts_v2', JSON.stringify(blogPosts));
 
-      // Tags
-      const tagsContainer = document.getElementById('tagsContainer');
-      tagsContainer.innerHTML = '';
-      data.tags.forEach(t => {
-        const span = document.createElement('span');
-        span.className = 'tag';
-        span.innerText = '#' + t.trim();
-        tagsContainer.appendChild(span);
-      });
+      document.getElementById('bd-category').innerText = post.category;
+      document.getElementById('bd-date').innerText = post.date;
+      document.getElementById('bd-title').innerText = post.title;
+      document.getElementById('bd-author').innerText = `작성자: ${post.author}`;
+      document.getElementById('bd-views').innerText = `조회 ${post.views}`;
+      document.getElementById('bd-content').innerText = post.content;
 
-      // Update Form Inputs
-      document.getElementById('inputName').value = data.name;
-      document.getElementById('inputEngName').value = data.engName;
-      document.getElementById('inputJobTitle').value = data.jobTitle;
-      document.getElementById('inputBio').value = data.bio;
-      document.getElementById('inputEmail').value = data.email;
-      document.getElementById('inputPhone').value = data.phone;
-      document.getElementById('inputLocation').value = data.location;
-      document.getElementById('inputTags').value = data.tags.join(', ');
-    }
-
-    let currentProfile = getStoredData();
-    applyDataToUI(currentProfile);
-
-    // 3D Card Flip Logic
-    const businessCard = document.getElementById('businessCard');
-    const flipQuickBtn = document.getElementById('flipQuickBtn');
-    const flipToBackBtn = document.getElementById('flipToBackBtn');
-    const flipToFrontBtn = document.getElementById('flipToFrontBtn');
-
-    function toggleFlip() {
-      businessCard.classList.toggle('is-flipped');
-      const isFlipped = businessCard.classList.contains('is-flipped');
-      flipQuickBtn.querySelector('span').innerText = isFlipped ? '앞면 보기' : '뒷면 보기';
-    }
-
-    flipQuickBtn.addEventListener('click', toggleFlip);
-    flipToBackBtn.addEventListener('click', toggleFlip);
-    flipToFrontBtn.addEventListener('click', toggleFlip);
-
-    // Mouse Tilt 3D Effect for Card
-    const cardScene = document.getElementById('cardScene');
-    let isHovered = false;
-
-    cardScene.addEventListener('mouseenter', () => { isHovered = true; });
-    cardScene.addEventListener('mouseleave', () => {
-      isHovered = false;
-      const isFlipped = businessCard.classList.contains('is-flipped');
-      businessCard.style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
-    });
-
-    cardScene.addEventListener('mousemove', (e) => {
-      if (!isHovered) return;
-      const rect = cardScene.getBoundingClientRect();
-      const x = e.clientX - rect.left - rect.width / 2;
-      const y = e.clientY - rect.top - rect.height / 2;
-
-      const rotateX = -(y / rect.height) * 16;
-      const rotateY = (x / rect.width) * 16;
-
-      const isFlipped = businessCard.classList.contains('is-flipped');
-      if (isFlipped) {
-        businessCard.style.transform = `rotateY(${180 + rotateY}deg) rotateX(${rotateX}deg)`;
-      } else {
-        businessCard.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-      }
-    });
-
-    // Theme Toggle (Dark / Light)
-    const themeToggleBtn = document.getElementById('themeToggleBtn');
-    const themeIcon = document.getElementById('themeIcon');
-    const themeText = document.getElementById('themeText');
-
-    let isLight = localStorage.getItem("biz_card_theme") === "light";
-    function applyTheme() {
-      if (isLight) {
-        document.body.setAttribute('data-theme', 'light');
-        themeIcon.setAttribute('data-lucide', 'sun');
-        themeText.innerText = '라이트';
-      } else {
-        document.body.removeAttribute('data-theme');
-        themeIcon.setAttribute('data-lucide', 'moon');
-        themeText.innerText = '다크';
-      }
-      lucide.createIcons();
-    }
-    applyTheme();
-
-    themeToggleBtn.addEventListener('click', () => {
-      isLight = !isLight;
-      localStorage.setItem("biz_card_theme", isLight ? "light" : "dark");
-      applyTheme();
-    });
-
-    // Toast Notification helper
-    const toast = document.getElementById('toastMessage');
-    const toastText = document.getElementById('toastText');
-    let toastTimer;
-    function showToast(msg) {
-      toastText.innerText = msg;
-      toast.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => {
-        toast.classList.remove('show');
-      }, 3000);
-    }
-
-    // Share Card (Web Share API or Clipboard Copy)
-    const shareCardBtn = document.getElementById('shareCardBtn');
-    shareCardBtn.addEventListener('click', async () => {
-      const shareData = {
-        title: `${currentProfile.name} | 디지털 명함`,
-        text: `${currentProfile.name} (${currentProfile.jobTitle}) - 웹 명함입니다.`,
-        url: window.location.href
-      };
-
-      if (navigator.share && window.isSecureContext) {
-        try {
-          await navigator.share(shareData);
-          showToast('명함이 공유되었습니다!');
-        } catch (err) {
-          if (err.name !== 'AbortError') {
-            copyCurrentUrl();
-          }
+      const delBtn = document.getElementById('bd-delete-btn');
+      delBtn.onclick = () => {
+        if (confirm('이 게시글을 삭제하시겠습니까?')) {
+          blogPosts = blogPosts.filter(p => p.id !== postId);
+          localStorage.setItem('clp_blog_posts_v2', JSON.stringify(blogPosts));
+          closeBlogDetailModal();
+          renderViewport(activeViewId);
         }
-      } else {
-        copyCurrentUrl();
-      }
-    });
-
-    function copyCurrentUrl() {
-      navigator.clipboard.writeText(window.location.href).then(() => {
-        showToast('명함 주소가 클립보드에 복사되었습니다!');
-      }).catch(() => {
-        showToast('주소 복사에 실패했습니다.');
-      });
-    }
-
-    // Download vCard (.vcf)
-    const saveContactBtn = document.getElementById('saveContactBtn');
-    saveContactBtn.addEventListener('click', () => {
-      const vcard = 
-`BEGIN:VCARD
-VERSION:3.0
-N:${currentProfile.name};;;;
-FN:${currentProfile.name}
-TITLE:${currentProfile.jobTitle}
-EMAIL;TYPE=PREF,INTERNET:${currentProfile.email}
-TEL;TYPE=CELL:${currentProfile.phone}
-ADR;TYPE=HOME:;;${currentProfile.location};;;;
-NOTE:${currentProfile.bio}
-URL:${window.location.href}
-END:VCARD`;
-
-      const blob = new Blob([vcard], { type: "text/vcard;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${currentProfile.name}_연락처.vcf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      showToast('연락처 파일(.vcf)이 다운로드되었습니다.');
-    });
-
-    // Dynamic QR Code Generation
-    const qrcodeContainer = document.getElementById("qrcode");
-    new QRCode(qrcodeContainer, {
-      text: window.location.href,
-      width: 84,
-      height: 84,
-      colorDark : "#0f172a",
-      colorLight : "#ffffff",
-      correctLevel : QRCode.CorrectLevel.M
-    });
-
-    // Modal Interaction
-    const editModal = document.getElementById('editModal');
-    const editModalBtn = document.getElementById('editModalBtn');
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    const saveInfoBtn = document.getElementById('saveInfoBtn');
-    const resetInfoBtn = document.getElementById('resetInfoBtn');
-
-    editModalBtn.addEventListener('click', () => {
-      editModal.classList.add('active');
-    });
-
-    closeModalBtn.addEventListener('click', () => {
-      editModal.classList.remove('active');
-    });
-
-    editModal.addEventListener('click', (e) => {
-      if (e.target === editModal) {
-        editModal.classList.remove('active');
-      }
-    });
-
-    saveInfoBtn.addEventListener('click', () => {
-      const updatedData = {
-        name: document.getElementById('inputName').value.trim() || defaultData.name,
-        engName: document.getElementById('inputEngName').value.trim() || defaultData.engName,
-        jobTitle: document.getElementById('inputJobTitle').value.trim() || defaultData.jobTitle,
-        bio: document.getElementById('inputBio').value.trim() || defaultData.bio,
-        email: document.getElementById('inputEmail').value.trim() || defaultData.email,
-        phone: document.getElementById('inputPhone').value.trim() || defaultData.phone,
-        location: document.getElementById('inputLocation').value.trim() || defaultData.location,
-        tags: document.getElementById('inputTags').value.split(',').map(s => s.trim()).filter(Boolean)
       };
 
-      currentProfile = updatedData;
-      localStorage.setItem("user_biz_card_data", JSON.stringify(updatedData));
-      applyDataToUI(updatedData);
-      editModal.classList.remove('active');
-      showToast('명함 정보가 성공적으로 저장되었습니다!');
-    });
+      document.getElementById('modal-blog-detail').classList.remove('hidden');
+      if (activeViewId === 'blog-main') renderViewport(activeViewId);
+    }
 
-    resetInfoBtn.addEventListener('click', () => {
-      if (confirm('기본 정보로 초기화하시겠습니까?')) {
-        currentProfile = defaultData;
-        localStorage.removeItem("user_biz_card_data");
-        applyDataToUI(defaultData);
-        editModal.classList.remove('active');
-        showToast('기본 정보로 초기화되었습니다.');
+    function closeBlogDetailModal() {
+      document.getElementById('modal-blog-detail').classList.add('hidden');
+    }
+
+    // -------------------------------------------------------------------------
+    // 7. NO-CODE MENU MANAGER FUNCTIONS
+    // -------------------------------------------------------------------------
+    function openMenuManagerModal() {
+      const sel = document.getElementById('mm-theme-select');
+      sel.innerHTML = menuGroups.map(g => `<option value="${g.themeId}">${g.themeTitle}</option>`).join('') +
+        `<option value="__new__">+ 새로운 상단 업무 테마 만들기</option>`;
+      sel.value = activeThemeId;
+      toggleNewThemeInputs();
+      renderCurrentMenusInModal();
+      document.getElementById('modal-menu-manager').classList.remove('hidden');
+    }
+
+    function closeMenuManagerModal() {
+      document.getElementById('modal-menu-manager').classList.add('hidden');
+    }
+
+    function toggleNewThemeInputs() {
+      const val = document.getElementById('mm-theme-select').value;
+      const box = document.getElementById('mm-new-theme-box');
+      if (val === '__new__') box.classList.remove('hidden');
+      else box.classList.add('hidden');
+    }
+
+    function toggleMenuUrlInput() {
+      const type = document.getElementById('mm-menu-type').value;
+      const box = document.getElementById('mm-url-box');
+      if (type === 'iframe') box.classList.remove('hidden');
+      else box.classList.add('hidden');
+    }
+
+    function handleAddMenu() {
+      const targetTheme = document.getElementById('mm-theme-select').value;
+      const newThemeTitle = document.getElementById('mm-new-theme-title').value.trim();
+      const menuTitle = document.getElementById('mm-menu-title').value.trim();
+      const menuType = document.getElementById('mm-menu-type').value;
+      const menuUrl = document.getElementById('mm-menu-url').value.trim() || 'template-page.html';
+      const menuBadge = document.getElementById('mm-menu-badge').value.trim() || '신규';
+      const menuRole = document.getElementById('mm-menu-role').value;
+
+      if (!menuTitle) return;
+
+      const newSubItem = {
+        id: 'menu-' + Date.now(),
+        title: menuTitle,
+        type: menuType === 'iframe' ? 'iframe' : 'builtin-template',
+        url: menuType === 'iframe' ? menuUrl : '',
+        badge: menuBadge,
+        badgeColor: menuRole === 'admin' ? 'red' : 'green',
+        role: menuRole
+      };
+
+      if (targetTheme === '__new__') {
+        if (!newThemeTitle) {
+          alert('신규 업무 테마 이름을 입력해주세요.');
+          return;
+        }
+        const newThemeId = 'theme-' + Date.now();
+        menuGroups.push({
+          themeId: newThemeId,
+          themeTitle: '📁 ' + newThemeTitle,
+          themeDesc: `${newThemeTitle} 통합 대시보드 및 하위메뉴 그룹`,
+          dashboard: {
+            id: 'dash-' + Date.now(),
+            title: `${newThemeTitle} 메인 대시보드`,
+            type: 'builtin-template'
+          },
+          subMenus: [newSubItem]
+        });
+        activeThemeId = newThemeId;
+      } else {
+        const grp = menuGroups.find(g => g.themeId === targetTheme);
+        if (grp) grp.subMenus.push(newSubItem);
+        activeThemeId = targetTheme;
       }
-    });
+
+      localStorage.setItem('clp_menu_groups_v2', JSON.stringify(menuGroups));
+      renderGNB();
+      renderLNB();
+      openView(newSubItem.id);
+      closeMenuManagerModal();
+    }
+
+    function deleteSubMenu(themeId, subId) {
+      const grp = menuGroups.find(g => g.themeId === themeId);
+      if (!grp) return;
+      grp.subMenus = grp.subMenus.filter(s => s.id !== subId);
+      localStorage.setItem('clp_menu_groups_v2', JSON.stringify(menuGroups));
+      renderCurrentMenusInModal();
+      renderLNB();
+    }
+
+    function resetDefaultMenus() {
+      if (!confirm('메뉴 구성을 초기 기본 상태로 되돌리시겠습니까?')) return;
+      menuGroups = JSON.parse(JSON.stringify(DEFAULT_MENU_GROUPS));
+      localStorage.setItem('clp_menu_groups_v2', JSON.stringify(menuGroups));
+      renderGNB();
+      selectTheme('finance');
+      closeMenuManagerModal();
+    }
+
+    function renderCurrentMenusInModal() {
+      const list = document.getElementById('mm-current-list');
+      list.innerHTML = menuGroups.map(g => `
+        <div class="p-3 rounded border border-[#e2e8f0] bg-white">
+          <div class="font-bold text-xs text-[#00236f] mb-1.5">${g.themeTitle} <span class="text-[10px] font-normal text-[#757682]">(대시보드: ${g.dashboard.title})</span></div>
+          <div class="space-y-1 pl-3 border-l-2 border-[#dae2fd]">
+            ${g.subMenus.map(s => `
+              <div class="flex items-center justify-between text-xs py-0.5">
+                <span>• ${s.title} <code class="text-[10px] text-[#757682]">${s.url ? '(' + s.url + ')' : '(내장화면)'}</code></span>
+                <button onclick="deleteSubMenu('${g.themeId}', '${s.id}');" class="text-[10px] text-red-500 hover:underline">삭제</button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // -------------------------------------------------------------------------
+    // 8. SUPABASE CONFIG MODAL
+    // -------------------------------------------------------------------------
+    function openSupabaseModal() {
+      document.getElementById('sb-url').value = localStorage.getItem('clp_sb_url') || '';
+      document.getElementById('sb-key').value = localStorage.getItem('clp_sb_key') || '';
+      document.getElementById('modal-supabase').classList.remove('hidden');
+    }
+
+    function closeSupabaseModal() {
+      document.getElementById('modal-supabase').classList.add('hidden');
+    }
+
+    function saveSupabaseConfig() {
+      const url = document.getElementById('sb-url').value.trim();
+      const key = document.getElementById('sb-key').value.trim();
+      if (url && key) {
+        localStorage.setItem('clp_sb_url', url);
+        localStorage.setItem('clp_sb_key', key);
+      }
+      closeSupabaseModal();
+      initApp();
+    }
+
+    function clearSupabaseConfig() {
+      localStorage.removeItem('clp_sb_url');
+      localStorage.removeItem('clp_sb_key');
+      supabaseClient = null;
+      updateSupabaseStatusUI(false);
+      closeSupabaseModal();
+    }
+
+    // Start Portal
+    window.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
