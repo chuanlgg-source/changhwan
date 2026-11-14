@@ -1,0 +1,139 @@
+{
+  "$schema": "./schema/portal-spec.schema.json",
+  "version": "1.0.0",
+  "systemTitle": "Clinical Ledger Precision",
+  "systemSubtitle": "병원부 미결 원장 대사 및 업무 통합 포털",
+  "designSystem": {
+    "name": "Clinical Ledger Precision",
+    "stitchProjectId": "projects/12355391550285824806",
+    "primaryColor": "#00236f",
+    "primaryContainer": "#1e3a8a",
+    "surface": "#faf8ff",
+    "typography": {
+      "headline": "Plus Jakarta Sans",
+      "body": "Noto Sans KR",
+      "numeric": "JetBrains Mono"
+    }
+  },
+  "themes": [
+    {
+      "id": "finance",
+      "title": "🏥 병원부 정산/재무",
+      "description": "병원 제약 공급망 정산 원장 대사 및 미결 금액 관리",
+      "adminOnly": false,
+      "dashboard": {
+        "id": "finance-dash",
+        "title": "미결 정산 총괄 대시보드",
+        "type": "builtin-finance-dash"
+      },
+      "subMenus": [
+        {
+          "id": "reconcile-ui",
+          "title": "병원부 미결 통합 원장",
+          "type": "iframe",
+          "url": "reconcile_ui.html",
+          "badge": "핵심원장",
+          "badgeColor": "blue",
+          "role": "all",
+          "description": "Pyodide WASM 기반 병원부 미결 원장 대사 엔진 (reconcile_engine.py 연동)"
+        },
+        {
+          "id": "variance-audit",
+          "title": "월별 미결 차액 소명 관리",
+          "type": "builtin-variance",
+          "badge": "대사관리",
+          "badgeColor": "amber",
+          "role": "all",
+          "description": "약정 할인율 및 사후 정산 차액 항목별 소명 추적 관리"
+        }
+      ]
+    },
+    {
+      "id": "tools",
+      "title": "📊 금융/자산 도구",
+      "description": "단리/복리 이자율 시뮬레이션 및 만기 수령액 분석",
+      "adminOnly": false,
+      "dashboard": {
+        "id": "tools-dash",
+        "title": "금융 시뮬레이션 종합 안내",
+        "type": "builtin-tools-dash"
+      },
+      "subMenus": [
+        {
+          "id": "savings-sim",
+          "title": "적금/수익 정밀 시뮬레이터",
+          "type": "iframe",
+          "url": "savings-simulator.html",
+          "badge": "계산기",
+          "badgeColor": "green",
+          "role": "all",
+          "description": "단리/복리, 과세 유형별 실수령액 및 월별 적립 이자 계산"
+        }
+      ]
+    },
+    {
+      "id": "knowledge",
+      "title": "📖 소통/블로그 허브",
+      "description": "사내 공지사항, 정산 매뉴얼 블로그 및 담당자 디지털 명함",
+      "adminOnly": false,
+      "dashboard": {
+        "id": "blog-main",
+        "title": "업무 지식 블로그 & 공지",
+        "type": "builtin-blog"
+      },
+      "subMenus": [
+        {
+          "id": "business-card",
+          "title": "이창환 디지털 명함 (Profile)",
+          "type": "iframe",
+          "url": "business-card.html",
+          "badge": "프로필",
+          "badgeColor": "blue",
+          "role": "all",
+          "description": "담당자 프로필 카드 및 연락처 QR 코드"
+        }
+      ]
+    },
+    {
+      "id": "internal-admin",
+      "title": "⚙️ 내부관리",
+      "description": "업무 이메일/비밀번호 계정 관리, 메뉴 그룹화 및 Supabase 연동 관리 (내부관리자 전용)",
+      "adminOnly": true,
+      "dashboard": {
+        "id": "admin-users",
+        "title": "업무 계정 및 비밀번호 관리",
+        "type": "builtin-admin-users"
+      },
+      "subMenus": [
+        {
+          "id": "admin-menus",
+          "title": "포털 메뉴 및 테마 그룹 관리",
+          "type": "builtin-admin-menus",
+          "badge": "메뉴관리",
+          "badgeColor": "green",
+          "role": "admin",
+          "description": "화면에서 메뉴 추가/수정/삭제"
+        },
+        {
+          "id": "admin-supabase",
+          "title": "Supabase 클라우드 연동 관리",
+          "type": "builtin-admin-supabase",
+          "badge": "DB연동",
+          "badgeColor": "blue",
+          "role": "admin",
+          "description": "Supabase Project URL 및 API Key 관리"
+        },
+        {
+          "id": "sample-template-html",
+          "title": "신규 코딩 템플릿 미리보기",
+          "type": "iframe",
+          "url": "template-page.html",
+          "badge": "템플릿",
+          "badgeColor": "amber",
+          "role": "admin",
+          "description": "신규 HTML 화면 코딩용 보일러플레이트"
+        }
+      ]
+    }
+  ]
+}

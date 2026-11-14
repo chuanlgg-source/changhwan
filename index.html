@@ -569,17 +569,32 @@
         } catch (e) {}
       }
 
-      // 3. Load Menu Groups
-      const savedMenus = localStorage.getItem('clp_menu_groups_v3');
-      if (savedMenus) {
-        try {
-          menuGroups = JSON.parse(savedMenus);
-        } catch {
-          menuGroups = JSON.parse(JSON.stringify(DEFAULT_MENU_GROUPS));
+      // 3. Load Menu Groups from portal-spec.json (Single Source of Truth) or LocalStorage
+      try {
+        const specResp = await fetch('portal-spec.json?t=' + Date.now());
+        if (specResp.ok) {
+          const specData = await specResp.json();
+          if (specData && specData.themes && Array.isArray(specData.themes)) {
+            menuGroups = specData.themes;
+            localStorage.setItem('clp_menu_groups_v3', JSON.stringify(menuGroups));
+          }
         }
-      } else {
-        menuGroups = JSON.parse(JSON.stringify(DEFAULT_MENU_GROUPS));
-        localStorage.setItem('clp_menu_groups_v3', JSON.stringify(menuGroups));
+      } catch (e) {
+        console.warn('portal-spec.json load fallback:', e);
+      }
+
+      if (!menuGroups || menuGroups.length === 0) {
+        const savedMenus = localStorage.getItem('clp_menu_groups_v3');
+        if (savedMenus) {
+          try {
+            menuGroups = JSON.parse(savedMenus);
+          } catch {
+            menuGroups = JSON.parse(JSON.stringify(DEFAULT_MENU_GROUPS));
+          }
+        } else {
+          menuGroups = JSON.parse(JSON.stringify(DEFAULT_MENU_GROUPS));
+          localStorage.setItem('clp_menu_groups_v3', JSON.stringify(menuGroups));
+        }
       }
 
       // 4. Load Blog Posts
