@@ -1,6 +1,6 @@
 {
   "$schema": "./schema/portal-spec.schema.json",
-  "version": "2.9.3",
+  "version": "2.9.4",
   "systemTitle": "Clinical Ledger Precision",
   "systemSubtitle": "병원부 미결 원장 대사 및 업무 통합 포털",
   "themes": [
@@ -70,8 +70,8 @@
     {
       "id": "knowledge",
       "themeId": "knowledge",
-      "title": "📖 블로그 & 명함",
-      "themeTitle": "📖 블로그 & 명함",
+      "title": "📖 블로그",
+      "themeTitle": "📖 블로그",
       "description": "사내 공지사항, 정산 매뉴얼 블로그 및 담당자 디지털 명함",
       "themeDesc": "사내 공지사항, 정산 매뉴얼 블로그 및 담당자 디지털 명함",
       "adminOnly": false,
