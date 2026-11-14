@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>금융정보 | 금일 주식시장 동향 및 주요 5대 뉴스</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #faf8ff;
+      color: #131b2e;
+    }
+    .font-headline { font-family: 'Plus Jakarta Sans', 'Pretendard', sans-serif; }
+    .num-font { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    .up { color: #dc2626; }
+    .up-bg { background-color: #fef2f2; color: #dc2626; border-color: #fecaca; }
+    .down { color: #2563eb; }
+    .down-bg { background-color: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+    .flat { color: #475569; }
+    .card-hover { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -6px rgba(0, 35, 111, 0.12); }
+  </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+
+  <!-- Top Header -->
+  <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-5 border-b border-[#cbd5e1]">
+    <div>
+      <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#1e3a8a]/10 border border-[#1e3a8a]/20 text-[#00236f] text-[11px] font-bold mb-2">
+        <span class="w-2 h-2 rounded-full bg-[#10b981] animate-pulse"></span>
+        <span>MARKET BRIEFING · 2026.11.14 (토) 기준 (직전 정규장 마감 및 야간선물/외환 반영)</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold font-headline text-[#00236f] tracking-tight">
+        금일 금융정보 &amp; 시장 동향 브리핑
+      </h1>
+      <p class="text-xs sm:text-sm text-[#444651] mt-1">
+        국내외 주요 지수, 원/달러 환율, 시가총액 상위 종목 시세 및 금일 핵심 5대 경제·증시 뉴스
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <button onclick="refreshLiveFx()" id="btn-fx-refresh"
+        class="px-3.5 py-2 bg-white hover:bg-[#f1f5f9] text-[#00236f] border border-[#cbd5e1] rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5 transition cursor-pointer">
+        <span>🔄 실시간 환율 조회</span>
+      </button>
+      <a href="https://finance.naver.com/" target="_blank" rel="noopener"
+        class="px-3.5 py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5 transition">
+        <span>네이버 증권 바로가기 ↗</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Live FX Status Toast -->
+  <div id="fx-status-banner" class="hidden mb-5 px-4 py-2.5 rounded-lg bg-[#ecfdf5] border border-[#a7f3d0] text-[#065f46] text-xs font-semibold flex items-center justify-between">
+    <span id="fx-status-text">실시간 글로벌 환율 데이터가 반영되었습니다.</span>
+    <button onclick="document.getElementById('fx-status-banner').classList.add('hidden')" class="text-[#059669] font-bold ml-4">닫기</button>
+  </div>
+
+  <!-- SECTION 1: 금일 주식시장 및 외환 동향 (Market Overview Cards) -->
+  <section class="mb-8">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-base sm:text-lg font-bold text-[#00236f] flex items-center gap-2">
+        <span>📈 1. 금일 주식시장 및 환율 동향</span>
+      </h2>
+      <span class="text-[11px] text-[#64748b] font-medium">한국(KRX 11.13 마감) · 미국(NYSE/NASDAQ 11.13 현지 마감)</span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+      <!-- KOSPI -->
+      <div class="bg-white rounded-xl border border-[#cbd5e1] p-4 shadow-sm card-hover">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs font-bold text-[#475569]">코스피 (KOSPI)</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded border down-bg">하락 마감</span>
+        </div>
+        <div class="text-2xl font-extrabold num-font text-[#131b2e]">5,290.53</div>
+        <div class="flex items-center justify-between mt-1.5 text-xs font-bold num-font down">
+          <span>▼ 52.20 (-0.98%)</span>
+          <span class="text-[11px] text-[#64748b] font-normal">장중 고가 5,504.44</span>
+        </div>
+        <p class="text-[11px] text-[#64748b] mt-2 pt-2 border-t border-[#f1f5f9]">
+          외국인 7,033억 순매도 영향으로 장중 5,500선 터치 후 5,300선 하회 마감
+        </p>
+      </div>
+
+      <!-- KOSDAQ -->
+      <div class="bg-white rounded-xl border border-[#cbd5e1] p-4 shadow-sm card-hover">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs font-bold text-[#475569]">코스닥 (KOSDAQ)</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded border up-bg">상승 마감</span>
+        </div>
+        <div class="text-2xl font-extrabold num-font text-[#131b2e]">699.66</div>
+        <div class="flex items-center justify-between mt-1.5 text-xs font-bold num-font up">
+          <span>▲ 3.13 (+0.45%)</span>
+          <span class="text-[11px] text-[#64748b] font-normal">코스피200: 824.78</span>
+        </div>
+        <p class="text-[11px] text-[#64748b] mt-2 pt-2 border-t border-[#f1f5f9]">
+          개별 테마 및 중소형 기술주 저가 매수세 유입으로 700선 목전 강보합
+        </p>
+      </div>
+
+      <!-- USD/KRW -->
+      <div class="bg-white rounded-xl border border-[#cbd5e1] p-4 shadow-sm card-hover">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs font-bold text-[#475569]">원/달러 환율 (USD/KRW)</span>
+          <span id="fx-badge" class="text-[10px] font-bold px-2 py-0.5 rounded border up-bg">강보합</span>
+        </div>
+        <div id="fx-usdkrw-val" class="text-2xl font-extrabold num-font text-[#131b2e]">1,335.90 <span class="text-sm font-bold text-[#64748b]">원</span></div>
+        <div class="flex items-center justify-between mt-1.5 text-xs font-bold num-font up">
+          <span id="fx-usdkrw-chg">▲ 0.20 (+0.01%) NDF</span>
+          <span class="text-[11px] text-[#64748b] font-normal">고시: 1,332.40원</span>
+        </div>
+        <p class="text-[11px] text-[#64748b] mt-2 pt-2 border-t border-[#f1f5f9]">
+          달러인덱스 103.41(+0.23%) 상승 및 미 10년물 국채금리 5.15% 부담 반영
+        </p>
+      </div>
+
+      <!-- US Markets -->
+      <div class="bg-white rounded-xl border border-[#cbd5e1] p-4 shadow-sm card-hover">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs font-bold text-[#475569]">나스닥 / S&amp;P 500</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded border down-bg">뉴욕 혼조</span>
+        </div>
+        <div class="text-2xl font-extrabold num-font text-[#131b2e]">25,136.27</div>
+        <div class="flex items-center justify-between mt-1.5 text-xs font-bold num-font down">
+          <span>▼ 229.82 (-0.91%)</span>
+          <span class="text-[11px] text-[#64748b] font-normal">다우 +0.10% (52,347)</span>
+        </div>
+        <p class="text-[11px] text-[#64748b] mt-2 pt-2 border-t border-[#f1f5f9]">
+          S&amp;P500 7,561.67(-0.40%), 필라델피아 반도체지수 -3.43% 급락
+        </p>
+      </div>
+    </div>
+
+    <!-- Trend Chart + Macro Summary -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 bg-white rounded-xl border border-[#cbd5e1] p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-bold text-[#00236f]">최근 5거래일 코스피(KOSPI) 및 원/달러 환율 추이</h3>
+          <span class="text-[11px] text-[#64748b]">단위: pt / 원</span>
+        </div>
+        <div class="h-56">
+          <canvas id="marketTrendChart"></canvas>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-[#cbd5e1] p-5 shadow-sm flex flex-col justify-between">
+        <div>
+          <h3 class="text-sm font-bold text-[#00236f] mb-3">글로벌 매크로 &amp; 원자재 지표</h3>
+          <div class="space-y-2.5 text-xs">
+            <div class="flex items-center justify-between py-1.5 border-b border-[#f1f5f9]">
+              <span class="text-[#475569] font-medium">다우존스 30 산업</span>
+              <div class="text-right num-font">
+                <span class="font-bold text-[#131b2e]">52,347.55</span>
+                <span class="ml-1.5 up font-bold">+0.10%</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between py-1.5 border-b border-[#f1f5f9]">
+              <span class="text-[#475569] font-medium">S&amp;P 500</span>
+              <div class="text-right num-font">
+                <span class="font-bold text-[#131b2e]">7,561.67</span>
+                <span class="ml-1.5 down font-bold">-0.40%</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between py-1.5 border-b border-[#f1f5f9]">
+              <span class="text-[#475569] font-medium">필라델피아 반도체</span>
+              <div class="text-right num-font">
+                <span class="font-bold text-[#131b2e]">SOX</span>
+                <span class="ml-1.5 down font-bold">-3.43%</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between py-1.5 border-b border-[#f1f5f9]">
+              <span class="text-[#475569] font-medium">미 국채 10년물 금리</span>
+              <div class="text-right num-font">
+                <span class="font-bold text-[#131b2e]">5.15%</span>
+                <span class="ml-1.5 up font-bold">상승</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between py-1.5 border-b border-[#f1f5f9]">
+              <span class="text-[#475569] font-medium">유로 / 원 (EUR/KRW)</span>
+              <div class="text-right num-font">
+                <span id="fx-eurkrw-val" class="font-bold text-[#131b2e]">1,428.50원</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between py-1.5">
+              <span class="text-[#475569] font-medium">비트코인 (BTC/USD)</span>
+              <div class="text-right num-font">
+                <span class="font-bold text-[#131b2e]">$70,000 하회</span>
+                <span class="ml-1.5 down font-bold">-3.90%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 p-2.5 rounded-lg bg-[#f8fafc] border border-[#e2e8f0] text-[11px] text-[#475569]">
+          <strong class="text-[#00236f]">💡 시황 코멘트:</strong> 미 10월 PPI 전년비 6.5% 상승으로 금리 경계감이 커진 가운데, 엔비디아 리더십 불확실성이 국내외 반도체주 차익실현을 자극했습니다.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: 주요 종목 지수 (Major Stocks Table) -->
+  <section class="mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+      <h2 class="text-base sm:text-lg font-bold text-[#00236f] flex items-center gap-2">
+        <span>🏢 2. 주요 종목 지수 (국내 시총 상위 &amp; 글로벌 빅테크)</span>
+      </h2>
+      <div class="flex items-center gap-1.5">
+        <button onclick="filterStocks('all')" id="tab-all" class="px-3 py-1.5 rounded-md text-xs font-bold bg-[#00236f] text-white cursor-pointer">전체 보기</button>
+        <button onclick="filterStocks('kr')" id="tab-kr" class="px-3 py-1.5 rounded-md text-xs font-bold bg-white border border-[#cbd5e1] text-[#475569] hover:bg-[#f1f5f9] cursor-pointer">국내 코스피</button>
+        <button onclick="filterStocks('us')" id="tab-us" class="px-3 py-1.5 rounded-md text-xs font-bold bg-white border border-[#cbd5e1] text-[#475569] hover:bg-[#f1f5f9] cursor-pointer">미국 빅테크</button>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-[#f8fafc] border-b border-[#cbd5e1] text-[11px] font-bold text-[#475569] uppercase tracking-wider">
+              <th class="py-3 px-4">시장</th>
+              <th class="py-3 px-4">종목명 (티커)</th>
+              <th class="py-3 px-4 text-right">현재가 / 종가</th>
+              <th class="py-3 px-4 text-right">등락률</th>
+              <th class="py-3 px-4">핵심 동향 및 메모</th>
+            </tr>
+          </thead>
+          <tbody id="stocks-tbody" class="divide-y divide-[#e2e8f0] text-xs">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3: 금일 주요 5대 뉴스 (Top 5 Financial News) -->
+  <section class="mb-6">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-base sm:text-lg font-bold text-[#00236f] flex items-center gap-2">
+        <span>📰 3. 금일 금융·증시 주요 5대 뉴스</span>
+      </h2>
+      <span class="text-[11px] text-[#64748b]">2026.11.14 기준 핵심 헤드라인 요약</span>
+    </div>
+
+    <div class="grid grid-cols-1 gap-3" id="news-list">
+      <!-- Rendered by JS -->
+    </div>
+  </section>
+
+  <footer class="text-center text-[11px] text-[#64748b] pt-4 border-t border-[#e2e8f0]">
+    본 금융정보 화면은 투자 참고용 요약 브리핑이며, 실제 매매 및 의사결정은 한국거래소(KRX)·증권사 실시간 시세를 반드시 확인하시기 바랍니다.
+  </footer>
+
+  <script>
+    const STOCKS_DATA = [
+      { market: 'KR', name: '삼성전자', code: '005930', price: '209,000원', change: '+0.48%', dir: 'up', note: '시가총액 약 1,221.8조원 · 반도체 업황 변동 속 소폭 반등' },
+      { market: 'KR', name: 'SK하이닉스', code: '000660', price: '1,233,000원', change: '-1.67%', dir: 'down', note: '시가총액 약 900.7조원 · 미 반도체 조정 및 외국인 차익매물 출회' },
+      { market: 'KR', name: '삼성전자우', code: '005935', price: '171,100원', change: '+1.66%', dir: 'up', note: '배당 매력 및 외국인 저가 매수 유입으로 강세' },
+      { market: 'KR', name: 'SK스퀘어', code: '402340', price: '769,000원', change: '-2.78%', dir: 'down', note: '반도체 투자 지주사 동반 약세 영향' },
+      { market: 'KR', name: 'LG에너지솔루션', code: '373220', price: '324,500원', change: '-1.52%', dir: 'down', note: '2차전지 대형주 수급 공백 속 완만한 조정' },
+      { market: 'KR', name: '삼성바이오로직스', code: '207940', price: '1,411,000원', change: '-2.62%', dir: 'down', note: '금리 상승 부담에 따른 성장·바이오 차익실현' },
+      { market: 'KR', name: '한화오션', code: '042660', price: '48,900원', change: '+1.77%', dir: 'up', note: '조선·방산 수주 모멘텀 지속으로 견조한 상승' },
+      { market: 'US', name: '엔비디아 (NVIDIA)', code: 'NVDA', price: '약세 마감', change: '-2.01%', dir: 'down', note: '젠슨 황 전 CEO 퇴진 후폭풍·규제 불확실성으로 시총 4조 달러 하회' },
+      { market: 'US', name: 'AMD', code: 'AMD', price: '급락 마감', change: '-8.75%', dir: 'down', note: '전일 급등에 따른 차익실현 및 AI 반도체 동반 투자심리 위축' },
+      { market: 'US', name: '브로드컴 (Broadcom)', code: 'AVGO', price: '하락 마감', change: '-4.76%', dir: 'down', note: '필라델피아 반도체지수(-3.43%) 급락 주도' },
+      { market: 'US', name: '애플 (Apple)', code: 'AAPL', price: '신고가 경신', change: '+0.35%', dir: 'up', note: '기술주 약세장 속 방어주 성격 부각되며 장중 사상 최고가 경신' }
+    ];
+
+    const TOP5_NEWS = [
+      {
+        rank: 1,
+        category: '글로벌 반도체',
+        impact: '부정적 영향',
+        impactClass: 'down-bg',
+        title: '젠슨 황 전 엔비디아 CEO 퇴진 여파 지속…뉴욕·국내 반도체주 동반 조정',
+        summary: '엔비디아의 리더십 공백과 향후 AI 투자 속도 조절 우려가 겹치며 엔비디아(-2.01%) 시총이 4조 달러 선 아래로 내려앉았고, AMD(-8.75%)·브로드컴(-4.76%) 등 필라델피아 반도체지수가 3.43% 급락했습니다.',
+        query: '엔비디아 젠슨 황 반도체주 급락'
+      },
+      {
+        rank: 2,
+        category: '국내 증시',
+        impact: '수급 이탈',
+        impactClass: 'down-bg',
+        title: '코스피, 장중 5,500선 돌파 후 외국인 7,033억 순매도에 5,290.53 하락 마감',
+        summary: '개장 초반 반도체 반등에 힘입어 5,504.44까지 치솟았으나, 외국인 대규모 매도세와 매크로 경계감으로 전강후약 장세를 보이며 5,300선을 내주었습니다. 반면 금융·건설·조선 일부 종목은 강세를 나타냈습니다.',
+        query: '코스피 5290 외국인 순매도 마감시황'
+      },
+      {
+        rank: 3,
+        category: '미국 물가·금리',
+        impact: '금리 경계',
+        impactClass: 'up-bg',
+        title: '美 10월 생산자물가지수(PPI) 전년비 6.5% 상승…미 국채 10년물 5.15% 돌파',
+        summary: '전월 대비로는 0.3% 올라 시장 예상(0.4%)을 하회했으나, 전년 동월 대비 6.5% 상승하며 2022년 11월 이후 최고치를 기록했습니다. 연준(Fed)의 12월 통화정책 경계감이 재차 높아졌습니다.',
+        query: '미국 10월 PPI 생산자물가지수 연준 금리'
+      },
+      {
+        rank: 4,
+        category: '외환·가상자산',
+        impact: '위험회피',
+        impactClass: 'up-bg',
+        title: '달러인덱스 103.41 상승 속 원/달러 1,330원대 중반…비트코인 7만 달러 하회',
+        summary: '미 국채 금리 상승과 안전자산 선호 심리가 겹치며 달러화가 강세를 유지했습니다. 서울 외환시장 원/달러는 1,335원대 중후반에서 등락 중이며, 비트코인은 3.9% 하락해 7만 달러 선을 하회했습니다.',
+        query: '원달러 환율 달러인덱스 비트코인 7만달러'
+      },
+      {
+        rank: 5,
+        category: '국내 거시·정책',
+        impact: '정책 주시',
+        impactClass: 'bg-[#f1f5f9] text-[#334155] border-[#cbd5e1]',
+        title: '가계부채 2,000조원 돌파 속 다음 주 가계신용 발표…세제 개편 논쟁 가열',
+        summary: '2,000조원을 넘어선 가계부채의 증가 폭을 가늠할 한국은행 가계신용 발표가 다음 주 예정되어 있습니다. 아울러 가상자산 과세 유예 및 근로소득세 감세 논의 등 재정·세수 정책 이슈가 부각되고 있습니다.',
+        query: '가계부채 2000조 한국은행 가계신용 세제'
+      }
+    ];
+
+    function renderStocks(filter) {
+      const tbody = document.getElementById('stocks-tbody');
+      const filtered = filter === 'all' ? STOCKS_DATA : STOCKS_DATA.filter(s => s.market.toLowerCase() === filter);
+
+      ['all', 'kr', 'us'].forEach(t => {
+        const btn = document.getElementById('tab-' + t);
+        if (t === filter) {
+          btn.className = 'px-3 py-1.5 rounded-md text-xs font-bold bg-[#00236f] text-white cursor-pointer';
+        } else {
+          btn.className = 'px-3 py-1.5 rounded-md text-xs font-bold bg-white border border-[#cbd5e1] text-[#475569] hover:bg-[#f1f5f9] cursor-pointer';
+        }
+      });
+
+      tbody.innerHTML = filtered.map(item => {
+        const marketBadge = item.market === 'KR'
+          ? '<span class="px-2 py-0.5 rounded bg-[#eff6ff] text-[#1e3a8a] border border-[#bfdbfe] text-[10px] font-bold">KRX</span>'
+          : '<span class="px-2 py-0.5 rounded bg-[#f5f3ff] text-[#5b21b6] border border-[#ddd6fe] text-[10px] font-bold">US</span>';
+        const colorCls = item.dir === 'up' ? 'up' : 'down';
+        const arrow = item.dir === 'up' ? '▲' : '▼';
+
+        return `
+          <tr class="hover:bg-[#f8fafc] transition">
+            <td class="py-3 px-4">${marketBadge}</td>
+            <td class="py-3 px-4">
+              <div class="font-bold text-[#131b2e]">${item.name}</div>
+              <div class="text-[10px] text-[#64748b] num-font">${item.code}</div>
+            </td>
+            <td class="py-3 px-4 text-right font-bold num-font text-[#131b2e]">${item.price}</td>
+            <td class="py-3 px-4 text-right font-bold num-font ${colorCls}">${arrow} ${item.change}</td>
+            <td class="py-3 px-4 text-[#475569]">${item.note}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterStocks(filter) {
+      renderStocks(filter);
+    }
+
+    function renderNews() {
+      const container = document.getElementById('news-list');
+      container.innerHTML = TOP5_NEWS.map(n => `
+        <article class="bg-white rounded-xl border border-[#cbd5e1] p-4 sm:p-5 shadow-sm card-hover flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          <div class="flex items-start gap-3.5">
+            <div class="w-8 h-8 rounded-lg bg-[#00236f] text-white font-extrabold num-font flex items-center justify-center shrink-0 text-sm">
+              0${n.rank}
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                <span class="px-2 py-0.5 rounded bg-[#f1f5f9] text-[#00236f] text-[10px] font-bold">${n.category}</span>
+                <span class="px-2 py-0.5 rounded border text-[10px] font-bold ${n.impactClass}">${n.impact}</span>
+              </div>
+              <h3 class="text-sm sm:text-base font-bold text-[#131b2e] leading-snug mb-1.5">${n.title}</h3>
+              <p class="text-xs text-[#475569] leading-relaxed">${n.summary}</p>
+            </div>
+          </div>
+          <a href="https://search.naver.com/search.naver?where=news&query=${encodeURIComponent(n.query)}" target="_blank" rel="noopener"
+            class="shrink-0 self-start px-3 py-1.5 rounded-md border border-[#cbd5e1] bg-[#faf8ff] hover:bg-[#eaedff] text-[#00236f] text-[11px] font-bold transition whitespace-nowrap">
+            관련기사 검색 ↗
+          </a>
+        </article>
+      `).join('');
+    }
+
+    function initChart() {
+      const ctx = document.getElementById('marketTrendChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['11/09 (월)', '11/10 (화)', '11/11 (수)', '11/12 (목)', '11/13 (금)'],
+          datasets: [
+            {
+              label: '코스피 (KOSPI)',
+              data: [5018, 5215, 5365, 5342.73, 5290.53],
+              borderColor: '#00236f',
+              backgroundColor: 'rgba(0, 35, 111, 0.08)',
+              borderWidth: 2.5,
+              tension: 0.3,
+              fill: true,
+              yAxisID: 'y'
+            },
+            {
+              label: '원/달러 환율 (원)',
+              data: [1345.0, 1344.5, 1337.5, 1336.7, 1335.9],
+              borderColor: '#059669',
+              backgroundColor: 'transparent',
+              borderWidth: 2,
+              borderDash: [5, 4],
+              tension: 0.3,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'top', labels: { font: { size: 11, family: 'Pretendard' } } }
+          },
+          scales: {
+            y: {
+              type: 'linear',
+              position: 'left',
+              min: 4950,
+              max: 5500,
+              grid: { color: 'rgba(203, 213, 225, 0.4)' },
+              ticks: { font: { size: 10, family: 'JetBrains Mono' } }
+            },
+            y1: {
+              type: 'linear',
+              position: 'right',
+              min: 1320,
+              max: 1360,
+              grid: { drawOnChartArea: false },
+              ticks: { font: { size: 10, family: 'JetBrains Mono' } }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 11, family: 'Pretendard' } }
+            }
+          }
+        }
+      });
+    }
+
+    async function refreshLiveFx() {
+      const btn = document.getElementById('btn-fx-refresh');
+      btn.innerText = '⏳ 조회 중...';
+      btn.disabled = true;
+      try {
+        const res = await fetch('https://open.er-api.com/v6/latest/USD');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.rates && data.rates.KRW) {
+            const krw = Number(data.rates.KRW).toFixed(2);
+            const eurPerUsd = data.rates.EUR || 0.93;
+            const eurKrw = (data.rates.KRW / eurPerUsd).toFixed(2);
+            document.getElementById('fx-usdkrw-val').innerHTML = `${Number(krw).toLocaleString()} <span class="text-sm font-bold text-[#64748b]">원</span>`;
+            document.getElementById('fx-eurkrw-val').innerText = `${Number(eurKrw).toLocaleString()}원`;
+            document.getElementById('fx-status-text').innerText = `실시간 글로벌 외환 API 반영 완료 (1 USD = ${Number(krw).toLocaleString()}원 / 기준시각: ${new Date().toLocaleTimeString('ko-KR')})`;
+            document.getElementById('fx-status-banner').classList.remove('hidden');
+          }
+        }
+      } catch (e) {
+        document.getElementById('fx-status-text').innerText = '오프라인/외부 API 제한으로 직전 마감 기준 환율(1,335.90원)을 유지합니다.';
+        document.getElementById('fx-status-banner').classList.remove('hidden');
+      } finally {
+        btn.innerText = '🔄 실시간 환율 조회';
+        btn.disabled = false;
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderStocks('all');
+      renderNews();
+      initChart();
+    });
+  </script>
+</body>
+</html>

@@ -381,6 +381,15 @@
             badge: '계산기',
             badgeColor: 'green',
             role: 'all'
+          },
+          {
+            id: 'financial-info',
+            title: '금융정보',
+            type: 'iframe',
+            url: 'financial-info.html',
+            badge: '시황/뉴스',
+            badgeColor: 'blue',
+            role: 'all'
           }
         ]
       },
@@ -544,7 +553,7 @@
       }
 
       // Version Cache Invalidation
-      const APP_BUILD_ID = 'v2.8.0';
+      const APP_BUILD_ID = 'v2.9.0';
       const storedBuild = localStorage.getItem('clp_build_id');
       if (storedBuild !== APP_BUILD_ID) {
         localStorage.removeItem('clp_menu_groups_v3');
