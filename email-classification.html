@@ -39,6 +39,9 @@
         </p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
+        <a href="index.html" class="px-3 py-2 bg-white text-[#1e3a8a] border border-[#cbd5e1] text-xs font-bold rounded-lg hover:bg-slate-50 transition">
+          ← 내 명함
+        </a>
         <button onclick="openGasModal()" class="px-3.5 py-2 bg-[#059669] text-white text-xs font-bold rounded-lg hover:bg-[#047857] transition">
           Gmail 실시간 동기화 (Apps Script)
         </button>
@@ -67,6 +70,9 @@
         </button>
         <button onclick="openImportModal()" class="px-3 py-1.5 bg-[#2563eb] text-white text-[11px] font-bold rounded hover:bg-[#1d4ed8]">
           파일 업로드
+        </button>
+        <button onclick="resetToGmail()" class="px-3 py-1.5 bg-white text-[#059669] border border-[#a7f3d0] text-[11px] font-bold rounded hover:bg-emerald-50">
+          Gmail 동기화 복원
         </button>
         <button onclick="resetToSample()" class="px-3 py-1.5 bg-white text-[#1e3a8a] border border-[#bfdbfe] text-[11px] font-bold rounded hover:bg-slate-50">
           샘플 초기화
@@ -320,21 +326,52 @@ function doGet(e) {
   </div>
 
   <script>
-    const STORAGE_KEY_EMAILS = 'clp_email_classification_items_v1';
-    const STORAGE_KEY_RULES = 'clp_email_classification_rules_v1';
-    const STORAGE_KEY_MODE = 'clp_email_classification_mode_v1';
+    const STORAGE_KEY_EMAILS = 'clp_email_classification_items_v2';
+    const STORAGE_KEY_RULES = 'clp_email_classification_rules_v2';
+    const STORAGE_KEY_MODE = 'clp_email_classification_mode_v2';
     const STORAGE_KEY_GAS_URL = 'clp_email_gas_url_v1';
     const STORAGE_KEY_GAS_TOKEN = 'clp_email_gas_token_v1';
-    const STORAGE_KEY_LAST_SYNC = 'clp_email_last_sync_v1';
+    const STORAGE_KEY_LAST_SYNC = 'clp_email_last_sync_v2';
 
     const CATEGORIES = ['업무/정산', '계약/세금', '시스템/보안', '뉴스레터', '기타'];
 
     const DEFAULT_RULES = [
-      { category: '업무/정산', priority: '높음', keywords: ['정산', '미결', '병원', '원장', '대사', '발주', '납품', '출고', '반품', '할인율', '청구', '입금', '지급', '회의', '요청', '확인'] },
-      { category: '계약/세금', priority: '높음', keywords: ['세금계산서', '전자세금', '계약', '견적', '법무', '공문', '약정', '인감', '사업자', '국세청', 'hometax', 'invoice', 'contract'] },
-      { category: '시스템/보안', priority: '보통', keywords: ['보안', '인증', '비밀번호', '로그인', '알림', 'github', 'supabase', 'google', 'aws', 'alert', 'security', 'verify', 'otp'] },
-      { category: '뉴스레터', priority: '낮음', keywords: ['뉴스레터', '구독', '수신거부', '프로모션', '이벤트', '할인', '마케팅', '광고', 'newsletter', 'unsubscribe', 'digest', 'weekly'] }
+      { category: '업무/정산', priority: '높음', keywords: ['정산', '미결', '병원', '원장', '대사', '발주', '납품', '출고', '반품', '할인율', '청구', '입금', '지급', '회의', '요청', '확인', '워크플로', 'workflow', 'run failed'] },
+      { category: '계약/세금', priority: '높음', keywords: ['세금계산서', '전자세금', '계약', '견적', '법무', '공문', '약정', '인감', '사업자', '국세청', 'hometax', 'invoice', 'contract', '약관', '신용관리', '개인정보'] },
+      { category: '시스템/보안', priority: '보통', keywords: ['보안', '인증', '비밀번호', '로그인', '알림', 'github', 'supabase', 'google', 'aws', 'alert', 'security', 'verify', 'otp', 'oauth', 'token', 'sudo', 'code'] },
+      { category: '뉴스레터', priority: '낮음', keywords: ['뉴스레터', '구독', '수신거부', '프로모션', '이벤트', '할인', '마케팅', '광고', 'newsletter', 'unsubscribe', 'digest', 'weekly', 'outlet', 'armour', 'netflix', 'duolingo', '페이지'] }
     ];
+
+    function getGmailSyncedEmails() {
+      return [
+        { id: '1a1df72a3bdd8e14', date: '2026-11-15 22:43', sender: 'Google <no-reply@accounts.google.com>', subject: '보안 알림', snippet: '일부 Google 계정 데이터(chuanlgg@gmail.com)에 대한 제목 없는 프로젝트의 액세스가 허용되었습니다. 본인이 허용하지 않았다면 계정 활동 기록을 확인하세요.', category: '시스템/보안', priority: '보통', reason: 'Google 계정 OAuth 액세스 알림', status: '확인중', labels: 'INBOX, SECURITY' },
+        { id: '1a1df7080032fd4e', date: '2026-11-15 22:40', sender: 'Google <no-reply@accounts.google.com>', subject: '보안 알림', snippet: '일부 Google 계정 데이터(chuanlgg@gmail.com)에 대한 제목 없는 프로젝트의 액세스가 허용되었습니다. 계정 보안 설정을 점검하세요.', category: '시스템/보안', priority: '보통', reason: 'Google 계정 OAuth 액세스 알림', status: '확인중', labels: 'INBOX, SECURITY' },
+        { id: '1a1df66ebfccc2f1', date: '2026-11-15 22:30', sender: 'Under Armour <underarmour@emails.underarmour.com>', subject: 'Extra 40% off UA Outlet ends today', snippet: 'UA.com Outlet 추가 40% 할인 프로모션 오늘 종료 안내 (코드: WARMUP).', category: '뉴스레터', priority: '낮음', reason: '프로모션/할인 메일', status: '보관', labels: 'INBOX, PROMOTIONS' },
+        { id: '1a1df3dc776b8884', date: '2026-11-15 21:45', sender: 'Google <no-reply@accounts.google.com>', subject: '보안 알림', snippet: '일부 Google 계정 데이터(chuanlgg@gmail.com)에 대한 Antigravity for Gmail의 액세스를 허용하셨습니다.', category: '시스템/보안', priority: '보통', reason: 'Gmail 플러그인 OAuth 연동 알림', status: '처리완료', labels: 'INBOX, SECURITY' },
+        { id: '1a1df36fa7f18b7e', date: '2026-11-15 21:38', sender: 'Google <no-reply@accounts.google.com>', subject: 'chuanlhh@gmail.com 관련 보안 경고', snippet: '복구 이메일 사본: TB331FC 기기에서 chuanlhh@gmail.com Google 계정에 새로 로그인했습니다. 본인이 맞는지 확인하세요.', category: '시스템/보안', priority: '높음', reason: '복구 계정 신규 기기 로그인 경고', status: '확인중', labels: 'INBOX, IMPORTANT, SECURITY' },
+        { id: '1a1de7a54ed1bf69', date: '2026-11-15 18:13', sender: 'Supabase Auth <noreply@mail.app.supabase.io>', subject: 'Confirm your email address', snippet: 'Supabase 기반 애플리케이션 회원가입 완료를 위한 이메일 주소 인증 요청 메일입니다.', category: '시스템/보안', priority: '보통', reason: '이메일 인증 요청', status: '처리완료', labels: 'INBOX' },
+        { id: '1a1ddd2978d8816c', date: '2026-11-15 15:10', sender: 'Facebook <notification@facebookmail.com>', subject: 'SoundCloud - 음악 과 오디오에 새 정보를 공유했습니다', snippet: 'SoundCloud - 음악 과 오디오 앱과 Facebook 계정 정보 공유가 연결되었습니다. 공유 설정에서 언제든지 변경할 수 있습니다.', category: '기타', priority: '낮음', reason: '소셜 앱 연동 알림', status: '보관', labels: 'INBOX, SOCIAL' },
+        { id: '1a1ddd1c39f21f92', date: '2026-11-15 15:09', sender: 'SoundCloud <noreply@account.soundcloud.com>', subject: 'Your SoundCloud 6-digit code is ******', snippet: 'SoundCloud 로그인 일회용 6자리 인증 코드([보안상 마스킹 처리])가 발급되었습니다.', category: '시스템/보안', priority: '보통', reason: '일회용 인증 코드(OTP)', status: '처리완료', labels: 'INBOX' },
+        { id: '1a1ddd170877776c', date: '2026-11-15 15:09', sender: 'Facebook <security@facebookmail.com>', subject: '방금 고양 근처에서 새로운 기기로 로그인하셨나요?', snippet: '보안 경고: 경기도 고양 근처에서 Linux Chrome으로 Facebook 계정에 로그인되었습니다. 본인이 아닌 경우 즉시 확인하세요.', category: '시스템/보안', priority: '높음', reason: '신규 기기 로그인 보안 경고', status: '처리완료', labels: 'INBOX, SECURITY' },
+        { id: '1a1dc972545d428f', date: '2026-11-15 09:24', sender: '멜론 <noreply_melon@kakaoent.com>', subject: '멜론 개인정보 이용・제공 내역 안내', snippet: '개인정보 보호법 제20조의2에 의거하여 연 1회 멜론 서비스의 개인정보 이용·제공 내역을 안내드립니다 (2026-11-11 기준).', category: '계약/세금', priority: '보통', reason: '법정 개인정보 이용·제공 정기 통지', status: '확인중', labels: 'INBOX' },
+        { id: '1a1da3bf3c7d85bb', date: '2026-11-14 22:25', sender: 'Under Armour <underarmour@emails.underarmour.com>', subject: 'Ends Tomorrow: Extra 40% off UA Outlet', snippet: 'UA Outlet 추가 40% 할인 마감 임박 안내 (프로모션 코드: WARMUP).', category: '뉴스레터', priority: '낮음', reason: '프로모션/할인 메일', status: '보관', labels: 'INBOX, PROMOTIONS' },
+        { id: '1a1d93c46c989937', date: '2026-11-14 17:47', sender: 'duolingo <hello@duolingo.com>', subject: '아직 계신가요? 💀', snippet: '마지막으로 레슨을 한 지 10일이 지났습니다. 듀오링고 학습 리마인더 알림입니다.', category: '뉴스레터', priority: '낮음', reason: '학습 리마인더/구독 알림', status: '보관', labels: 'INBOX, PROMOTIONS' },
+        { id: '1a1d7e794c4694cf', date: '2026-11-14 11:35', sender: 'chuanlgg-source <notifications@github.com>', subject: '[chuanlgg-source/changhwan] Run failed: 병원부 미결 통합 관리 및 리포트 자동 실행 - main (8fd625d)', snippet: 'GitHub Actions 워크플로(병원부 미결 통합 관리 및 리포트 자동 실행)가 main 브랜치(8fd625d)에서 실패했습니다 (소요시간 17.0s).', category: '업무/정산', priority: '높음', reason: '핵심 업무 자동화(병원부 미결) 실행 실패 알림', status: '미처리', labels: 'INBOX, IMPORTANT' },
+        { id: '1a1d7dfcb93280c7', date: '2026-11-14 11:27', sender: 'GitHub <noreply@github.com>', subject: '[GitHub] A personal access token (classic) has been added to your account', snippet: 'GitHub 계정에 Personal Access Token "Antigravity-Reconcile" (repo, workflow 권한)이 새로 추가되었습니다.', category: '시스템/보안', priority: '높음', reason: 'GitHub PAT 토큰 발급 보안 알림', status: '처리완료', labels: 'INBOX, SECURITY' },
+        { id: '1a1d7dd01a5295cd', date: '2026-11-14 11:24', sender: 'GitHub <noreply@github.com>', subject: '[GitHub] Sudo email verification code', snippet: 'GitHub Sudo 인증 코드([보안상 마스킹 처리])가 발급되었습니다 (유효시간 15분).', category: '시스템/보안', priority: '보통', reason: 'GitHub Sudo 인증 코드', status: '처리완료', labels: 'INBOX' },
+        { id: '1a1d7ada842a8e89', date: '2026-11-14 10:32', sender: 'Google <no-reply@accounts.google.com>', subject: '보안 알림', snippet: '일부 Google 계정 데이터(chuanlgg@gmail.com)에 대한 Antigravity for Google Drive의 액세스를 허용하셨습니다.', category: '시스템/보안', priority: '보통', reason: 'Google Drive OAuth 연동 알림', status: '처리완료', labels: 'INBOX, SECURITY' },
+        { id: '1a1d79d52c930381', date: '2026-11-14 10:14', sender: 'Supabase <noreply@supabase.com>', subject: 'OAuth Application Approval', snippet: '조직 설정 및 프로젝트에 접근하는 새 OAuth 애플리케이션이 승인되었습니다.', category: '시스템/보안', priority: '보통', reason: 'Supabase OAuth 앱 승인 알림', status: '처리완료', labels: 'INBOX' },
+        { id: '1a1d79803f383e87', date: '2026-11-14 10:09', sender: 'Supabase <welcome@supabase.com>', subject: 'Welcome to Supabase', snippet: 'Postgres 개발 플랫폼 Supabase 가입 환영 안내 (Database, Auth, Storage, Realtime API 소개).', category: '기타', priority: '낮음', reason: '서비스 가입 환영 메일', status: '보관', labels: 'INBOX' },
+        { id: '1a1d797ef7a37e58', date: '2026-11-14 10:09', sender: 'GitHub <noreply@github.com>', subject: '[GitHub] A third-party OAuth application has been added to your account', snippet: 'GitHub 계정에 서드파티 OAuth 앱(Supabase, user:email 권한)이 새로 연결되었습니다.', category: '시스템/보안', priority: '보통', reason: 'GitHub 서드파티 OAuth 연동 알림', status: '처리완료', labels: 'INBOX, SECURITY' },
+        { id: '1a1d57fa0640304f', date: '2026-11-14 00:22', sender: 'Armour Access <underarmour@emails.underarmour.com>', subject: 'Armour Access November snapshot', snippet: 'Under Armour Armour Access 11월 멤버십 혜택 및 친구 추천(15% 할인 / 250 보너스 포인트) 안내.', category: '뉴스레터', priority: '낮음', reason: '멤버십 뉴스레터', status: '보관', labels: 'INBOX, PROMOTIONS' },
+        { id: '1a1d4a110681f4ee', date: '2026-11-13 20:19', sender: '카카오뱅크 <no-reply@mail.kakaobank.com>', subject: '[카카오뱅크] 계좌통합관리서비스 이용약관 개정 안내', snippet: '계좌통합관리서비스 이용약관 개정 안내 (시행일자: 2026년 12월 16일, 기존 동의 고객 적용).', category: '계약/세금', priority: '보통', reason: '금융 서비스 약관 개정 안내', status: '확인중', labels: 'INBOX' },
+        { id: '1a1d44a00825906d', date: '2026-11-13 18:46', sender: 'Netflix <info@members.netflix.com>', subject: '이 장면을 기억하시나요?', snippet: '좋아하는 장면을 다시 돌려보세요: 섀도우 앤 본, 오징어 게임 등 추천 콘텐츠 안내.', category: '뉴스레터', priority: '낮음', reason: '콘텐츠 추천 뉴스레터', status: '보관', labels: 'INBOX, PROMOTIONS' },
+        { id: '1a1d3974d7aaeb98', date: '2026-11-13 15:31', sender: 'NICE평가정보 <sendmail@credit.co.kr>', subject: '[NICE지키미] 이*환님, 11월 신용관리 서비스 이용내역을 확인하세요!', snippet: '제휴 플랫폼에서 이용하신 11월 신용관리 서비스 이용 내역 및 신용정보 이용·제공사실 통보 안내입니다.', category: '계약/세금', priority: '보통', reason: '신용정보 이용·제공 내역 통보', status: '확인중', labels: 'INBOX' },
+        { id: '1a1d38d8c5222a75', date: '2026-11-13 15:20', sender: 'Facebook 페이지 <pageupdates@facebookmail.com>', subject: '회원님이 좋아할 만한 Serkan 페이지를 둘러보세요', snippet: 'Facebook 추천 페이지 안내 메일입니다.', category: '뉴스레터', priority: '낮음', reason: '소셜 추천 뉴스레터', status: '보관', labels: 'INBOX, SOCIAL' },
+        { id: '1a1d38c8459e161d', date: '2026-11-13 15:19', sender: 'Google <no-reply@accounts.google.com>', subject: '보안 알림', snippet: 'Windows 기기에서 chuanlgg@gmail.com Google 계정에 새로 로그인했습니다. 본인이 맞는지 확인하세요.', category: '시스템/보안', priority: '높음', reason: '신규 기기 로그인 보안 알림', status: '처리완료', labels: 'INBOX, SECURITY' },
+        { id: '1a1d38509a29d792', date: '2026-11-13 15:11', sender: 'GitHub <noreply@github.com>', subject: '[GitHub] Please verify your device', snippet: '인식되지 않은 기기(Microsoft Edge on Windows)에서 로그인 시도가 감지되어 기기 인증이 요청되었습니다.', category: '시스템/보안', priority: '높음', reason: 'GitHub 신규 기기 인증 요청', status: '처리완료', labels: 'INBOX, SECURITY' }
+      ];
+    }
 
     function getSampleEmails() {
       const now = new Date();
@@ -357,8 +394,8 @@ function doGet(e) {
     }
 
     let rules = JSON.parse(localStorage.getItem(STORAGE_KEY_RULES) || 'null') || DEFAULT_RULES;
-    let emails = JSON.parse(localStorage.getItem(STORAGE_KEY_EMAILS) || 'null') || getSampleEmails();
-    let dataMode = localStorage.getItem(STORAGE_KEY_MODE) || 'sample';
+    let emails = JSON.parse(localStorage.getItem(STORAGE_KEY_EMAILS) || 'null') || getGmailSyncedEmails();
+    let dataMode = localStorage.getItem(STORAGE_KEY_MODE) || 'gmail_plugin';
     let selectedCategory = '전체';
 
     function classifyEmail(item) {
@@ -426,8 +463,13 @@ function doGet(e) {
       ensureClassified();
       const modeBadge = document.getElementById('dataModeBadge');
       const lastSync = localStorage.getItem(STORAGE_KEY_LAST_SYNC);
-      document.getElementById('lastSyncInfo').textContent = lastSync ? `(최근 동기화: ${lastSync})` : '';
-      if (dataMode === 'gas') {
+      document.getElementById('lastSyncInfo').textContent = lastSync
+        ? `(최근 동기화: ${lastSync})`
+        : (dataMode === 'gmail_plugin' ? '(최근 동기화: 2026-11-15 23:15 · chuanlgg@gmail.com · 26건)' : '');
+      if (dataMode === 'gmail_plugin') {
+        modeBadge.textContent = 'Gmail 플러그인 연동됨 (2026-11-15)';
+        modeBadge.className = 'px-2.5 py-0.5 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] text-[11px] font-bold';
+      } else if (dataMode === 'gas') {
         modeBadge.textContent = 'Gmail Apps Script 연동됨';
         modeBadge.className = 'px-2.5 py-0.5 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] text-[11px] font-bold';
       } else if (dataMode === 'imported') {
@@ -579,6 +621,15 @@ function doGet(e) {
       });
       saveState();
       closeRulesModal();
+      renderAll();
+    }
+
+    function resetToGmail() {
+      dataMode = 'gmail_plugin';
+      emails = getGmailSyncedEmails();
+      localStorage.removeItem(STORAGE_KEY_LAST_SYNC);
+      ensureClassified();
+      saveState();
       renderAll();
     }
 
