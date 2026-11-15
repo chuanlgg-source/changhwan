@@ -1,6 +1,6 @@
 {
   "$schema": "./schema/portal-spec.schema.json",
-  "version": "2.9.9",
+  "version": "2.9.10",
   "systemTitle": "Clinical Ledger Precision",
   "systemSubtitle": "병원부 미결 원장 대사 및 업무 통합 포털",
   "themes": [
@@ -54,18 +54,7 @@
         "type": "iframe",
         "url": "financial-info.html"
       },
-      "subMenus": [
-        {
-          "id": "savings-sim",
-          "title": "적금/수익 정밀 시뮬레이터",
-          "type": "iframe",
-          "url": "savings-simulator.html",
-          "badge": "계산기",
-          "badgeColor": "green",
-          "role": "all",
-          "description": "일일 저축 및 복리 자산 증식 시뮬레이터"
-        }
-      ]
+      "subMenus": []
     },
     {
       "id": "knowledge",

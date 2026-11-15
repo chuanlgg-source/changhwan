@@ -384,17 +384,7 @@
           type: 'iframe',
           url: 'financial-info.html'
         },
-        subMenus: [
-          {
-            id: 'savings-sim',
-            title: '적금/수익 정밀 시뮬레이터',
-            type: 'iframe',
-            url: 'savings-simulator.html',
-            badge: '계산기',
-            badgeColor: 'green',
-            role: 'all'
-          }
-        ]
+        subMenus: []
       },
       {
         themeId: 'knowledge',
@@ -562,7 +552,7 @@
       }
 
       // Version Cache Invalidation
-      const APP_BUILD_ID = 'v2.9.9';
+      const APP_BUILD_ID = 'v2.9.10';
       const storedBuild = localStorage.getItem('clp_build_id');
       if (storedBuild !== APP_BUILD_ID) {
         localStorage.removeItem('clp_menu_groups_v3');
