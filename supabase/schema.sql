@@ -67,3 +67,22 @@ alter table public.portal_menus enable row level security;
 
 create policy "메뉴 설정 조회 및 업데이트 허용" on public.portal_menus
   for all using (true);
+
+
+-- 4. 개인업무 달력 일정 테이블 (모든 기기 클라우드 동기화)
+create table if not exists public.work_schedules (
+  id uuid default gen_random_uuid() primary key,
+  schedule_date date not null,
+  work_type text not null default '정산/대사',
+  work_time text not null default '09:00',
+  memo text not null,
+  user_email text default 'chuan@hospital.com',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.work_schedules enable row level security;
+
+create policy "개인업무 일정 조회 및 관리 허용" on public.work_schedules
+  for all using (true);
+

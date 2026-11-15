@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>개인업무 일정 캘린더</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -36,8 +37,17 @@
   <!-- Header & Year/Month Controls -->
   <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-4 border-b border-[#cbd5e1]">
     <div>
-      <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#1e3a8a]/10 border border-[#1e3a8a]/20 text-[#00236f] text-[11px] font-bold mb-1.5">
-        <span>PERSONAL WORK SCHEDULE</span>
+      <div class="flex flex-wrap items-center gap-2 mb-1.5">
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#1e3a8a]/10 border border-[#1e3a8a]/20 text-[#00236f] text-[11px] font-bold">
+          <span>PERSONAL WORK SCHEDULE</span>
+        </div>
+        <span id="sync-status-badge" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#f1f5f9] border border-[#cbd5e1] text-[#475569] text-[11px] font-bold">
+          ⏳ 동기화 확인 중...
+        </span>
+        <button type="button" onclick="syncSchedulesFromSupabase(true)" title="클라우드와 수동 동기화"
+          class="px-2 py-0.5 rounded-full bg-white hover:bg-[#eff6ff] border border-[#cbd5e1] text-[11px] font-bold text-[#00236f] cursor-pointer transition">
+          🔄 새로고침
+        </button>
       </div>
       <h1 class="text-2xl font-extrabold font-headline text-[#00236f] tracking-tight">
         개인업무 일정 캘린더
@@ -213,10 +223,119 @@
 
   <script>
     const STORAGE_KEY = 'clp_work_schedules_v1';
+    const DEFAULT_SUPABASE_URL = 'https://cbarfruyknhfjvvhcmgu.supabase.co';
+    const DEFAULT_SUPABASE_KEY = 'sb_publishable_k-LLkVT3ducZNfkzF0tGvw_36TMYhhZ';
+    let supabaseClient = null;
     let schedules = {}; // { "YYYY-MM-DD": [ { id, type, time, memo } ] }
     let viewYear = new Date().getFullYear();
     let viewMonth = new Date().getMonth() + 1; // 1~12
     let selectedDateStr = '';
+
+    function getActiveUserEmail() {
+      try {
+        const raw = localStorage.getItem('clp_session_user_v3');
+        if (raw) {
+          const u = JSON.parse(raw);
+          if (u && u.email) return u.email;
+        }
+      } catch (e) {}
+      return 'chuan@hospital.com';
+    }
+
+    function initSupabaseClient() {
+      const sbUrl = localStorage.getItem('clp_sb_url') || DEFAULT_SUPABASE_URL;
+      const sbKey = localStorage.getItem('clp_sb_key') || DEFAULT_SUPABASE_KEY;
+      if (sbUrl && sbKey && window.supabase) {
+        try {
+          supabaseClient = window.supabase.createClient(sbUrl, sbKey);
+        } catch (e) {
+          console.warn('Supabase init error:', e);
+        }
+      }
+    }
+
+    function setSyncBadge(state, text) {
+      const el = document.getElementById('sync-status-badge');
+      if (!el) return;
+      if (state === 'synced') {
+        el.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#ecfdf5] border border-[#a7f3d0] text-[#059669] text-[11px] font-bold';
+      } else if (state === 'warn') {
+        el.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#fef3c7] border border-[#fde68a] text-[#b45309] text-[11px] font-bold';
+      } else {
+        el.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#f1f5f9] border border-[#cbd5e1] text-[#475569] text-[11px] font-bold';
+      }
+      el.innerText = text;
+    }
+
+    function isUuid(str) {
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(str || ''));
+    }
+
+    async function syncSchedulesFromSupabase(showAlertOnFail = false) {
+      if (!supabaseClient) {
+        setSyncBadge('warn', '⚠️ 로컬 저장 모드');
+        return;
+      }
+      setSyncBadge('loading', '⏳ 클라우드 동기화 중...');
+      try {
+        // Upload any legacy local-only items (id starting with sch_) first
+        const localEntries = [];
+        Object.entries(schedules).forEach(([dateStr, items]) => {
+          (items || []).forEach(item => {
+            if (!isUuid(item.id)) {
+              localEntries.push({ dateStr, item });
+            }
+          });
+        });
+
+        if (localEntries.length > 0) {
+          const userEmail = getActiveUserEmail();
+          const payload = localEntries.map(({ dateStr, item }) => ({
+            schedule_date: dateStr,
+            work_type: item.type || '정산/대사',
+            work_time: item.time || '09:00',
+            memo: item.memo || '',
+            user_email: userEmail
+          }));
+          const { error: upErr } = await supabaseClient.from('work_schedules').insert(payload);
+          if (upErr) throw upErr;
+        }
+
+        const { data, error } = await supabaseClient
+          .from('work_schedules')
+          .select('*')
+          .order('schedule_date', { ascending: true })
+          .order('work_time', { ascending: true });
+
+        if (error) throw error;
+
+        const nextSchedules = {};
+        (data || []).forEach(row => {
+          const dStr = row.schedule_date;
+          if (!nextSchedules[dStr]) nextSchedules[dStr] = [];
+          nextSchedules[dStr].push({
+            id: row.id,
+            type: row.work_type,
+            time: row.work_time,
+            memo: row.memo
+          });
+        });
+
+        schedules = nextSchedules;
+        persistSchedules();
+        renderCalendar();
+        if (!document.getElementById('schedule-modal').classList.contains('hidden')) {
+          renderModalDayList();
+        }
+        setSyncBadge('synced', `☁️ 클라우드 동기화됨 (${(data || []).length}건)`);
+      } catch (err) {
+        console.warn('work_schedules sync error:', err);
+        setSyncBadge('warn', '⚠️ 로컬 모드 (work_schedules 테이블 확인)');
+        if (showAlertOnFail) {
+          alert('클라우드 동기화에 실패했습니다. Supabase에 work_schedules 테이블이 생성되어 있는지 확인해주세요.');
+        }
+      }
+    }
 
     const TYPE_BADGE_MAP = {
       '정산/대사': 'bg-[#eff6ff] text-[#1e3a8a] border-[#bfdbfe]',
@@ -472,7 +591,7 @@
       }).join('');
     }
 
-    function saveSchedule() {
+    async function saveSchedule() {
       const editId = document.getElementById('edit-schedule-id').value;
       const type = document.getElementById('input-type').value;
       const time = document.getElementById('input-time').value;
@@ -480,28 +599,68 @@
 
       if (!memo) return;
 
+      const saveBtn = document.getElementById('btn-save-schedule');
+      if (saveBtn) saveBtn.disabled = true;
+
       if (!schedules[selectedDateStr]) {
         schedules[selectedDateStr] = [];
+      }
+
+      let finalId = editId || ('sch_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6));
+
+      if (supabaseClient) {
+        try {
+          if (editId && isUuid(editId)) {
+            const { error } = await supabaseClient
+              .from('work_schedules')
+              .update({
+                work_type: type,
+                work_time: time,
+                memo,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', editId);
+            if (error) throw error;
+          } else {
+            const { data, error } = await supabaseClient
+              .from('work_schedules')
+              .insert([{
+                schedule_date: selectedDateStr,
+                work_type: type,
+                work_time: time,
+                memo,
+                user_email: getActiveUserEmail()
+              }])
+              .select('id')
+              .single();
+            if (error) throw error;
+            if (data && data.id) finalId = data.id;
+          }
+        } catch (err) {
+          console.warn('Supabase saveSchedule fallback to local:', err);
+          setSyncBadge('warn', '⚠️ 로컬 저장 (클라우드 반영 실패)');
+        }
       }
 
       if (editId) {
         const idx = schedules[selectedDateStr].findIndex(s => s.id === editId);
         if (idx !== -1) {
-          schedules[selectedDateStr][idx] = { id: editId, type, time, memo };
+          schedules[selectedDateStr][idx] = { id: finalId, type, time, memo };
         }
       } else {
-        schedules[selectedDateStr].push({
-          id: 'sch_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-          type,
-          time,
-          memo
-        });
+        schedules[selectedDateStr].push({ id: finalId, type, time, memo });
       }
 
       persistSchedules();
       resetForm();
       renderModalDayList();
       renderCalendar();
+      if (saveBtn) saveBtn.disabled = false;
+
+      if (supabaseClient && isUuid(finalId)) {
+        const totalCnt = Object.values(schedules).reduce((acc, arr) => acc + arr.length, 0);
+        setSyncBadge('synced', `☁️ 클라우드 동기화됨 (${totalCnt}건)`);
+      }
     }
 
     function editSchedule(id) {
@@ -516,8 +675,18 @@
       document.getElementById('btn-cancel-edit').classList.remove('hidden');
     }
 
-    function deleteSchedule(id) {
+    async function deleteSchedule(id) {
       if (!confirm('이 업무일정을 삭제하시겠습니까?')) return;
+
+      if (supabaseClient && isUuid(id)) {
+        try {
+          const { error } = await supabaseClient.from('work_schedules').delete().eq('id', id);
+          if (error) throw error;
+        } catch (err) {
+          console.warn('Supabase deleteSchedule error:', err);
+        }
+      }
+
       schedules[selectedDateStr] = (schedules[selectedDateStr] || []).filter(s => s.id !== id);
       if (schedules[selectedDateStr].length === 0) {
         delete schedules[selectedDateStr];
@@ -526,6 +695,11 @@
       resetForm();
       renderModalDayList();
       renderCalendar();
+
+      if (supabaseClient) {
+        const totalCnt = Object.values(schedules).reduce((acc, arr) => acc + arr.length, 0);
+        setSyncBadge('synced', `☁️ 클라우드 동기화됨 (${totalCnt}건)`);
+      }
     }
 
     function resetForm() {
@@ -548,9 +722,11 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      initSupabaseClient();
       loadSchedules();
       initSelectors();
       renderCalendar();
+      syncSchedulesFromSupabase(false);
     });
   </script>
 </body>
