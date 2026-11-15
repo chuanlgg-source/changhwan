@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Mail 분류 — Clinical Ledger Precision</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #faf8ff;
+      color: #131b2e;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 13px;
+    }
+    .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .num-font { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    .ledger-row { height: 40px; }
+  </style>
+</head>
+<body class="p-4 sm:p-6">
+  <div class="max-w-7xl mx-auto space-y-5">
+    <!-- 상단 헤더 카드 -->
+    <div class="bg-white rounded-xl border border-[#cbd5e1] p-5 sm:p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+      <div>
+        <div class="text-[11px] font-bold text-[#1e3a8a] uppercase tracking-wider mb-1">
+          PERSONAL WORK · E-MAIL CLASSIFICATION
+        </div>
+        <h1 class="text-xl font-bold font-headline text-[#00236f] flex items-center gap-2">
+          <span>E-Mail 분류 및 3개월 수신함 정리</span>
+          <span id="dataModeBadge" class="px-2.5 py-0.5 rounded bg-[#fffbeb] text-[#d97706] border border-[#fde68a] text-[11px] font-bold">
+            샘플 데이터 모드
+          </span>
+        </h1>
+        <p class="text-xs text-[#444651] mt-1">
+          최근 3개월간 수신한 구글메일(Gmail)을 업무·정산·계약·시스템·뉴스레터 카테고리로 자동 분류하고 처리 상태를 관리합니다.
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button onclick="openImportModal()" class="px-3.5 py-2 bg-[#00236f] text-white text-xs font-bold rounded-lg hover:bg-[#1e3a8a] transition">
+          + 메일 가져오기 (MBOX / CSV / JSON)
+        </button>
+        <button onclick="openRulesModal()" class="px-3 py-2 bg-[#f2f3ff] text-[#1e3a8a] border border-[#cbd5e1] text-xs font-bold rounded-lg hover:bg-[#eaedff] transition">
+          분류 규칙 설정
+        </button>
+        <button onclick="exportCSV()" class="px-3 py-2 bg-white text-[#444651] border border-[#cbd5e1] text-xs font-bold rounded-lg hover:bg-slate-50 transition">
+          CSV 내보내기
+        </button>
+      </div>
+    </div>
+
+    <!-- 안내 배너 (데이터 연동 안내) -->
+    <div id="syncNoticeBanner" class="bg-[#eff6ff] border border-[#bfdbfe] rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div class="text-xs text-[#1e3a8a] leading-relaxed">
+        <strong>구글메일(Gmail) 실데이터 반영 방법:</strong>
+        Google Takeout(<code>.mbox</code>) 또는 Gmail 내보내기(<code>.csv</code>/<code>.json</code>) 파일을 업로드하면 최근 3개월 메일을 즉시 자동 분류합니다.
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button onclick="openImportModal()" class="px-3 py-1.5 bg-[#2563eb] text-white text-[11px] font-bold rounded hover:bg-[#1d4ed8]">
+          파일 업로드
+        </button>
+        <button onclick="resetToSample()" class="px-3 py-1.5 bg-white text-[#1e3a8a] border border-[#bfdbfe] text-[11px] font-bold rounded hover:bg-slate-50">
+          샘플 초기화
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI 위젯 그리드 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white p-4 rounded-lg border border-[#cbd5e1] border-l-4 border-l-[#00236f]">
+        <div class="text-xs text-[#757682] font-semibold">선택 기간 총 수신 메일</div>
+        <div id="kpiTotal" class="text-2xl font-bold num-font text-[#00236f] mt-1">0 건</div>
+        <div id="kpiRangeLabel" class="text-[11px] text-[#444651] mt-1">최근 3개월 기준</div>
+      </div>
+      <div class="bg-white p-4 rounded-lg border border-[#cbd5e1] border-l-4 border-l-[#dc2626]">
+        <div class="text-xs text-[#757682] font-semibold">미처리 · 우선 확인</div>
+        <div id="kpiPending" class="text-2xl font-bold num-font text-[#dc2626] mt-1">0 건</div>
+        <div class="text-[11px] text-[#dc2626] mt-1">업무/정산·계약 미처리 건</div>
+      </div>
+      <div class="bg-white p-4 rounded-lg border border-[#cbd5e1] border-l-4 border-l-[#059669]">
+        <div class="text-xs text-[#757682] font-semibold">정리·처리 완료</div>
+        <div id="kpiDone" class="text-2xl font-bold num-font text-[#059669] mt-1">0 건</div>
+        <div id="kpiDoneRate" class="text-[11px] text-[#059669] mt-1">완료율 0%</div>
+      </div>
+      <div class="bg-white p-4 rounded-lg border border-[#cbd5e1] border-l-4 border-l-[#d97706]">
+        <div class="text-xs text-[#757682] font-semibold">뉴스레터·자동알림</div>
+        <div id="kpiLowPriority" class="text-2xl font-bold num-font text-[#d97706] mt-1">0 건</div>
+        <div class="text-[11px] text-[#757682] mt-1">일괄 보관 대상</div>
+      </div>
+    </div>
+
+    <!-- 카테고리별 요약 바 -->
+    <div class="bg-white rounded-xl border border-[#cbd5e1] p-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <span class="text-xs font-bold text-[#00236f]">카테고리별 분포</span>
+        <button onclick="bulkArchiveNewsletters()" class="px-2.5 py-1 bg-[#f2f3ff] text-[#1e3a8a] border border-[#cbd5e1] rounded text-[11px] font-bold hover:bg-[#eaedff]">
+          뉴스레터·기타 일괄 보관 처리
+        </button>
+      </div>
+      <div id="categorySummaryGrid" class="grid grid-cols-2 sm:grid-cols-5 gap-2.5"></div>
+    </div>
+
+    <!-- 필터 & 검색 바 + 데이터 테이블 -->
+    <div class="bg-white rounded-xl border border-[#cbd5e1] overflow-hidden">
+      <div class="p-4 bg-[#f2f3ff] border-b border-[#cbd5e1] space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div id="categoryTabs" class="flex flex-wrap gap-1.5"></div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="periodFilter" onchange="renderAll()" class="px-2.5 py-1.5 bg-white border border-[#cbd5e1] rounded text-xs font-medium text-[#131b2e]">
+              <option value="90" selected>최근 3개월 (90일)</option>
+              <option value="30">최근 1개월 (30일)</option>
+              <option value="7">최근 1주 (7일)</option>
+              <option value="all">전체 기간</option>
+            </select>
+            <select id="statusFilter" onchange="renderAll()" class="px-2.5 py-1.5 bg-white border border-[#cbd5e1] rounded text-xs font-medium text-[#131b2e]">
+              <option value="all">전체 상태</option>
+              <option value="미처리">미처리</option>
+              <option value="확인중">확인중</option>
+              <option value="처리완료">처리완료</option>
+              <option value="보관">보관</option>
+            </select>
+            <input id="searchInput" type="text" oninput="renderAll()" placeholder="발신자, 제목, 내용 검색..." class="px-3 py-1.5 bg-white border border-[#cbd5e1] rounded text-xs w-52 sm:w-64 focus:outline-none focus:border-[#00236f]">
+          </div>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-50 border-b border-[#cbd5e1] text-[#1e3a8a] font-bold">
+              <th class="px-3 py-2.5 w-28">수신일시</th>
+              <th class="px-3 py-2.5 w-32">분류</th>
+              <th class="px-3 py-2.5 w-20 text-center">중요도</th>
+              <th class="px-3 py-2.5 w-48">발신자</th>
+              <th class="px-3 py-2.5">제목 / 핵심 요약</th>
+              <th class="px-3 py-2.5 w-28 text-center">처리상태</th>
+            </tr>
+          </thead>
+          <tbody id="emailTableBody" class="divide-y divide-[#e2e8f0]"></tbody>
+        </table>
+      </div>
+
+      <div id="emptyState" class="hidden p-10 text-center text-xs text-[#757682]">
+        조건에 해당하는 메일이 없습니다. 필터를 변경하거나 새 메일 데이터를 가져와 보세요.
+      </div>
+    </div>
+  </div>
+
+  <!-- 메일 상세 보기 모달 -->
+  <div id="detailModal" class="hidden fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl border border-[#cbd5e1] max-w-2xl w-full overflow-hidden shadow-xl">
+      <div class="px-5 py-4 bg-[#f2f3ff] border-b border-[#cbd5e1] flex justify-between items-center">
+        <div>
+          <div class="text-[11px] font-bold text-[#1e3a8a]">E-MAIL DETAIL</div>
+          <h3 id="modalSubject" class="text-sm font-bold text-[#00236f] mt-0.5"></h3>
+        </div>
+        <button onclick="closeDetailModal()" class="text-[#444651] hover:text-[#00236f] font-bold text-sm px-2">✕</button>
+      </div>
+      <div class="p-5 space-y-4 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#faf8ff] p-3 rounded-lg border border-[#e2e8f0]">
+          <div><span class="text-[#757682] font-semibold">발신자:</span> <span id="modalSender" class="font-medium text-[#131b2e]"></span></div>
+          <div><span class="text-[#757682] font-semibold">수신일:</span> <span id="modalDate" class="num-font text-[#131b2e]"></span></div>
+          <div><span class="text-[#757682] font-semibold">분류 근거:</span> <span id="modalReason" class="text-[#1e3a8a] font-medium"></span></div>
+          <div><span class="text-[#757682] font-semibold">라벨/원본:</span> <span id="modalLabels" class="text-[#444651]"></span></div>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold text-[#757682] mb-1.5">본문 요약</div>
+          <div id="modalBody" class="p-3.5 bg-white border border-[#e2e8f0] rounded-lg text-[#131b2e] leading-relaxed whitespace-pre-wrap max-h-60 overflow-y-auto"></div>
+        </div>
+      </div>
+      <div class="px-5 py-3 bg-slate-50 border-t border-[#e2e8f0] flex justify-end gap-2">
+        <button onclick="closeDetailModal()" class="px-4 py-1.5 bg-[#00236f] text-white text-xs font-bold rounded hover:bg-[#1e3a8a]">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 파일 가져오기 모달 -->
+  <div id="importModal" class="hidden fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl border border-[#cbd5e1] max-w-xl w-full overflow-hidden shadow-xl">
+      <div class="px-5 py-4 bg-[#f2f3ff] border-b border-[#cbd5e1] flex justify-between items-center">
+        <div>
+          <div class="text-[11px] font-bold text-[#1e3a8a]">IMPORT GMAIL DATA</div>
+          <h3 class="text-sm font-bold text-[#00236f] mt-0.5">구글메일 데이터 가져오기 (MBOX / CSV / JSON)</h3>
+        </div>
+        <button onclick="closeImportModal()" class="text-[#444651] hover:text-[#00236f] font-bold text-sm px-2">✕</button>
+      </div>
+      <div class="p-5 space-y-4 text-xs">
+        <p class="text-[#444651] leading-relaxed">
+          Google Takeout에서 내려받은 <code>.mbox</code> 파일이나 Gmail 목록 <code>.csv</code> / <code>.json</code> 파일을 선택하면, 브라우저 내에서 안전하게(서버 전송 없이) 최근 3개월 메일을 자동 분류합니다.
+        </p>
+        <div class="border-2 border-dashed border-[#cbd5e1] rounded-xl p-6 text-center bg-[#faf8ff]">
+          <input id="fileInput" type="file" accept=".mbox,.csv,.json,.txt" class="hidden" onchange="handleFileImport(event)">
+          <button onclick="document.getElementById('fileInput').click()" class="px-4 py-2 bg-[#00236f] text-white font-bold rounded-lg hover:bg-[#1e3a8a]">
+            파일 선택 (.mbox / .csv / .json)
+          </button>
+          <div class="text-[11px] text-[#757682] mt-2">CSV 권장 컬럼: <code>date, from, subject, snippet</code></div>
+        </div>
+        <div id="importStatus" class="hidden p-3 rounded-lg bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] font-medium"></div>
+      </div>
+      <div class="px-5 py-3 bg-slate-50 border-t border-[#e2e8f0] flex justify-end">
+        <button onclick="closeImportModal()" class="px-4 py-1.5 bg-white border border-[#cbd5e1] text-[#444651] text-xs font-bold rounded hover:bg-slate-100">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 분류 규칙 설정 모달 -->
+  <div id="rulesModal" class="hidden fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl border border-[#cbd5e1] max-w-2xl w-full overflow-hidden shadow-xl">
+      <div class="px-5 py-4 bg-[#f2f3ff] border-b border-[#cbd5e1] flex justify-between items-center">
+        <div>
+          <div class="text-[11px] font-bold text-[#1e3a8a]">CLASSIFICATION RULES</div>
+          <h3 class="text-sm font-bold text-[#00236f] mt-0.5">자동 분류 키워드 규칙 설정</h3>
+        </div>
+        <button onclick="closeRulesModal()" class="text-[#444651] hover:text-[#00236f] font-bold text-sm px-2">✕</button>
+      </div>
+      <div class="p-5 space-y-3 text-xs max-h-[65vh] overflow-y-auto" id="rulesContainer"></div>
+      <div class="px-5 py-3 bg-slate-50 border-t border-[#e2e8f0] flex justify-between items-center">
+        <button onclick="reclassifyAll()" class="px-3.5 py-1.5 bg-[#00236f] text-white text-xs font-bold rounded hover:bg-[#1e3a8a]">
+          규칙 저장 및 전체 재분류
+        </button>
+        <button onclick="closeRulesModal()" class="px-4 py-1.5 bg-white border border-[#cbd5e1] text-[#444651] text-xs font-bold rounded hover:bg-slate-100">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY_EMAILS = 'clp_email_classification_items_v1';
+    const STORAGE_KEY_RULES = 'clp_email_classification_rules_v1';
+    const STORAGE_KEY_MODE = 'clp_email_classification_mode_v1';
+
+    const CATEGORIES = ['업무/정산', '계약/세금', '시스템/보안', '뉴스레터', '기타'];
+
+    const DEFAULT_RULES = [
+      { category: '업무/정산', priority: '높음', keywords: ['정산', '미결', '병원', '원장', '대사', '발주', '납품', '출고', '반품', '할인율', '청구', '입금', '지급', '회의', '요청', '확인'] },
+      { category: '계약/세금', priority: '높음', keywords: ['세금계산서', '전자세금', '계약', '견적', '법무', '공문', '약정', '인감', '사업자', '국세청', 'hometax', 'invoice', 'contract'] },
+      { category: '시스템/보안', priority: '보통', keywords: ['보안', '인증', '비밀번호', '로그인', '알림', 'github', 'supabase', 'google', 'aws', 'alert', 'security', 'verify', 'otp'] },
+      { category: '뉴스레터', priority: '낮음', keywords: ['뉴스레터', '구독', '수신거부', '프로모션', '이벤트', '할인', '마케팅', '광고', 'newsletter', 'unsubscribe', 'digest', 'weekly'] }
+    ];
+
+    function getSampleEmails() {
+      const now = new Date();
+      const daysAgo = (d) => {
+        const dt = new Date(now.getTime() - d * 86400000);
+        return dt.toISOString().slice(0, 16).replace('T', ' ');
+      };
+      return [
+        { id: 'm1', date: daysAgo(2), sender: '서울아산병원 구매팀 <purchase@amc.example.kr>', subject: '[정산] 2026년 10월 의약품 미결 대사 내역 확인 요청', snippet: '첨부된 10월분 병원부 미결 정산 원장과 약정 할인율 차액 소명 자료를 금주 금요일까지 회신 부탁드립니다.', status: '미처리', labels: 'INBOX, IMPORTANT' },
+        { id: 'm2', date: daysAgo(5), sender: '국세청 홈택스 <noreply@hometax.go.kr>', subject: '[전자세금계산서] 발급 완료 안내 (2026-11-10)', snippet: '공급받는자용 전자세금계산서가 정상 발급되었습니다. 승인번호 및 공급가액을 확인하세요.', status: '확인중', labels: 'INBOX' },
+        { id: 'm3', date: daysAgo(9), sender: 'GitHub <notifications@github.com>', subject: '[chuanlgg-source/changhwan] GitHub Pages 배포 완료', snippet: 'main 브랜치 커밋이 GitHub Actions를 통해 정상 빌드 및 배포되었습니다.', status: '처리완료', labels: 'INBOX, UPDATES' },
+        { id: 'm4', date: daysAgo(14), sender: '삼성서울병원 약제부 <pharm@smc.example.kr>', subject: '4분기 의약품 반품 정산 승인 및 차감 내역 송부', snippet: '반품 승인 건에 대한 차감 정산 금액을 전달드립니다. 원장 반영 후 확인 바랍니다.', status: '미처리', labels: 'INBOX, IMPORTANT' },
+        { id: 'm5', date: daysAgo(21), sender: '데일리 헬스케어 <newsletter@healthnews.example.com>', subject: '[뉴스레터] 2026년 하반기 제약·유통 약가 제도 개편 요약', snippet: '이번 주 주요 보건복지부 고시 및 병원 유통 시장 동향을 정리해 드립니다. 수신거부 가능.', status: '보관', labels: 'INBOX, PROMOTIONS' },
+        { id: 'm6', date: daysAgo(33), sender: 'Google 보안 알림 <no-reply@accounts.google.com>', subject: '새 기기에서 Google 계정에 로그인됨', snippet: '새로운 환경에서 계정에 로그인되었습니다. 본인이 맞는지 확인해 주세요.', status: '처리완료', labels: 'INBOX, SECURITY' },
+        { id: 'm7', date: daysAgo(45), sender: '세브란스병원 재무팀 <finance@yuhs.example.kr>', subject: '연말 약정 할인율 갱신 계약서 날인 요청', snippet: '2027년도 공급 약정 계약서 초안과 인감 날인 일정을 안내드립니다.', status: '확인중', labels: 'INBOX' },
+        { id: 'm8', date: daysAgo(58), sender: 'Supabase <support@supabase.io>', subject: 'Monthly Usage Summary & Security Advisory', snippet: 'Your project database usage summary and authentication security best practices.', status: '보관', labels: 'INBOX, UPDATES' },
+        { id: 'm9', date: daysAgo(72), sender: '분당서울대병원 물류팀 <logi@snubh.example.kr>', subject: '긴급 발주 품목 출고 일정 및 납품 확인', snippet: '요청하신 긴급 품목의 출고 예정 시간과 검수 담당자 연락처 공유드립니다.', status: '처리완료', labels: 'INBOX' },
+        { id: 'm10', date: daysAgo(84), sender: '커리어 인사이트 <digest@career.example.com>', subject: 'Weekly Digest: 업무 생산성을 높이는 자동화 툴 모음', snippet: '구독 중인 주간 다이제스트입니다. 뉴스레터 수신 설정은 하단 링크에서 변경 가능합니다.', status: '보관', labels: 'INBOX, PROMOTIONS' }
+      ];
+    }
+
+    let rules = JSON.parse(localStorage.getItem(STORAGE_KEY_RULES) || 'null') || DEFAULT_RULES;
+    let emails = JSON.parse(localStorage.getItem(STORAGE_KEY_EMAILS) || 'null') || getSampleEmails();
+    let dataMode = localStorage.getItem(STORAGE_KEY_MODE) || 'sample';
+    let selectedCategory = '전체';
+
+    function classifyEmail(item) {
+      const text = `${item.subject || ''} ${item.sender || ''} ${item.snippet || ''} ${item.labels || ''}`.toLowerCase();
+      for (const rule of rules) {
+        for (const kw of rule.keywords) {
+          if (kw && text.includes(kw.toLowerCase())) {
+            return { category: rule.category, priority: rule.priority, reason: `키워드 일치: "${kw}"` };
+          }
+        }
+      }
+      return { category: '기타', priority: '보통', reason: '기본 분류 (일치 키워드 없음)' };
+    }
+
+    function ensureClassified() {
+      emails = emails.map(e => {
+        if (!e.category || !e.priority) {
+          const res = classifyEmail(e);
+          return { ...e, category: e.category || res.category, priority: e.priority || res.priority, reason: e.reason || res.reason };
+        }
+        return e;
+      });
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY_EMAILS, JSON.stringify(emails));
+      localStorage.setItem(STORAGE_KEY_RULES, JSON.stringify(rules));
+      localStorage.setItem(STORAGE_KEY_MODE, dataMode);
+    }
+
+    function getFilteredEmails() {
+      const periodVal = document.getElementById('periodFilter').value;
+      const statusVal = document.getElementById('statusFilter').value;
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      const now = Date.now();
+
+      return emails.filter(item => {
+        if (periodVal !== 'all') {
+          const days = parseInt(periodVal, 10);
+          const itemTime = new Date(item.date.replace(' ', 'T')).getTime();
+          if (!isNaN(itemTime) && (now - itemTime) > days * 86400000) return false;
+        }
+        if (selectedCategory !== '전체' && item.category !== selectedCategory) return false;
+        if (statusVal !== 'all' && item.status !== statusVal) return false;
+        if (q) {
+          const hay = `${item.sender} ${item.subject} ${item.snippet} ${item.category}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      }).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    }
+
+    function getPeriodEmails() {
+      const periodVal = document.getElementById('periodFilter').value;
+      const now = Date.now();
+      return emails.filter(item => {
+        if (periodVal === 'all') return true;
+        const days = parseInt(periodVal, 10);
+        const itemTime = new Date(item.date.replace(' ', 'T')).getTime();
+        return isNaN(itemTime) || (now - itemTime) <= days * 86400000;
+      });
+    }
+
+    function renderAll() {
+      ensureClassified();
+      const modeBadge = document.getElementById('dataModeBadge');
+      if (dataMode === 'imported') {
+        modeBadge.textContent = '구글메일 실데이터 연동됨';
+        modeBadge.className = 'px-2.5 py-0.5 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] text-[11px] font-bold';
+      } else {
+        modeBadge.textContent = '샘플 데이터 모드';
+        modeBadge.className = 'px-2.5 py-0.5 rounded bg-[#fffbeb] text-[#d97706] border border-[#fde68a] text-[11px] font-bold';
+      }
+
+      const periodItems = getPeriodEmails();
+      const total = periodItems.length;
+      const pending = periodItems.filter(e => (e.category === '업무/정산' || e.category === '계약/세금') && (e.status === '미처리' || e.status === '확인중')).length;
+      const done = periodItems.filter(e => e.status === '처리완료' || e.status === '보관').length;
+      const lowPrio = periodItems.filter(e => e.category === '뉴스레터' || e.priority === '낮음').length;
+
+      document.getElementById('kpiTotal').textContent = `${total} 건`;
+      document.getElementById('kpiPending').textContent = `${pending} 건`;
+      document.getElementById('kpiDone').textContent = `${done} 건`;
+      document.getElementById('kpiDoneRate').textContent = `완료율 ${total ? Math.round((done / total) * 100) : 0}%`;
+      document.getElementById('kpiLowPriority').textContent = `${lowPrio} 건`;
+
+      const catGrid = document.getElementById('categorySummaryGrid');
+      catGrid.innerHTML = CATEGORIES.map(cat => {
+        const cnt = periodItems.filter(e => e.category === cat).length;
+        const pct = total ? Math.round((cnt / total) * 100) : 0;
+        const active = selectedCategory === cat ? 'ring-2 ring-[#00236f] bg-[#f2f3ff]' : 'bg-[#faf8ff] hover:bg-[#f2f3ff]';
+        return `
+          <button onclick="selectCategory('${cat}')" class="text-left p-3 rounded-lg border border-[#cbd5e1] transition ${active}">
+            <div class="text-[11px] text-[#444651] font-semibold">${cat}</div>
+            <div class="flex items-baseline justify-between mt-1">
+              <span class="text-base font-bold num-font text-[#00236f]">${cnt}건</span>
+              <span class="text-[11px] num-font text-[#757682]">${pct}%</span>
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      const tabs = ['전체', ...CATEGORIES];
+      document.getElementById('categoryTabs').innerHTML = tabs.map(t => {
+        const isActive = selectedCategory === t;
+        const cls = isActive
+          ? 'bg-[#00236f] text-white border-[#00236f]'
+          : 'bg-white text-[#444651] border-[#cbd5e1] hover:bg-slate-50';
+        return `<button onclick="selectCategory('${t}')" class="px-3 py-1 rounded-md border text-xs font-bold transition ${cls}">${t}</button>`;
+      }).join('');
+
+      const filtered = getFilteredEmails();
+      const tbody = document.getElementById('emailTableBody');
+      const empty = document.getElementById('emptyState');
+
+      if (!filtered.length) {
+        tbody.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+
+      tbody.innerHTML = filtered.map(item => {
+        const prioBadge = item.priority === '높음'
+          ? '<span class="px-2 py-0.5 rounded bg-[#fef2f2] text-[#dc2626] border border-[#fecaca] text-[10px] font-bold">높음</span>'
+          : item.priority === '보통'
+            ? '<span class="px-2 py-0.5 rounded bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe] text-[10px] font-bold">보통</span>'
+            : '<span class="px-2 py-0.5 rounded bg-slate-100 text-[#444651] border border-slate-200 text-[10px] font-bold">낮음</span>';
+
+        const catOptions = CATEGORIES.map(c => `<option value="${c}" ${item.category === c ? 'selected' : ''}>${c}</option>`).join('');
+        const statusOptions = ['미처리', '확인중', '처리완료', '보관'].map(s => `<option value="${s}" ${item.status === s ? 'selected' : ''}>${s}</option>`).join('');
+
+        return `
+          <tr class="ledger-row hover:bg-[#f2f3ff]/60 transition">
+            <td class="px-3 py-2 num-font text-[11px] text-[#444651] whitespace-nowrap">${escapeHtml(item.date)}</td>
+            <td class="px-3 py-2">
+              <select onchange="updateItemField('${item.id}', 'category', this.value)" class="px-2 py-1 rounded border border-[#cbd5e1] bg-white text-[11px] font-semibold text-[#1e3a8a]">
+                ${catOptions}
+              </select>
+            </td>
+            <td class="px-3 py-2 text-center">${prioBadge}</td>
+            <td class="px-3 py-2 text-[11px] font-medium text-[#131b2e] truncate max-w-[190px]" title="${escapeHtml(item.sender)}">${escapeHtml(item.sender)}</td>
+            <td class="px-3 py-2 cursor-pointer" onclick="openDetail('${item.id}')">
+              <div class="font-semibold text-[#00236f] hover:underline truncate max-w-md">${escapeHtml(item.subject)}</div>
+              <div class="text-[11px] text-[#757682] truncate max-w-md">${escapeHtml(item.snippet)}</div>
+            </td>
+            <td class="px-3 py-2 text-center">
+              <select onchange="updateItemField('${item.id}', 'status', this.value)" class="px-2 py-1 rounded border border-[#cbd5e1] bg-white text-[11px] font-bold">
+                ${statusOptions}
+              </select>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function selectCategory(cat) {
+      selectedCategory = cat;
+      renderAll();
+    }
+
+    function updateItemField(id, field, val) {
+      emails = emails.map(e => e.id === id ? { ...e, [field]: val } : e);
+      saveState();
+      renderAll();
+    }
+
+    function bulkArchiveNewsletters() {
+      emails = emails.map(e => (e.category === '뉴스레터' || e.category === '기타') && e.status === '미처리' ? { ...e, status: '보관' } : e);
+      saveState();
+      renderAll();
+    }
+
+    function openDetail(id) {
+      const item = emails.find(e => e.id === id);
+      if (!item) return;
+      document.getElementById('modalSubject').textContent = item.subject;
+      document.getElementById('modalSender').textContent = item.sender;
+      document.getElementById('modalDate').textContent = item.date;
+      document.getElementById('modalReason').textContent = item.reason || '수동 분류';
+      document.getElementById('modalLabels').textContent = item.labels || '-';
+      document.getElementById('modalBody').textContent = item.snippet || '(본문 요약 없음)';
+      document.getElementById('detailModal').classList.remove('hidden');
+    }
+
+    function closeDetailModal() { document.getElementById('detailModal').classList.add('hidden'); }
+    function openImportModal() { document.getElementById('importModal').classList.remove('hidden'); }
+    function closeImportModal() { document.getElementById('importModal').classList.add('hidden'); }
+
+    function openRulesModal() {
+      const container = document.getElementById('rulesContainer');
+      container.innerHTML = rules.map((r, idx) => `
+        <div class="p-3 bg-[#faf8ff] border border-[#cbd5e1] rounded-lg space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-[#00236f]">${r.category}</span>
+            <span class="text-[11px] text-[#757682]">기본 중요도: <strong>${r.priority}</strong></span>
+          </div>
+          <input id="ruleInput_${idx}" type="text" value="${escapeHtml(r.keywords.join(', '))}" class="w-full px-3 py-1.5 bg-white border border-[#cbd5e1] rounded text-xs" placeholder="쉼표(,)로 키워드 구분">
+        </div>
+      `).join('');
+      document.getElementById('rulesModal').classList.remove('hidden');
+    }
+    function closeRulesModal() { document.getElementById('rulesModal').classList.add('hidden'); }
+
+    function reclassifyAll() {
+      rules = rules.map((r, idx) => {
+        const raw = document.getElementById(`ruleInput_${idx}`).value;
+        return { ...r, keywords: raw.split(',').map(s => s.trim()).filter(Boolean) };
+      });
+      emails = emails.map(e => {
+        const res = classifyEmail(e);
+        return { ...e, category: res.category, priority: res.priority, reason: res.reason };
+      });
+      saveState();
+      closeRulesModal();
+      renderAll();
+    }
+
+    function resetToSample() {
+      dataMode = 'sample';
+      emails = getSampleEmails();
+      ensureClassified();
+      saveState();
+      renderAll();
+    }
+
+    function handleFileImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target.result;
+        let parsed = [];
+        try {
+          if (file.name.endsWith('.json')) {
+            const raw = JSON.parse(content);
+            const arr = Array.isArray(raw) ? raw : (raw.messages || raw.emails || []);
+            parsed = arr.map((m, i) => ({
+              id: m.id || `imp_${Date.now()}_${i}`,
+              date: normalizeDate(m.date || m.receivedAt || m.internalDate),
+              sender: m.sender || m.from || '알 수 없음',
+              subject: m.subject || '(제목 없음)',
+              snippet: m.snippet || m.body || '',
+              status: m.status || '미처리',
+              labels: m.labels || 'GMAIL'
+            }));
+          } else if (file.name.endsWith('.csv')) {
+            parsed = parseCSV(content);
+          } else {
+            parsed = parseMBOX(content);
+          }
+
+          if (!parsed.length) {
+            alert('가져올 수 있는 메일 데이터를 찾지 못했습니다.');
+            return;
+          }
+
+          emails = parsed.map(item => {
+            const res = classifyEmail(item);
+            return { ...item, category: res.category, priority: res.priority, reason: res.reason };
+          });
+          dataMode = 'imported';
+          saveState();
+          renderAll();
+          const st = document.getElementById('importStatus');
+          st.textContent = `✓ 총 ${emails.length}건의 메일을 성공적으로 가져와 자동 분류했습니다.`;
+          st.classList.remove('hidden');
+        } catch (err) {
+          alert('파일 파싱 중 오류가 발생했습니다: ' + err.message);
+        }
+      };
+      reader.readAsText(file, 'utf-8');
+    }
+
+    function normalizeDate(val) {
+      if (!val) return new Date().toISOString().slice(0, 16).replace('T', ' ');
+      const d = new Date(isNaN(val) ? val : Number(val));
+      if (isNaN(d.getTime())) return String(val).slice(0, 16);
+      return d.toISOString().slice(0, 16).replace('T', ' ');
+    }
+
+    function parseCSV(text) {
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) return [];
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+      const idx = (names) => headers.findIndex(h => names.some(n => h.includes(n)));
+      const iDate = idx(['date', '수신', 'time']);
+      const iFrom = idx(['from', 'sender', '발신']);
+      const iSubj = idx(['subject', '제목']);
+      const iBody = idx(['snippet', 'body', '요약', '내용']);
+      return lines.slice(1).map((line, i) => {
+        const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.trim().replace(/^"|"$/g, ''));
+        return {
+          id: `csv_${Date.now()}_${i}`,
+          date: normalizeDate(iDate >= 0 ? cols[iDate] : ''),
+          sender: iFrom >= 0 ? cols[iFrom] : '알 수 없음',
+          subject: iSubj >= 0 ? cols[iSubj] : '(제목 없음)',
+          snippet: iBody >= 0 ? cols[iBody] : '',
+          status: '미처리',
+          labels: 'CSV'
+        };
+      });
+    }
+
+    function parseMBOX(text) {
+      const blocks = text.split(/^From /m).filter(b => b.trim());
+      return blocks.slice(0, 2000).map((block, i) => {
+        const getHeader = (name) => {
+          const m = block.match(new RegExp(`^${name}:\\s*(.+(?:\\r?\\n[ \\t].+)*)`, 'im'));
+          return m ? m[1].replace(/\r?\n[ \t]+/g, ' ').trim() : '';
+        };
+        const bodyIdx = block.search(/\r?\n\r?\n/);
+        const snippet = bodyIdx >= 0 ? block.slice(bodyIdx + 2, bodyIdx + 300).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : '';
+        return {
+          id: `mbox_${Date.now()}_${i}`,
+          date: normalizeDate(getHeader('Date')),
+          sender: getHeader('From') || '알 수 없음',
+          subject: getHeader('Subject') || '(제목 없음)',
+          snippet,
+          status: '미처리',
+          labels: getHeader('X-Gmail-Labels') || 'MBOX'
+        };
+      });
+    }
+
+    function exportCSV() {
+      const rows = getFilteredEmails();
+      const esc = (v) => `"${String(v || '').replace(/"/g, '""')}"`;
+      const csv = [
+        ['수신일시', '분류', '중요도', '발신자', '제목', '요약', '처리상태'].join(','),
+        ...rows.map(r => [r.date, r.category, r.priority, r.sender, r.subject, r.snippet, r.status].map(esc).join(','))
+      ].join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `email-classification-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]));
+    }
+
+    ensureClassified();
+    renderAll();
+  </script>
+</body>
+</html>

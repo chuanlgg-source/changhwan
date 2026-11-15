@@ -37,6 +37,16 @@
           "badgeColor": "amber",
           "role": "all",
           "description": "약정 할인율 및 사후 정산 차액 항목별 소명 추적 관리"
+        },
+        {
+          "id": "email-classification",
+          "title": "E-Mail 분류",
+          "type": "iframe",
+          "url": "email-classification.html",
+          "badge": "메일정리",
+          "badgeColor": "blue",
+          "role": "all",
+          "description": "최근 3개월간 수신한 구글메일(Gmail) 자동 분류 및 처리 상태 정리"
         }
       ]
     },
