@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>예/적금 시뮬레이터 | 3년·5년 자산 성장 계산기</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #faf8ff;
+      color: #131b2e;
+    }
+    .font-headline { font-family: 'Plus Jakarta Sans', 'Pretendard', sans-serif; }
+    .num-font { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    .card-hover { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -6px rgba(0, 35, 111, 0.12); }
+    input[type="range"] {
+      accent-color: #00236f;
+    }
+  </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+
+  <!-- Top Header -->
+  <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-5 border-b border-[#cbd5e1]">
+    <div>
+      <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#1e3a8a]/10 border border-[#1e3a8a]/20 text-[#00236f] text-[11px] font-bold mb-2">
+        <span class="w-2 h-2 rounded-full bg-[#10b981]"></span>
+        <span>DEPOSIT &amp; DAILY SAVINGS SIMULATOR</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold font-headline text-[#00236f] tracking-tight">
+        예/적금 자산 성장 시뮬레이터
+      </h1>
+      <p class="text-xs sm:text-sm text-[#444651] mt-1">
+        일시 예금 또는 매일 일정 금액 저축 시, 연 <span class="font-bold text-[#00236f]">n%</span> 자산 증가 가정 하에 <span class="font-bold text-[#00236f]">3년 후 · 5년 후</span> 예상 자산을 시뮬레이션합니다.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <button onclick="resetDefaults()"
+        class="px-3.5 py-2 bg-white hover:bg-[#f1f5f9] text-[#00236f] border border-[#cbd5e1] rounded-lg text-xs font-bold shadow-sm transition cursor-pointer">
+        ↺ 기본값 초기화
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Left: Input Controls (5 cols) -->
+    <section class="lg:col-span-5 space-y-5">
+      <div class="bg-white rounded-2xl border border-[#cbd5e1] p-5 sm:p-6 shadow-sm space-y-5">
+
+        <!-- Mode Selector -->
+        <div>
+          <label class="block text-xs font-bold text-[#444651] mb-2">저축 방식 선택</label>
+          <div class="grid grid-cols-3 gap-1.5 p-1 bg-[#f1f5f9] rounded-xl border border-[#e2e8f0]">
+            <button type="button" onclick="setMode('deposit')" id="mode-deposit"
+              class="py-2 px-2 rounded-lg text-xs font-bold transition cursor-pointer">
+              💰 일시 예금
+            </button>
+            <button type="button" onclick="setMode('daily')" id="mode-daily"
+              class="py-2 px-2 rounded-lg text-xs font-bold transition cursor-pointer">
+              📅 매일 저축
+            </button>
+            <button type="button" onclick="setMode('both')" id="mode-both"
+              class="py-2 px-2 rounded-lg text-xs font-bold transition cursor-pointer">
+              ✨ 예금+매일
+            </button>
+          </div>
+        </div>
+
+        <!-- Deposit Input -->
+        <div id="wrap-deposit" class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label for="input-deposit" class="text-xs font-bold text-[#00236f]">초기 예금 금액 (거치금)</label>
+            <span id="label-deposit-kr" class="text-[11px] font-bold text-[#2563eb]">1,000만원</span>
+          </div>
+          <div class="relative">
+            <input type="text" id="input-deposit" value="10,000,000" inputmode="numeric"
+              oninput="handleCurrencyInput(this, 'deposit')"
+              class="w-full pr-10 pl-4 py-2.5 bg-[#faf8ff] border border-[#cbd5e1] rounded-xl text-sm font-bold num-font text-[#131b2e] focus:outline-none focus:border-[#00236f] focus:ring-2 focus:ring-[#00236f]/10" />
+            <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#757682]">원</span>
+          </div>
+          <div class="flex flex-wrap gap-1.5 pt-0.5">
+            <button type="button" onclick="addDeposit(1000000)" class="px-2.5 py-1 bg-[#f8fafc] hover:bg-[#eff6ff] border border-[#e2e8f0] hover:border-[#bfdbfe] rounded-md text-[11px] font-semibold text-[#334155] cursor-pointer">+100만</button>
+            <button type="button" onclick="addDeposit(5000000)" class="px-2.5 py-1 bg-[#f8fafc] hover:bg-[#eff6ff] border border-[#e2e8f0] hover:border-[#bfdbfe] rounded-md text-[11px] font-semibold text-[#334155] cursor-pointer">+500만</button>
+            <button type="button" onclick="addDeposit(10000000)" class="px-2.5 py-1 bg-[#f8fafc] hover:bg-[#eff6ff] border border-[#e2e8f0] hover:border-[#bfdbfe] rounded-md text-[11px] font-semibold text-[#334155] cursor-pointer">+1,000만</button>
+            <button type="button" onclick="addDeposit(50000000)" class="px-2.5 py-1 bg-[#f8fafc] hover:bg-[#eff6ff] border border-[#e2e8f0] hover:border-[#bfdbfe] rounded-md text-[11px] font-semibold text-[#334155] cursor-pointer">+5,000만</button>
+            <button type="button" onclick="setDeposit(0)" class="px-2.5 py-1 bg-[#fef2f2] hover:bg-[#fee2e2] border border-[#fecaca] rounded-md text-[11px] font-semibold text-[#dc2626] cursor-pointer">0원</button>
+          </div>
+        </div>
+
+        <!-- Daily Savings Input -->
+        <div id="wrap-daily" class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label for="input-daily" class="text-xs font-bold text-[#00236f]">매일 저축 금액 (1일 기준)</label>
+            <span id="label-daily-monthly" class="text-[11px] font-bold text-[#059669]">월 약 91만 2,500원</span>
+          </div>
+          <div class="relative">
+            <input type="text" id="input-daily" value="30,000" inputmode="numeric"
+              oninput="handleCurrencyInput(this, 'daily')"
+              class="w-full pr-14 pl-4 py-2.5 bg-[#faf8ff] border border-[#cbd5e1] rounded-xl text-sm font-bold num-font text-[#131b2e] focus:outline-none focus:border-[#00236f] focus:ring-2 focus:ring-[#00236f]/10" />
+            <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#757682]">원/일</span>
+          </div>
+          <div class="flex flex-wrap gap-1.5 pt-0.5">
+            <button type="button" onclick="setDaily(10000)" class="px-2.5 py-1 bg-[#f8fafc] hover:bg-[#ecfdf5] border border-[#e2e8f0] hover:border-[#a7f3d0] rounded-md text-[11px] font-semibold text-[#334155] cursor-pointer">1만원/일</button>
+            <button type="button" onclick="setDaily(20000)" class="px-2.5 py-1 bg-[#f8fafc] hover:bg-[#ecfdf5] border border-[#e2e8f0] hover:border-[#a7f3d0] rounded-md text-[11px] font-semibold text-[#334155] cursor-pointer">2만원/일</button>
+            <button type="button" onclick="setDaily(30000)" class="px-2.5 py-1 bg-[#f8fafc] hover:bg-[#ecfdf5] border border-[#e2e8f0] hover:border-[#a7f3d0] rounded-md text-[11px] font-semibold text-[#334155] cursor-pointer">3만원/일</button>
+            <button type="button" onclick="setDaily(50000)" class="px-2.5 py-1 bg-[#f8fafc] hover:bg-[#ecfdf5] border border-[#e2e8f0] hover:border-[#a7f3d0] rounded-md text-[11px] font-semibold text-[#334155] cursor-pointer">5만원/일</button>
+            <button type="button" onclick="setDaily(100000)" class="px-2.5 py-1 bg-[#f8fafc] hover:bg-[#ecfdf5] border border-[#e2e8f0] hover:border-[#a7f3d0] rounded-md text-[11px] font-semibold text-[#334155] cursor-pointer">10만원/일</button>
+          </div>
+        </div>
+
+        <!-- Annual Return Rate -->
+        <div class="space-y-2 pt-2 border-t border-[#f1f5f9]">
+          <div class="flex items-center justify-between">
+            <label for="input-rate" class="text-xs font-bold text-[#00236f]">연 자산 증가율 (수익률 / 이율)</label>
+            <div class="flex items-center gap-1">
+              <input type="number" id="input-rate" value="5.0" min="0" max="50" step="0.1"
+                oninput="syncRateFromInput(this.value)"
+                class="w-20 px-2.5 py-1 bg-[#faf8ff] border border-[#cbd5e1] rounded-lg text-sm font-bold num-font text-right text-[#00236f] focus:outline-none focus:border-[#00236f]" />
+              <span class="text-xs font-bold text-[#444651]">%</span>
+            </div>
+          </div>
+          <input type="range" id="range-rate" min="0" max="20" step="0.1" value="5.0"
+            oninput="syncRateFromRange(this.value)"
+            class="w-full h-2 bg-[#e2e8f0] rounded-lg cursor-pointer" />
+          <div class="flex flex-wrap gap-1.5">
+            <button type="button" onclick="setRate(3.5)" class="px-2.5 py-1 bg-[#f8fafc] hover:bg-[#eff6ff] border border-[#e2e8f0] rounded-md text-[11px] font-semibold text-[#334155] cursor-pointer">예적금 3.5%</button>
+            <button type="button" onclick="setRate(5.0)" class="px-2.5 py-1 bg-[#f8fafc] hover:bg-[#eff6ff] border border-[#e2e8f0] rounded-md text-[11px] font-semibold text-[#334155] cursor-pointer">채권/배당 5.0%</button>
+            <button type="button" onclick="setRate(8.0)" class="px-2.5 py-1 bg-[#f8fafc] hover:bg-[#eff6ff] border border-[#e2e8f0] rounded-md text-[11px] font-semibold text-[#334155] cursor-pointer">지수투자 8.0%</button>
+            <button type="button" onclick="setRate(12.0)" class="px-2.5 py-1 bg-[#f8fafc] hover:bg-[#eff6ff] border border-[#e2e8f0] rounded-md text-[11px] font-semibold text-[#334155] cursor-pointer">고성장 12.0%</button>
+          </div>
+        </div>
+
+        <!-- Compounding & Tax Options -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-[#f1f5f9]">
+          <div>
+            <label for="select-compound" class="block text-[11px] font-bold text-[#444651] mb-1">이자/수익 계산 방식</label>
+            <select id="select-compound" onchange="calculateAndRender()"
+              class="w-full px-3 py-2 bg-[#faf8ff] border border-[#cbd5e1] rounded-lg text-xs font-semibold text-[#131b2e] focus:outline-none focus:border-[#00236f]">
+              <option value="compound" selected>연 n% 복리 (일/월 환산 복리)</option>
+              <option value="simple">연 n% 단리 (원금 기준)</option>
+            </select>
+          </div>
+          <div>
+            <label for="select-tax" class="block text-[11px] font-bold text-[#444651] mb-1">세금 적용 기준</label>
+            <select id="select-tax" onchange="calculateAndRender()"
+              class="w-full px-3 py-2 bg-[#faf8ff] border border-[#cbd5e1] rounded-lg text-xs font-semibold text-[#131b2e] focus:outline-none focus:border-[#00236f]">
+              <option value="0" selected>세전 / 비과세 (0%)</option>
+              <option value="0.154">일반과세 (15.4%)</option>
+              <option value="0.095">세금우대 (9.5%)</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Calculation Formula Note -->
+      <div class="bg-[#f2f3ff] border border-[#cbd5e1] rounded-xl p-4 text-[11px] text-[#444651] leading-relaxed">
+        <div class="font-bold text-[#00236f] mb-1">📐 시뮬레이션 계산 기준</div>
+        <ul class="list-disc pl-4 space-y-0.5">
+          <li>1년 = <strong>365일</strong> 기준으로 매일 저축액을 반영합니다.</li>
+          <li><strong>복리 기준</strong>: 일 수익률 <code>(1 + r)<sup>1/365</sup> - 1</code>을 매일 복리 적용하여 1년 뒤 거치 원금이 정확히 연 <code>n%</code> 성장하도록 계산합니다.</li>
+          <li><strong>단리 기준</strong>: 누적 납입 원금에 대해 보유 일수 비율만큼 연 <code>n%</code> 단리 이자를 합산합니다.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Right: Results & Chart (7 cols) -->
+    <section class="lg:col-span-7 space-y-5">
+
+      <!-- Highlight Cards: 3년 후 & 5년 후 -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- 3 Years Card -->
+        <div class="bg-white rounded-2xl border-2 border-[#bfdbfe] p-5 shadow-sm card-hover relative overflow-hidden">
+          <div class="flex items-center justify-between mb-2">
+            <span class="px-2.5 py-0.5 rounded-full bg-[#eff6ff] text-[#1d4ed8] border border-[#bfdbfe] text-[11px] font-extrabold">
+              3년 후 (36개월)
+            </span>
+            <span id="res-3y-roi" class="text-xs font-extrabold num-font text-[#059669]">+0.0%</span>
+          </div>
+          <div id="res-3y-total" class="text-2xl sm:text-3xl font-extrabold num-font text-[#00236f] tracking-tight">0원</div>
+          <div id="res-3y-kr" class="text-xs font-bold text-[#444651] mt-0.5 mb-3">0원</div>
+          <div class="pt-3 border-t border-[#f1f5f9] space-y-1.5 text-xs">
+            <div class="flex justify-between">
+              <span class="text-[#757682]">총 납입 원금</span>
+              <span id="res-3y-principal" class="font-bold num-font text-[#131b2e]">0원</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[#757682]">예상 수익 (세후)</span>
+              <span id="res-3y-profit" class="font-bold num-font text-[#059669]">+0원</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5 Years Card -->
+        <div class="bg-gradient-to-br from-[#00236f] to-[#1e3a8a] text-white rounded-2xl p-5 shadow-md card-hover relative overflow-hidden">
+          <div class="flex items-center justify-between mb-2">
+            <span class="px-2.5 py-0.5 rounded-full bg-white/15 text-white border border-white/25 text-[11px] font-extrabold">
+              5년 후 (60개월) ★
+            </span>
+            <span id="res-5y-roi" class="text-xs font-extrabold num-font text-[#6ee7b7]">+0.0%</span>
+          </div>
+          <div id="res-5y-total" class="text-2xl sm:text-3xl font-extrabold num-font text-white tracking-tight">0원</div>
+          <div id="res-5y-kr" class="text-xs font-bold text-blue-100 mt-0.5 mb-3">0원</div>
+          <div class="pt-3 border-t border-white/15 space-y-1.5 text-xs">
+            <div class="flex justify-between">
+              <span class="text-blue-200">총 납입 원금</span>
+              <span id="res-5y-principal" class="font-bold num-font text-white">0원</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-blue-200">예상 수익 (세후)</span>
+              <span id="res-5y-profit" class="font-bold num-font text-[#6ee7b7]">+0원</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Reference Mini Bar: 1년 / 10년 -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-white rounded-xl border border-[#cbd5e1] px-4 py-3 flex items-center justify-between">
+          <div>
+            <div class="text-[11px] font-bold text-[#757682]">1년 후 참고</div>
+            <div id="res-1y-total" class="text-sm font-extrabold num-font text-[#131b2e]">0원</div>
+          </div>
+          <div id="res-1y-profit" class="text-[11px] font-bold num-font text-[#059669]">+0원</div>
+        </div>
+        <div class="bg-white rounded-xl border border-[#cbd5e1] px-4 py-3 flex items-center justify-between">
+          <div>
+            <div class="text-[11px] font-bold text-[#757682]">10년 장기 복리 참고</div>
+            <div id="res-10y-total" class="text-sm font-extrabold num-font text-[#00236f]">0원</div>
+          </div>
+          <div id="res-10y-profit" class="text-[11px] font-bold num-font text-[#059669]">+0원</div>
+        </div>
+      </div>
+
+      <!-- Chart Card -->
+      <div class="bg-white rounded-2xl border border-[#cbd5e1] p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 class="text-sm font-extrabold font-headline text-[#00236f]">연차별 자산 성장 추이 (1년 ~ 5년)</h2>
+            <p class="text-[11px] text-[#757682]">납입 원금과 누적 수익(이자)의 연도별 증가 비교</p>
+          </div>
+          <div class="flex items-center gap-3 text-[11px] font-semibold">
+            <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[#1e3a8a]"></span>납입 원금</span>
+            <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[#10b981]"></span>예상 수익</span>
+          </div>
+        </div>
+        <div class="h-64">
+          <canvas id="growthChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Yearly Breakdown Table -->
+      <div class="bg-white rounded-2xl border border-[#cbd5e1] overflow-hidden shadow-sm">
+        <div class="px-5 py-3.5 border-b border-[#e2e8f0] flex items-center justify-between">
+          <h2 class="text-sm font-extrabold font-headline text-[#00236f]">연차별 상세 시뮬레이션 내역</h2>
+          <span class="text-[11px] font-semibold text-[#757682]">단위: 원</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-right">
+            <thead class="bg-[#f8fafc] text-[#444651] border-b border-[#e2e8f0]">
+              <tr>
+                <th class="py-2.5 px-4 text-left font-bold">경과 기간</th>
+                <th class="py-2.5 px-4 font-bold">누적 납입 원금</th>
+                <th class="py-2.5 px-4 font-bold">누적 수익 (세후)</th>
+                <th class="py-2.5 px-4 font-bold">예상 총자산</th>
+                <th class="py-2.5 px-4 font-bold">수익률</th>
+              </tr>
+            </thead>
+            <tbody id="yearly-table-body" class="divide-y divide-[#f1f5f9]">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <script>
+    let currentMode = 'both'; // 'deposit' | 'daily' | 'both'
+    let depositAmount = 10000000;
+    let dailyAmount = 30000;
+    let annualRate = 5.0;
+    let growthChart = null;
+
+    function formatNumber(n) {
+      return Math.round(n).toLocaleString('ko-KR');
+    }
+
+    function formatKoreanUnit(n) {
+      const num = Math.round(n);
+      if (num === 0) return '0원';
+      const eok = Math.floor(num / 100000000);
+      const man = Math.floor((num % 100000000) / 10000);
+      const rest = num % 10000;
+      const parts = [];
+      if (eok > 0) parts.push(`${eok.toLocaleString('ko-KR')}억`);
+      if (man > 0) parts.push(`${man.toLocaleString('ko-KR')}만`);
+      if (eok === 0 && rest > 0) parts.push(`${rest.toLocaleString('ko-KR')}`);
+      return parts.join(' ') + '원';
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      ['deposit', 'daily', 'both'].forEach(m => {
+        const btn = document.getElementById(`mode-${m}`);
+        if (m === mode) {
+          btn.className = 'py-2 px-2 rounded-lg text-xs font-bold transition cursor-pointer bg-[#00236f] text-white shadow-sm';
+        } else {
+          btn.className = 'py-2 px-2 rounded-lg text-xs font-bold transition cursor-pointer text-[#444651] hover:text-[#00236f]';
+        }
+      });
+
+      const wrapDeposit = document.getElementById('wrap-deposit');
+      const wrapDaily = document.getElementById('wrap-daily');
+      if (mode === 'deposit') {
+        wrapDeposit.classList.remove('hidden');
+        wrapDaily.classList.add('hidden');
+      } else if (mode === 'daily') {
+        wrapDeposit.classList.add('hidden');
+        wrapDaily.classList.remove('hidden');
+      } else {
+        wrapDeposit.classList.remove('hidden');
+        wrapDaily.classList.remove('hidden');
+      }
+      calculateAndRender();
+    }
+
+    function handleCurrencyInput(el, type) {
+      const raw = el.value.replace(/[^0-9]/g, '');
+      const val = raw ? parseInt(raw, 10) : 0;
+      if (type === 'deposit') {
+        depositAmount = val;
+      } else {
+        dailyAmount = val;
+      }
+      el.value = val ? val.toLocaleString('ko-KR') : '0';
+      calculateAndRender();
+    }
+
+    function addDeposit(delta) {
+      depositAmount = Math.max(0, depositAmount + delta);
+      document.getElementById('input-deposit').value = depositAmount.toLocaleString('ko-KR');
+      calculateAndRender();
+    }
+
+    function setDeposit(val) {
+      depositAmount = val;
+      document.getElementById('input-deposit').value = depositAmount.toLocaleString('ko-KR');
+      calculateAndRender();
+    }
+
+    function setDaily(val) {
+      dailyAmount = val;
+      document.getElementById('input-daily').value = dailyAmount.toLocaleString('ko-KR');
+      calculateAndRender();
+    }
+
+    function syncRateFromRange(val) {
+      annualRate = parseFloat(val) || 0;
+      document.getElementById('input-rate').value = annualRate.toFixed(1);
+      calculateAndRender();
+    }
+
+    function syncRateFromInput(val) {
+      let parsed = parseFloat(val);
+      if (isNaN(parsed) || parsed < 0) parsed = 0;
+      if (parsed > 50) parsed = 50;
+      annualRate = parsed;
+      document.getElementById('range-rate').value = Math.min(20, annualRate);
+      calculateAndRender();
+    }
+
+    function setRate(val) {
+      annualRate = val;
+      document.getElementById('input-rate').value = val.toFixed(1);
+      document.getElementById('range-rate').value = Math.min(20, val);
+      calculateAndRender();
+    }
+
+    function resetDefaults() {
+      depositAmount = 10000000;
+      dailyAmount = 30000;
+      annualRate = 5.0;
+      document.getElementById('input-deposit').value = depositAmount.toLocaleString('ko-KR');
+      document.getElementById('input-daily').value = dailyAmount.toLocaleString('ko-KR');
+      document.getElementById('input-rate').value = '5.0';
+      document.getElementById('range-rate').value = '5.0';
+      document.getElementById('select-compound').value = 'compound';
+      document.getElementById('select-tax').value = '0';
+      setMode('both');
+    }
+
+    function simulateYears(years, initDep, dailySave, ratePct, method, taxRate) {
+      const r = ratePct / 100;
+      const totalDays = years * 365;
+      let principal = initDep;
+      let balance = initDep;
+      let grossProfit = 0;
+
+      if (method === 'compound') {
+        const dailyFactor = Math.pow(1 + r, 1 / 365);
+        for (let d = 1; d <= totalDays; d++) {
+          balance = balance * dailyFactor;
+          if (dailySave > 0) {
+            balance += dailySave;
+            principal += dailySave;
+          }
+        }
+        grossProfit = balance - principal;
+      } else {
+        // Simple interest: initial deposit earns r * years; each daily deposit earns r * (remainingDays / 365)
+        const depInterest = initDep * r * years;
+        let dailyInterest = 0;
+        if (dailySave > 0) {
+          // Sum of (totalDays - d) for d = 1..totalDays = totalDays*(totalDays - 1)/2
+          // Assuming deposit at end of each day d (same as compound loop above)
+          const sumRemainingDays = (totalDays * (totalDays - 1)) / 2;
+          dailyInterest = dailySave * r * (sumRemainingDays / 365);
+          principal += dailySave * totalDays;
+        }
+        grossProfit = depInterest + dailyInterest;
+      }
+
+      const netProfit = grossProfit * (1 - taxRate);
+      const total = principal + netProfit;
+      const roi = principal > 0 ? (netProfit / principal) * 100 : 0;
+
+      return { years, principal, profit: netProfit, total, roi };
+    }
+
+    function calculateAndRender() {
+      const initDep = currentMode === 'daily' ? 0 : depositAmount;
+      const dailySave = currentMode === 'deposit' ? 0 : dailyAmount;
+      const method = document.getElementById('select-compound').value;
+      const taxRate = parseFloat(document.getElementById('select-tax').value) || 0;
+
+      document.getElementById('label-deposit-kr').innerText = formatKoreanUnit(depositAmount);
+      document.getElementById('label-daily-monthly').innerText = `월 약 ${formatNumber(dailyAmount * (365 / 12))}원`;
+
+      const y1 = simulateYears(1, initDep, dailySave, annualRate, method, taxRate);
+      const y2 = simulateYears(2, initDep, dailySave, annualRate, method, taxRate);
+      const y3 = simulateYears(3, initDep, dailySave, annualRate, method, taxRate);
+      const y4 = simulateYears(4, initDep, dailySave, annualRate, method, taxRate);
+      const y5 = simulateYears(5, initDep, dailySave, annualRate, method, taxRate);
+      const y10 = simulateYears(10, initDep, dailySave, annualRate, method, taxRate);
+
+      // Update 3-year card
+      document.getElementById('res-3y-total').innerText = `${formatNumber(y3.total)}원`;
+      document.getElementById('res-3y-kr').innerText = formatKoreanUnit(y3.total);
+      document.getElementById('res-3y-principal').innerText = `${formatNumber(y3.principal)}원`;
+      document.getElementById('res-3y-profit').innerText = `+${formatNumber(y3.profit)}원`;
+      document.getElementById('res-3y-roi').innerText = `+${y3.roi.toFixed(1)}%`;
+
+      // Update 5-year card
+      document.getElementById('res-5y-total').innerText = `${formatNumber(y5.total)}원`;
+      document.getElementById('res-5y-kr').innerText = formatKoreanUnit(y5.total);
+      document.getElementById('res-5y-principal').innerText = `${formatNumber(y5.principal)}원`;
+      document.getElementById('res-5y-profit').innerText = `+${formatNumber(y5.profit)}원`;
+      document.getElementById('res-5y-roi').innerText = `+${y5.roi.toFixed(1)}%`;
+
+      // Update 1y & 10y mini cards
+      document.getElementById('res-1y-total').innerText = formatKoreanUnit(y1.total);
+      document.getElementById('res-1y-profit').innerText = `+${formatNumber(y1.profit)}원`;
+      document.getElementById('res-10y-total').innerText = formatKoreanUnit(y10.total);
+      document.getElementById('res-10y-profit').innerText = `+${formatNumber(y10.profit)}원`;
+
+      // Render Table
+      const rows = [y1, y2, y3, y4, y5, y10];
+      const tbody = document.getElementById('yearly-table-body');
+      tbody.innerHTML = rows.map(row => {
+        const isHighlight = row.years === 3 || row.years === 5;
+        const badge = row.years === 5
+          ? '<span class="ml-1.5 px-1.5 py-0.5 rounded bg-[#00236f] text-white text-[10px] font-bold">5년 목표</span>'
+          : (row.years === 3 ? '<span class="ml-1.5 px-1.5 py-0.5 rounded bg-[#eff6ff] text-[#1d4ed8] border border-[#bfdbfe] text-[10px] font-bold">3년</span>' : '');
+        return `
+          <tr class="${isHighlight ? 'bg-[#faf8ff] font-bold' : 'hover:bg-[#f8fafc]'}">
+            <td class="py-2.5 px-4 text-left text-[#00236f] font-bold">${row.years}년 후${badge}</td>
+            <td class="py-2.5 px-4 num-font text-[#444651]">${formatNumber(row.principal)}원</td>
+            <td class="py-2.5 px-4 num-font text-[#059669]">+${formatNumber(row.profit)}원</td>
+            <td class="py-2.5 px-4 num-font text-[#00236f] font-extrabold">${formatNumber(row.total)}원</td>
+            <td class="py-2.5 px-4 num-font text-[#1e3a8a]">+${row.roi.toFixed(1)}%</td>
+          </tr>
+        `;
+      }).join('');
+
+      // Render Chart (1y ~ 5y)
+      const chartData = [y1, y2, y3, y4, y5];
+      const ctx = document.getElementById('growthChart').getContext('2d');
+      if (growthChart) growthChart.destroy();
+
+      growthChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: chartData.map(d => `${d.years}년 후`),
+          datasets: [
+            {
+              label: '납입 원금',
+              data: chartData.map(d => Math.round(d.principal)),
+              backgroundColor: '#1e3a8a',
+              borderRadius: { bottomLeft: 6, bottomRight: 6 }
+            },
+            {
+              label: '예상 수익',
+              data: chartData.map(d => Math.round(d.profit)),
+              backgroundColor: '#10b981',
+              borderRadius: { topLeft: 6, topRight: 6 }
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${formatNumber(ctx.parsed.y)}원`,
+                afterBody: (items) => {
+                  const idx = items[0].dataIndex;
+                  const item = chartData[idx];
+                  return `총 예상 자산: ${formatNumber(item.total)}원 (${formatKoreanUnit(item.total)})`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: { stacked: true, grid: { display: false }, ticks: { font: { weight: 'bold', size: 11 } } },
+            y: {
+              stacked: true,
+              grid: { color: '#f1f5f9' },
+              ticks: {
+                font: { size: 11 },
+                callback: (v) => v >= 100000000 ? `${(v / 100000000).toFixed(1)}억` : `${Math.round(v / 10000).toLocaleString()}만`
+              }
+            }
+          }
+        }
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setMode('both');
+    });
+  </script>
+</body>
+</html>

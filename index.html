@@ -384,7 +384,17 @@
           type: 'iframe',
           url: 'financial-info.html'
         },
-        subMenus: []
+        subMenus: [
+          {
+            id: 'deposit-savings-sim',
+            title: '예/적금 시뮬레이터',
+            type: 'iframe',
+            url: 'deposit-savings-simulator.html',
+            badge: '시뮬레이터',
+            badgeColor: 'green',
+            role: 'all'
+          }
+        ]
       },
       {
         themeId: 'knowledge',
@@ -552,7 +562,7 @@
       }
 
       // Version Cache Invalidation
-      const APP_BUILD_ID = 'v2.9.10';
+      const APP_BUILD_ID = 'v2.9.11';
       const storedBuild = localStorage.getItem('clp_build_id');
       if (storedBuild !== APP_BUILD_ID) {
         localStorage.removeItem('clp_menu_groups_v3');

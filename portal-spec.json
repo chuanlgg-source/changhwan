@@ -1,6 +1,6 @@
 {
   "$schema": "./schema/portal-spec.schema.json",
-  "version": "2.9.10",
+  "version": "2.9.11",
   "systemTitle": "Clinical Ledger Precision",
   "systemSubtitle": "병원부 미결 원장 대사 및 업무 통합 포털",
   "themes": [
@@ -54,7 +54,18 @@
         "type": "iframe",
         "url": "financial-info.html"
       },
-      "subMenus": []
+      "subMenus": [
+        {
+          "id": "deposit-savings-sim",
+          "title": "예/적금 시뮬레이터",
+          "type": "iframe",
+          "url": "deposit-savings-simulator.html",
+          "badge": "시뮬레이터",
+          "badgeColor": "green",
+          "role": "all",
+          "description": "일시 예금 및 매일 저축 시 연 n% 수익률 기준 3년·5년 후 자산 시뮬레이터"
+        }
+      ]
     },
     {
       "id": "knowledge",
