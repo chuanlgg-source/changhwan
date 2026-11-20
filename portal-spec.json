@@ -1,6 +1,6 @@
 {
   "$schema": "./schema/portal-spec.schema.json",
-  "version": "2.9.12",
+  "version": "2.9.14",
   "systemTitle": "Clinical Ledger Precision",
   "systemSubtitle": "병원부 미결 원장 대사 및 업무 통합 포털",
   "themes": [
@@ -28,15 +28,6 @@
           "badgeColor": "blue",
           "role": "all",
           "description": "Pyodide WASM 기반 병원부 미결 원장 대사 엔진 (reconcile_engine.py 연동)"
-        },
-        {
-          "id": "variance-audit",
-          "title": "월별 미결 차액 소명 관리",
-          "type": "builtin-variance",
-          "badge": "대사관리",
-          "badgeColor": "amber",
-          "role": "all",
-          "description": "약정 할인율 및 사후 정산 차액 항목별 소명 추적 관리"
         },
         {
           "id": "email-classification",

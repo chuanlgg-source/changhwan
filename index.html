@@ -364,14 +364,6 @@
             role: 'all'
           },
           {
-            id: 'variance-audit',
-            title: '월별 미결 차액 소명 관리',
-            type: 'builtin-variance',
-            badge: '대사관리',
-            badgeColor: 'amber',
-            role: 'all'
-          },
-          {
             id: 'email-classification',
             title: 'E-Mail 분류',
             type: 'iframe',
@@ -724,7 +716,7 @@
       }
 
       // Version Cache Invalidation
-      const APP_BUILD_ID = 'v2.9.13';
+      const APP_BUILD_ID = 'v2.9.14';
       const storedBuild = localStorage.getItem('clp_build_id');
       if (storedBuild !== APP_BUILD_ID) {
         localStorage.removeItem('clp_menu_groups_v3');
