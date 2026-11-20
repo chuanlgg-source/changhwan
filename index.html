@@ -468,6 +468,150 @@
 
     const DEFAULT_BLOG_POSTS = [
       {
+        id: 'post-local-pc-sync-guide',
+        title: '로컬 개발 프로젝트를 다른 PC와 효과적으로 공유·동기화하는 방법',
+        category: '업무가이드',
+        author: '이창환 (총괄 매니저)',
+        date: '2026-11-20',
+        summary: '회사 PC와 집 PC 등 여러 컴퓨터를 오가며 개발할 때 GitHub 비공개 저장소를 활용한 표준 동기화 루틴과 .gitignore, 환경 변수(.env), 패키지 관리 주의사항을 정리했습니다.',
+        content: `로컬에서 작업한 프로젝트를 다른 PC와 효과적으로 공유하는 방법
+
+가장 효과적이고 안전한 방법은 GitHub(비공개 저장소)를 중앙 허브로 사용하는 것입니다.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. 가장 추천하는 방법: GitHub(Git) 동기화 루틴
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+코드는 GitHub에 올리고, 두 PC(예: 회사 PC ↔ 집 PC)가 GitHub를 통해 주고받는 방식입니다.
+외부에 공개되면 안 되는 프로젝트라면 Private(비공개) 저장소로 생성하면 됩니다.
+
+[최초 1회 세팅]
+- PC A (원본 작업 PC): 프로젝트를 GitHub 저장소에 연결하고 첫 업로드(push)
+- PC B (다른 PC): 저장소를 통째로 내려받기(clone)
+  예) git clone https://github.com/계정명/저장소명.git
+
+[매일 반복하는 동기화 루틴 (핵심)]
+- 작업 끝낼 때 (PC A):
+  1) git add .
+  2) git commit -m "작업 내용 요약"
+  3) git push
+- 작업 시작할 때 (PC B):
+  1) git pull
+
+※ Tip: 작업이 아직 미완성인데 급히 PC를 옮겨야 한다면, 임시 브랜치(예: wip)를 만들어 커밋·푸시하고 다른 PC에서 이어서 작업하면 메인 코드를 건드리지 않고 안전하게 옮길 수 있습니다.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. 다른 PC로 옮길 때 꼭 챙겨야 할 3가지
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+코드만 옮기면 실행이 안 되는 경우가 많으므로 아래 3가지를 함께 관리해야 합니다.
+
+1) .gitignore 설정 (필수)
+- node_modules/, .venv/, dist/, .env 등 용량이 크거나 보안이 필요한 파일은 Git에서 제외해야 합니다.
+
+2) 환경 변수(.env)와 대용량 테스트 파일 별도 공유
+- API 키나 비밀번호가 담긴 .env 파일은 보안상 GitHub에 올리지 않습니다.
+- 대신 키 이름만 적힌 .env.example만 GitHub에 올리고, 실제 .env 값이나 테스트용 원본 엑셀 파일 등은 구글 드라이브·개인 메모·비밀번호 관리자 등으로 별도 전달합니다.
+
+3) 패키지 설치 명령 실행
+- 다른 PC에서 git clone 또는 git pull을 받은 뒤, 라이브러리 설치 명령을 한 번 실행해 줍니다.
+- 예) Node.js → npm install / Python → pip install -r requirements.txt
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. 상황별 대안 요약
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- 두 PC를 오가며 계속 개발할 때
+  → GitHub Private 저장소 (push / pull) [가장 추천]
+- 딱 한 번만 다른 PC로 옮기면 될 때
+  → node_modules, .venv 폴더를 빼고 .zip으로 압축해 USB·드라이브로 전달
+- 오프라인(사내 폐쇄망 등) 환경일 때
+  → git bundle로 Git 이력까지 하나의 파일로 묶어 USB로 이동
+- OS나 프로그램 버전 차이까지 없애고 싶을 때
+  → Docker 또는 VS Code Dev Containers 사용
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+핵심 요약
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+코드와 변경 이력은 GitHub(push/pull)로, 비밀키(.env)와 원본 데이터(엑셀 등)는 구글 드라이브 등 별도 채널로 나누어 관리하는 것이 가장 깔끔하고 실수가 적습니다.`,
+        views: 1,
+        tags: ['Git', 'GitHub', 'PC동기화', '업무가이드']
+      },
+      {
+        id: 'post-deploy-workflow-guide',
+        title: '개발·배포 워크플로우 3가지 비교 (GitHub 직접 vs 로컬→GitHub vs 구글 드라이브→GitHub)',
+        category: '업무가이드',
+        author: '이창환 (총괄 매니저)',
+        date: '2026-11-20',
+        summary: 'GitHub 직접 작성, 로컬 개발 후 GitHub 배포, 구글 드라이브 경유 배포 등 3가지 개발·배포 방식의 장단점을 비교하고 가장 안전하고 효율적인 추천 워크플로우를 정리했습니다.',
+        content: `개발·배포 워크플로우 3가지 장단점 비교 및 추천 가이드
+
+프로젝트를 작성하고 GitHub에 배포할 때 자주 고민하는 3가지 방식의 장단점과 실무 추천 기준을 정리합니다.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. 깃허브(GitHub)에서 직접 작성하고 배포
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(GitHub 웹 편집기, github.dev, GitHub Codespaces 활용)
+
+[장점]
+- 별도 개발 환경 세팅 없이 브라우저만 있으면 어떤 PC에서든 바로 작업 가능
+- 수정 즉시 커밋 → 자동 배포(GitHub Pages, Vercel, Actions 등)까지 흐름이 단순함
+
+[단점]
+- 일반 웹 에디터에서는 코드 실행·테스트·디버깅이 불가능함 (실행하려면 Codespaces를 써야 하며 무료 사용량 제한 존재)
+- 인터넷 연결이 필수이고, 로컬 파일(테스트용 엑셀 등)이나 로컬 AI 코딩 툴 연동이 번거로움
+
+[추천도] △ (오타 수정, 문서 편집 등 가벼운 수정용)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. 로컬(내 PC)에서 작성하고, 완료되면 깃허브에 올려 배포
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(개발 업계의 표준 방식)
+
+[장점]
+- 개발·테스트 속도가 가장 빠름: 로컬 실행, 디버깅, 라이브러리 설치, 로컬 데이터 테스트가 자유로움
+- AI 코딩 툴(Antigravity, VS Code 등) 활용에 최적화되어 있음
+- Git의 핵심 기능(브랜치, 변경 이력 비교, 되돌리기)을 가장 안전하게 사용 가능
+- 테스트를 마친 검증된 코드만 GitHub에 올려 안전하게 배포 가능
+
+[단점]
+- 최초 1회 로컬 개발 환경 세팅(Git, 런타임 등)이 필요함
+- 푸시(push)하지 않은 상태에서 PC가 고장 나거나 다른 PC로 옮기면 작업물이 동기화되지 않음
+
+[추천도] ★ 가장 추천 (표준 워크플로우)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. 구글 드라이브에서 작성하고, 완료되면 깃허브에 올려 배포
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(구글 드라이브 동기화 폴더 안에 프로젝트 코드를 두고 작업하는 경우)
+
+[장점]
+- 자동 클라우드 백업 및 여러 PC 간 파일 공유가 편해 보임
+- 기획서·엑셀 등 비개발 문서와 한곳에 모아두기 쉬움
+
+[단점 — 실무에서 문제가 가장 많이 발생]
+- Git 저장소 손상 위험: .git 폴더 안의 수많은 내부 파일이 구글 드라이브 동기화와 충돌해 저장소가 깨지는 경우가 흔함
+- 심각한 속도 저하 및 용량 낭비: node_modules, .venv, 빌드 결과물 등 수만 개의 파일이 실시간 동기화되면서 PC가 느려지거나 동기화가 멈춤
+- 파일 잠금(Lock) 오류: 드라이브가 파일을 동기화하는 도중 빌드나 실행이 실패하는 문제가 자주 발생함
+
+[추천도] ✕ 비추천 (코드 작업 폴더로는 절대 사용 금지)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+최종 추천 가이드
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. 기본은 무조건 [2번: 로컬 작성 → 깃허브 배포] 방식을 사용하세요.
+   - 단, "다 끝난 뒤 한 번에 올리기"보다 기능 하나가 끝날 때마다(또는 하루 작업 마감 시) 자주 commit & push 하는 습관을 들이면 백업과 다른 PC 동기화 문제까지 자연스럽게 해결됩니다.
+2. [1번: 깃허브 직접 작성]은 오타 수정, README 편집, 간단한 설정 변경 등 가벼운 작업에만 보조로 활용하세요.
+3. [3번: 구글 드라이브]는 코드 작업 폴더로 쓰지 마시고, 원본 엑셀·기획서·참고 자료 보관용으로만 분리해 사용하시는 것을 권장합니다.`,
+        views: 1,
+        tags: ['GitHub', '배포가이드', '워크플로우', '업무가이드']
+      },
+      {
       "id": "post-vibe-73",
       "title": "바이브 코딩을 위한 73가지 IT 용어",
       "category": "업무가이드",
@@ -580,7 +724,7 @@
       }
 
       // Version Cache Invalidation
-      const APP_BUILD_ID = 'v2.9.12';
+      const APP_BUILD_ID = 'v2.9.13';
       const storedBuild = localStorage.getItem('clp_build_id');
       if (storedBuild !== APP_BUILD_ID) {
         localStorage.removeItem('clp_menu_groups_v3');
@@ -1733,8 +1877,11 @@ create policy "Allow all portal_users" on public.portal_users for all using (tru
           .order('created_at', { ascending: false });
 
         if (!error && Array.isArray(data)) {
-          if (data.length === 0 && autoSeed && DEFAULT_BLOG_POSTS.length > 0) {
-            const seedRows = DEFAULT_BLOG_POSTS.map(p => ({
+          const existingSlugs = new Set(data.map(p => p.slug || p.id));
+          const missingDefaults = DEFAULT_BLOG_POSTS.filter(p => !existingSlugs.has(p.id));
+
+          if (autoSeed && missingDefaults.length > 0) {
+            const seedRows = missingDefaults.map(p => ({
               title: p.title,
               slug: p.id,
               category: p.category || '공지',
@@ -1751,12 +1898,14 @@ create policy "Allow all portal_users" on public.portal_users for all using (tru
               .select('*')
               .order('created_at', { ascending: false });
             if (!retry.error && Array.isArray(retry.data) && retry.data.length > 0) {
-              blogPosts = retry.data.map(mapDbPost);
+              const retrySlugs = new Set(retry.data.map(p => p.slug || p.id));
+              const stillMissing = DEFAULT_BLOG_POSTS.filter(p => !retrySlugs.has(p.id));
+              blogPosts = [...stillMissing, ...retry.data.map(mapDbPost)];
               localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
               return true;
             }
           } else if (data.length > 0) {
-            blogPosts = data.map(mapDbPost);
+            blogPosts = [...missingDefaults, ...data.map(mapDbPost)];
             localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
             return true;
           }

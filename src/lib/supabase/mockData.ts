@@ -13,6 +13,79 @@ export interface BlogPost {
 
 export const initialBlogPosts: BlogPost[] = [
   {
+    id: 'post-local-pc-sync-guide',
+    title: '로컬 개발 프로젝트를 다른 PC와 효과적으로 공유·동기화하는 방법',
+    category: '업무가이드',
+    author: '이창환',
+    authorRole: '총괄 매니저',
+    date: '2026-11-20',
+    summary: '회사 PC와 집 PC 등 여러 컴퓨터를 오가며 개발할 때 GitHub 비공개 저장소를 활용한 표준 동기화 루틴과 .gitignore, 환경 변수(.env), 패키지 관리 주의사항을 정리했습니다.',
+    content: `## 1. 가장 추천하는 방법: GitHub(Git) 동기화 루틴
+코드는 GitHub에 올리고, 두 PC(예: 회사 PC ↔ 집 PC)가 GitHub를 통해 주고받는 방식입니다. 외부에 공개되면 안 되는 프로젝트라면 Private(비공개) 저장소로 만들면 됩니다.
+
+### 최초 1회 세팅
+- PC A (원본 작업 PC): 프로젝트를 GitHub 저장소에 연결하고 첫 업로드(push)
+- PC B (다른 PC): 저장소를 통째로 내려받기(clone)
+  \`git clone https://github.com/계정명/저장소명.git\`
+
+### 매일 반복하는 동기화 루틴
+- 작업 끝낼 때 (PC A): \`git add .\` → \`git commit -m "작업 내용 요약"\` → \`git push\`
+- 작업 시작할 때 (PC B): \`git pull\`
+
+---
+
+## 2. 다른 PC로 옮길 때 꼭 챙겨야 할 3가지
+1. \`.gitignore\` 설정: \`node_modules/\`, \`.venv/\`, \`dist/\`, \`.env\` 등 용량이 크거나 보안이 필요한 파일 제외
+2. 환경 변수(\`.env\`) 및 원본 데이터 별도 공유: 키 이름만 적힌 \`.env.example\`만 GitHub에 올리고, 실제 \`.env\`나 테스트용 엑셀은 구글 드라이브·비밀번호 관리자 등으로 별도 전달
+3. 패키지 설치 명령 실행: \`git pull\` 후 \`npm install\` 또는 \`pip install -r requirements.txt\` 실행
+
+---
+
+## 3. 상황별 대안 요약
+- 두 PC를 오가며 계속 개발: GitHub Private 저장소 (push / pull) [가장 추천]
+- 딱 한 번만 전달: \`node_modules\`, \`.venv\` 제외 후 \`.zip\` 압축 전달
+- 오프라인(폐쇄망) 환경: \`git bundle\`로 묶어 USB 이동
+- OS/버전 차이 제거: Docker 또는 VS Code Dev Containers`,
+    views: 1,
+    tags: ['Git', 'GitHub', 'PC동기화', '업무가이드'],
+  },
+  {
+    id: 'post-deploy-workflow-guide',
+    title: '개발·배포 워크플로우 3가지 비교 (GitHub 직접 vs 로컬→GitHub vs 구글 드라이브→GitHub)',
+    category: '업무가이드',
+    author: '이창환',
+    authorRole: '총괄 매니저',
+    date: '2026-11-20',
+    summary: 'GitHub 직접 작성, 로컬 개발 후 GitHub 배포, 구글 드라이브 경유 배포 등 3가지 개발·배포 방식의 장단점을 비교하고 가장 안전하고 효율적인 추천 워크플로우를 정리했습니다.',
+    content: `## 1. 깃허브(GitHub)에서 직접 작성하고 배포
+- 장점: 별도 개발 환경 세팅 없이 브라우저만으로 작업 및 즉시 커밋·배포 가능
+- 단점: 일반 웹 에디터는 실행·디버깅 불가(Codespaces는 무료 한도 제한), 로컬 파일 및 로컬 AI 툴 연동 불편
+- 추천도: △ (오타 수정, 문서 편집 등 가벼운 수정용)
+
+---
+
+## 2. 로컬(내 PC)에서 작성하고, 완료되면 깃허브에 올려 배포
+- 장점: 가장 빠른 개발·테스트 환경, AI 코딩 툴(Antigravity, VS Code) 최적화, Git 기능 완벽 활용, 검증 후 안전한 배포
+- 단점: 최초 1회 로컬 환경 세팅 필요, 미푸시 상태 유실 주의
+- 추천도: ★ 가장 추천 (표준 워크플로우)
+
+---
+
+## 3. 구글 드라이브에서 작성하고, 완료되면 깃허브에 올려 배포
+- 장점: 자동 클라우드 백업 및 비개발 문서와 함께 관리 가능
+- 단점: \`.git\` 폴더 동기화 충돌로 저장소 손상 위험 높음, \`node_modules\` 등 수만 개 파일 동기화로 심각한 속도 저하, 파일 잠금 오류 빈발
+- 추천도: ✕ 비추천 (코드 작업 폴더로 사용 금지)
+
+---
+
+## 최종 추천 가이드
+1. 기본은 [2번: 로컬 작성 → 깃허브 배포]를 사용하고, 기능 단위·퇴근 전 자주 \`commit\` & \`push\` 하세요.
+2. [1번: 깃허브 직접 작성]은 오타 수정·문서 편집 등 가벼운 수정에만 보조로 활용하세요.
+3. [3번: 구글 드라이브]는 코드가 아닌 원본 엑셀·기획서·참고 자료 보관용으로만 분리해 사용하세요.`,
+    views: 1,
+    tags: ['GitHub', '배포가이드', '워크플로우', '업무가이드'],
+  },
+  {
     id: 'post-1',
     title: '2026년 하반기 병원부 미결 정산 마감 일정 및 유의사항 안내',
     category: '공지',
