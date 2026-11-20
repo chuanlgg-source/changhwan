@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>병원부 미결 정리 (분기) — Clinical Ledger Precision</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SheetJS for reading .xls / .xlsx -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <!-- ExcelJS for styled .xlsx export with live SUMIF/SUM formulas -->
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <style>
+    body {
+      background-color: #faf8ff;
+      color: #131b2e;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 13px;
+    }
+    .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .num-font { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    .dropzone-active {
+      border-color: #00236f !important;
+      background-color: #eaedff !important;
+    }
+    .step-badge-active {
+      background-color: #00236f;
+      color: #ffffff;
+    }
+    .step-badge-done {
+      background-color: #059669;
+      color: #ffffff;
+    }
+    .step-badge-idle {
+      background-color: #e2e8f0;
+      color: #64748b;
+    }
+    .tab-btn-active {
+      background-color: #00236f;
+      color: #ffffff;
+      border-color: #00236f;
+    }
+    .tab-btn-idle {
+      background-color: #ffffff;
+      color: #444651;
+      border-color: #cbd5e1;
+    }
+    .tab-btn-idle:hover {
+      background-color: #f2f3ff;
+      color: #00236f;
+    }
+    ::-webkit-scrollbar { width: 7px; height: 7px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="p-4 sm:p-6">
+  <div class="max-w-7xl mx-auto space-y-5">
+
+    <!-- 상단 헤더 -->
+    <div class="bg-white rounded-xl border border-[#cbd5e1] p-5 shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+      <div>
+        <div class="text-[11px] font-bold text-[#1e3a8a] uppercase tracking-wider mb-1">
+          QUARTERLY PENDING LEDGER CLEANUP TOOL
+        </div>
+        <h1 class="text-xl font-bold font-headline text-[#00236f]">
+          병원부 미결 정리 (분기)
+        </h1>
+        <p class="text-xs text-[#444651] mt-1">
+          1번~4번 항목별 <strong>총 미결금액과 기본틀을 유지</strong>하면서 기준년월 이전 내역을 합산하고, <strong>마이너스(-) 미결금액을 빠른 일자 순으로 순차 상계</strong>하여 정리된 엑셀(.xlsx)을 생성합니다.
+        </p>
+      </div>
+      <!-- 3단계 진행 표시기 -->
+      <div class="flex items-center gap-2 text-xs font-bold shrink-0">
+        <div id="step1-pill" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#cbd5e1] bg-[#f2f3ff] text-[#00236f]">
+          <span id="step1-num" class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] step-badge-active">1</span>
+          <span>엑셀 불러오기</span>
+        </div>
+        <span class="text-slate-400">→</span>
+        <div id="step2-pill" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e2e8f0] bg-white text-slate-500">
+          <span id="step2-num" class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] step-badge-idle">2</span>
+          <span>내용 정리</span>
+        </div>
+        <span class="text-slate-400">→</span>
+        <div id="step3-pill" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e2e8f0] bg-white text-slate-500">
+          <span id="step3-num" class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] step-badge-idle">3</span>
+          <span>파일 생성</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 알림 배너 -->
+    <div id="alert-box" class="hidden rounded-lg border p-3.5 text-xs flex items-start justify-between gap-3">
+      <div id="alert-text" class="leading-relaxed"></div>
+      <button onclick="hideAlert()" class="text-xs font-bold opacity-70 hover:opacity-100 shrink-0">닫기</button>
+    </div>
+
+    <!-- STEP 1: 엑셀 불러오기 & 정리 옵션 -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <!-- 파일 업로드 카드 -->
+      <div class="lg:col-span-7 bg-white rounded-xl border border-[#cbd5e1] p-5 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold text-[#00236f] flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe] text-[11px]">STEP 1</span>
+              원본 미결 엑셀 파일 불러오기
+            </h2>
+            <button id="btn-reset" onclick="resetAll()" class="hidden text-xs text-slate-500 hover:text-[#dc2626] underline">
+              초기화
+            </button>
+          </div>
+
+          <div id="dropzone"
+               class="border-2 border-dashed border-[#cbd5e1] rounded-xl p-6 text-center cursor-pointer transition-colors bg-[#faf8ff] hover:bg-[#f2f3ff] hover:border-[#1e3a8a]">
+            <input type="file" id="file-input" accept=".xls,.xlsx" class="hidden">
+            <div class="text-2xl mb-2">📂</div>
+            <div class="font-bold text-[#00236f] text-sm">
+              여기에 엑셀 파일(.xls / .xlsx)을 드래그하거나 클릭하여 선택하세요
+            </div>
+            <div class="text-xs text-[#757682] mt-1">
+              예: <code class="bg-white px-1.5 py-0.5 rounded border border-[#e2e8f0]">2026.09월거래처_미결_관리(병원부)Re.xls</code> (<code>미결(병원부)</code> 시트 자동 인식)
+            </div>
+            <div class="mt-3">
+              <span class="inline-block px-3.5 py-1.5 rounded-lg bg-[#00236f] text-white text-xs font-bold hover:bg-[#1e3a8a]">
+                파일 선택하기
+              </span>
+            </div>
+          </div>
+
+          <!-- 불러온 파일 메타 정보 -->
+          <div id="file-info-panel" class="hidden mt-4 rounded-lg bg-[#f2f3ff] border border-[#cbd5e1] p-3.5 space-y-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="px-2 py-0.5 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] text-[10px] font-bold shrink-0">로드 완료</span>
+                <span id="meta-filename" class="font-bold text-[#00236f] truncate"></span>
+              </div>
+              <span id="meta-filesize" class="text-[11px] text-[#757682] num-font shrink-0"></span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+              <div class="bg-white rounded border border-[#e2e8f0] p-2">
+                <div class="text-[10px] text-[#757682]">인식된 항목</div>
+                <div id="meta-sections" class="text-xs font-bold text-[#00236f] mt-0.5 num-font">-</div>
+              </div>
+              <div class="bg-white rounded border border-[#e2e8f0] p-2">
+                <div class="text-[10px] text-[#757682]">전체 데이터 행</div>
+                <div id="meta-rows" class="text-xs font-bold text-[#131b2e] mt-0.5 num-font">-</div>
+              </div>
+              <div class="bg-white rounded border border-[#e2e8f0] p-2">
+                <div class="text-[10px] text-[#757682]">정리 전 -미결 건수</div>
+                <div id="meta-negs" class="text-xs font-bold text-[#dc2626] mt-0.5 num-font">-</div>
+              </div>
+              <div class="bg-white rounded border border-[#e2e8f0] p-2">
+                <div class="text-[10px] text-[#757682]">정리 전 총 미결금액</div>
+                <div id="meta-total" class="text-xs font-bold text-[#00236f] mt-0.5 num-font">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 정리 규칙 설정 및 실행 카드 -->
+      <div class="lg:col-span-5 bg-white rounded-xl border border-[#cbd5e1] p-5 shadow-sm flex flex-col justify-between gap-4">
+        <div class="space-y-3.5">
+          <h2 class="text-sm font-bold text-[#00236f] flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-[#fffbeb] text-[#d97706] border border-[#fde68a] text-[11px]">STEP 2</span>
+            정리 기준 설정 및 실행
+          </h2>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label for="opt-cutoff" class="block text-[11px] font-bold text-[#444651] mb-1">
+                이전 일자 합산 기준년월
+              </label>
+              <input id="opt-cutoff" type="month" value="2025-01"
+                     class="w-full px-3 py-1.5 rounded-lg border border-[#cbd5e1] bg-[#faf8ff] text-xs num-font font-semibold focus:outline-none focus:border-[#00236f]">
+              <p class="text-[10px] text-[#757682] mt-1">기준월 이전 일자는 기준월로 합산/변경</p>
+            </div>
+
+            <div>
+              <label for="opt-tier" class="block text-[11px] font-bold text-[#444651] mb-1">
+                -미결금액 상계 범위
+              </label>
+              <select id="opt-tier"
+                      class="w-full px-2.5 py-1.5 rounded-lg border border-[#cbd5e1] bg-[#faf8ff] text-xs font-semibold focus:outline-none focus:border-[#00236f]">
+                <option value="3" selected>3단계 전체 상계 (-미결 완전 제거)</option>
+                <option value="2">2단계 매입처 내 상계 (매입처 합계 유지)</option>
+              </select>
+              <p class="text-[10px] text-[#757682] mt-1">1차 동일거래처 → 2차 동일매입처 → 3차 타매입처</p>
+            </div>
+          </div>
+
+          <div>
+            <label for="opt-outname" class="block text-[11px] font-bold text-[#444651] mb-1">
+              생성할 파일명 (.xlsx)
+            </label>
+            <input id="opt-outname" type="text" placeholder="미결(병원부)_정리완료.xlsx"
+                   class="w-full px-3 py-1.5 rounded-lg border border-[#cbd5e1] bg-[#faf8ff] text-xs font-medium focus:outline-none focus:border-[#00236f]">
+          </div>
+
+          <div class="rounded-lg bg-slate-50 border border-[#e2e8f0] p-2.5 text-[11px] text-[#444651] space-y-1">
+            <div class="font-bold text-[#1e3a8a]">적용 규칙 요약</div>
+            <div>• 기존 행 구조(기본틀) 및 <code>예정금액</code>·<code>금액</code> 원본 보존, <code>미결금액(N열)</code> 반영</div>
+            <div>• 기준월 이전 행: 기준월 동일 거래처에 합산 후 삭제 (없으면 일자만 기준월로 변경)</div>
+            <div>• 출력 시트: <code>미결(병원부)</code> + <code>집계</code>(SUMIF 수식 연동) + <code>정리요약</code>(3차 상계 로그)</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+          <button id="btn-process" onclick="runCleanup()" disabled
+                  class="w-full py-2.5 px-4 rounded-lg bg-[#00236f] text-white text-xs font-bold hover:bg-[#1e3a8a] disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm">
+            ⚡ 미결 내용 정리 실행
+          </button>
+          <button id="btn-download" onclick="downloadExcel()" disabled
+                  class="w-full py-2.5 px-4 rounded-lg bg-[#059669] text-white text-xs font-bold hover:bg-[#047857] disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm">
+            📥 정리완료 엑셀 생성
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2~3 결과 영역 (정리 실행 후 표시) -->
+    <div id="result-section" class="hidden space-y-5">
+
+      <!-- KPI 요약 카드 -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-[#cbd5e1] border-l-4 border-l-[#00236f] shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[#757682] font-semibold">총 미결금액 (정리 후)</span>
+            <span id="kpi-diff-badge" class="px-2 py-0.5 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] text-[10px] font-bold">차액 0</span>
+          </div>
+          <div id="kpi-total-after" class="text-xl font-bold num-font text-[#00236f] mt-1.5">-</div>
+          <div id="kpi-total-before" class="text-[11px] text-[#757682] mt-1 num-font">정리 전: -</div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-[#cbd5e1] border-l-4 border-l-[#059669] shadow-sm">
+          <div class="text-xs text-[#757682] font-semibold">-미결금액 잔존 건수</div>
+          <div id="kpi-neg-after" class="text-xl font-bold num-font text-[#059669] mt-1.5">0 건</div>
+          <div id="kpi-neg-before" class="text-[11px] text-[#757682] mt-1 num-font">정리 전: -</div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-[#cbd5e1] border-l-4 border-l-[#2563eb] shadow-sm">
+          <div class="text-xs text-[#757682] font-semibold">기준월 이전 정리</div>
+          <div id="kpi-pre-summary" class="text-xl font-bold num-font text-[#2563eb] mt-1.5">-</div>
+          <div id="kpi-pre-detail" class="text-[11px] text-[#757682] mt-1">합산삭제 / 일자변경</div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-[#cbd5e1] border-l-4 border-l-[#d97706] shadow-sm">
+          <div class="text-xs text-[#757682] font-semibold">3차 타매입처 상계</div>
+          <div id="kpi-tier3-count" class="text-xl font-bold num-font text-[#d97706] mt-1.5">0 건</div>
+          <div id="kpi-tier3-amount" class="text-[11px] text-[#757682] mt-1 num-font">상계액: 0</div>
+        </div>
+      </div>
+
+      <!-- 탭 네비게이션 및 상세 데이터 뷰 -->
+      <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-sm overflow-hidden">
+        <div class="p-3.5 bg-[#f2f3ff] border-b border-[#cbd5e1] flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="switchTab('summary')" id="tab-summary" class="px-3 py-1.5 rounded-lg border text-xs font-bold tab-btn-active">
+              📊 항목별 검증 요약
+            </button>
+            <button onclick="switchTab('tier3')" id="tab-tier3" class="px-3 py-1.5 rounded-lg border text-xs font-bold tab-btn-idle">
+              🔀 3차 상계 내역 (<span id="badge-tier3">0</span>)
+            </button>
+            <button onclick="switchTab('jipgye')" id="tab-jipgye" class="px-3 py-1.5 rounded-lg border text-xs font-bold tab-btn-idle">
+              📋 매입처별 집계
+            </button>
+            <button onclick="switchTab('detail')" id="tab-detail" class="px-3 py-1.5 rounded-lg border text-xs font-bold tab-btn-idle">
+              📄 정리 후 미결 내역 (<span id="badge-detail">0</span>)
+            </button>
+          </div>
+          <button onclick="downloadExcel()" class="px-3.5 py-1.5 rounded-lg bg-[#059669] text-white text-xs font-bold hover:bg-[#047857]">
+            📥 엑셀 파일 다운로드 (.xlsx)
+          </button>
+        </div>
+
+        <!-- TAB 1: 항목별 검증 요약 -->
+        <div id="pane-summary" class="p-4 overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs whitespace-nowrap">
+            <thead>
+              <tr class="bg-slate-50 border-b border-[#cbd5e1] text-[#1e3a8a] font-bold">
+                <th class="p-2.5 text-center">항목</th>
+                <th class="p-2.5 text-right">정리 전 행수</th>
+                <th class="p-2.5 text-right">정리 후 행수</th>
+                <th class="p-2.5 text-right">이전 합산삭제</th>
+                <th class="p-2.5 text-right">이전 일자변경</th>
+                <th class="p-2.5 text-right">전 -미결 건수</th>
+                <th class="p-2.5 text-right">후 -미결 건수</th>
+                <th class="p-2.5 text-right">정리 전 총 미결금액</th>
+                <th class="p-2.5 text-right">정리 후 총 미결금액</th>
+                <th class="p-2.5 text-right">차액</th>
+                <th class="p-2.5 text-right">1차 상계</th>
+                <th class="p-2.5 text-right">2차 상계</th>
+                <th class="p-2.5 text-right">3차 상계</th>
+              </tr>
+            </thead>
+            <tbody id="summary-tbody" class="divide-y divide-slate-200"></tbody>
+            <tfoot id="summary-tfoot" class="bg-[#f2f3ff] font-bold border-t-2 border-[#cbd5e1]"></tfoot>
+          </table>
+        </div>
+
+        <!-- TAB 2: 3차 상계 내역 -->
+        <div id="pane-tier3" class="hidden p-4 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="text-xs text-[#444651]">
+              매입처 순액 자체가 마이너스(-)여서 동일 항목 내 타 매입처 `+`금액과 상계 처리된 추적 로그입니다.
+            </div>
+            <input id="search-tier3" type="text" oninput="renderTier3Table()" placeholder="매입처/거래처 검색..."
+                   class="px-3 py-1.5 rounded-lg border border-[#cbd5e1] text-xs w-56 focus:outline-none focus:border-[#00236f]">
+          </div>
+          <div class="overflow-x-auto max-h-[460px] overflow-y-auto border border-[#e2e8f0] rounded-lg">
+            <table class="w-full text-left border-collapse text-xs whitespace-nowrap">
+              <thead class="sticky top-0 bg-slate-50 border-b border-[#cbd5e1] text-[#1e3a8a] font-bold">
+                <tr>
+                  <th class="p-2.5 text-center">항목</th>
+                  <th class="p-2.5">마이너스 매입처</th>
+                  <th class="p-2.5">마이너스 거래처</th>
+                  <th class="p-2.5 text-center">일자</th>
+                  <th class="p-2.5">상계 대상 매입처</th>
+                  <th class="p-2.5">상계 대상 거래처</th>
+                  <th class="p-2.5 text-center">대상 일자</th>
+                  <th class="p-2.5 text-right">상계 금액</th>
+                </tr>
+              </thead>
+              <tbody id="tier3-tbody" class="divide-y divide-slate-200"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 3: 매입처별 집계 -->
+        <div id="pane-jipgye" class="hidden p-4 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="text-xs text-[#444651]">
+              정리 완료된 <code>미결(병원부)</code> 데이터 기준 매입처별 사후(1+2번)·약가(4번)·저가(3번) 집계입니다.
+            </div>
+            <input id="search-jipgye" type="text" oninput="renderJipgyeTable()" placeholder="매입처명 검색..."
+                   class="px-3 py-1.5 rounded-lg border border-[#cbd5e1] text-xs w-56 focus:outline-none focus:border-[#00236f]">
+          </div>
+          <div class="overflow-x-auto max-h-[460px] overflow-y-auto border border-[#e2e8f0] rounded-lg">
+            <table class="w-full text-left border-collapse text-xs whitespace-nowrap">
+              <thead class="sticky top-0 bg-slate-50 border-b border-[#cbd5e1] text-[#1e3a8a] font-bold">
+                <tr>
+                  <th class="p-2.5">매입처명</th>
+                  <th class="p-2.5 text-right">사후 (1+2번)</th>
+                  <th class="p-2.5 text-right">약가 (4번)</th>
+                  <th class="p-2.5 text-right">저가 (3번)</th>
+                  <th class="p-2.5 text-right">총합계</th>
+                </tr>
+              </thead>
+              <tbody id="jipgye-tbody" class="divide-y divide-slate-200"></tbody>
+              <tfoot id="jipgye-tfoot" class="sticky bottom-0 bg-[#f2f3ff] font-bold border-t-2 border-[#cbd5e1]"></tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 4: 정리 후 미결 내역 -->
+        <div id="pane-detail" class="hidden p-4 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <select id="filter-sec" onchange="detailPage=1; renderDetailTable()"
+                      class="px-2.5 py-1.5 rounded-lg border border-[#cbd5e1] text-xs font-semibold bg-white">
+                <option value="ALL">전체 항목</option>
+              </select>
+              <input id="search-detail" type="text" oninput="detailPage=1; renderDetailTable()" placeholder="매입처명 / 거래처 / 적요 검색..."
+                     class="px-3 py-1.5 rounded-lg border border-[#cbd5e1] text-xs w-60 focus:outline-none focus:border-[#00236f]">
+              <label class="inline-flex items-center gap-1.5 text-xs text-[#444651] cursor-pointer select-none ml-1">
+                <input id="chk-hide-zero" type="checkbox" onchange="detailPage=1; renderDetailTable()" class="rounded border-slate-300">
+                <span>0원 행 숨기기</span>
+              </label>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+              <span id="detail-count-info" class="text-[#757682] num-font"></span>
+              <button onclick="changeDetailPage(-1)" class="px-2.5 py-1 rounded border border-[#cbd5e1] hover:bg-slate-50">이전</button>
+              <span id="detail-page-info" class="num-font font-bold text-[#00236f]">1 / 1</span>
+              <button onclick="changeDetailPage(1)" class="px-2.5 py-1 rounded border border-[#cbd5e1] hover:bg-slate-50">다음</button>
+            </div>
+          </div>
+          <div class="overflow-x-auto max-h-[460px] overflow-y-auto border border-[#e2e8f0] rounded-lg">
+            <table class="w-full text-left border-collapse text-xs whitespace-nowrap">
+              <thead class="sticky top-0 bg-slate-50 border-b border-[#cbd5e1] text-[#1e3a8a] font-bold">
+                <tr>
+                  <th class="p-2 text-center">항목</th>
+                  <th class="p-2">매입처</th>
+                  <th class="p-2">매입처명</th>
+                  <th class="p-2 text-center">일자</th>
+                  <th class="p-2">적요</th>
+                  <th class="p-2 text-right">예정금액</th>
+                  <th class="p-2 text-right">금액</th>
+                  <th class="p-2 text-right">미결금액 (정리 후)</th>
+                  <th class="p-2">거래처</th>
+                  <th class="p-2">비고</th>
+                </tr>
+              </thead>
+              <tbody id="detail-tbody" class="divide-y divide-slate-200"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ========================
+    // Global State
+    // ========================
+    let loadedFileName = '';
+    let parsedWorkbook = null;
+    let rawMainRows = null;
+    let rawJipgyeRows = null;
+    let detectedSections = [];
+    let cleanupResult = null;
+    let detailPage = 1;
+    const DETAIL_PAGE_SIZE = 100;
+
+    // ========================
+    // Utilities
+    // ========================
+    function roundTiny(x) {
+      return Math.abs(x) < 1e-9 ? 0 : x;
+    }
+
+    function fmtNum(n, decimals = 0) {
+      if (n === null || n === undefined || isNaN(n)) return '-';
+      const v = roundTiny(Number(n));
+      if (decimals === 0 && Math.abs(v - Math.round(v)) > 0.005) {
+        return v.toLocaleString('ko-KR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      return v.toLocaleString('ko-KR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    }
+
+    function fmtInt(n) {
+      return Number(n || 0).toLocaleString('ko-KR');
+    }
+
+    function escHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[ch]));
+    }
+
+    function excelSerialToJSDate(serial) {
+      const utcDays = Math.floor(serial - 25569);
+      return new Date(utcDays * 86400 * 1000);
+    }
+
+    function ymToExcelSerial(ym) {
+      const [y, m] = ym.split('-').map(Number);
+      return Math.floor(Date.UTC(y, m - 1, 1) / 86400000) + 25569;
+    }
+
+    function ymToShortStr(ym) {
+      const [y, m] = ym.split('-');
+      return `${y.slice(-2)}/${m}`;
+    }
+
+    function parseDateInfo(val, fallbackSerial) {
+      if (typeof val === 'string' && /^\d{2}\/\d{2}$/.test(val.trim())) {
+        const [yy, mm] = val.trim().split('/');
+        return {
+          ym: `20${yy}-${mm}`,
+          sortKey: `20${yy}-${mm}-01`,
+          display: val.trim(),
+          isSerial: false,
+          isEmpty: false
+        };
+      }
+      if (typeof val === 'number' && val > 20000) {
+        const d = XLSX.SSF.parse_date_code(val);
+        if (d) {
+          const ym = `${d.y}-${String(d.m).padStart(2, '0')}`;
+          const sortKey = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+          return { ym, sortKey, display: sortKey, isSerial: true, isEmpty: false };
+        }
+      }
+      let sortKey = '9999-12-31';
+      if (typeof fallbackSerial === 'number' && fallbackSerial > 20000) {
+        const d = XLSX.SSF.parse_date_code(fallbackSerial);
+        if (d) {
+          sortKey = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+        }
+      }
+      return { ym: null, sortKey, display: '', isSerial: false, isEmpty: true };
+    }
+
+    function formatDisplayDate(val, isStrSec) {
+      if (val === null || val === undefined || val === '') return '';
+      if (!isStrSec && typeof val === 'number' && val > 20000) {
+        const d = XLSX.SSF.parse_date_code(val);
+        if (d) return `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+      }
+      return String(val);
+    }
+
+    function showAlert(type, htmlMsg) {
+      const box = document.getElementById('alert-box');
+      const txt = document.getElementById('alert-text');
+      box.className = 'rounded-lg border p-3.5 text-xs flex items-start justify-between gap-3';
+      if (type === 'error') {
+        box.classList.add('bg-[#fef2f2]', 'border-[#fecaca]', 'text-[#dc2626]');
+      } else if (type === 'success') {
+        box.classList.add('bg-[#ecfdf5]', 'border-[#a7f3d0]', 'text-[#059669]');
+      } else {
+        box.classList.add('bg-[#eff6ff]', 'border-[#bfdbfe]', 'text-[#1e3a8a]');
+      }
+      txt.innerHTML = htmlMsg;
+    }
+
+    function hideAlert() {
+      document.getElementById('alert-box').classList.add('hidden');
+    }
+
+    function setStepState(step) {
+      // step: 1 (upload), 2 (ready/processed), 3 (downloaded)
+      const configs = [
+        { num: 'step1-num', pill: 'step1-pill', idx: 1 },
+        { num: 'step2-num', pill: 'step2-pill', idx: 2 },
+        { num: 'step3-num', pill: 'step3-pill', idx: 3 }
+      ];
+      for (const c of configs) {
+        const numEl = document.getElementById(c.num);
+        const pillEl = document.getElementById(c.pill);
+        numEl.className = 'w-5 h-5 rounded-full flex items-center justify-center text-[11px]';
+        pillEl.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border';
+        if (c.idx < step) {
+          numEl.classList.add('step-badge-done');
+          numEl.textContent = '✓';
+          pillEl.classList.add('border-[#a7f3d0]', 'bg-[#ecfdf5]', 'text-[#059669]');
+        } else if (c.idx === step) {
+          numEl.classList.add('step-badge-active');
+          numEl.textContent = String(c.idx);
+          pillEl.classList.add('border-[#cbd5e1]', 'bg-[#f2f3ff]', 'text-[#00236f]');
+        } else {
+          numEl.classList.add('step-badge-idle');
+          numEl.textContent = String(c.idx);
+          pillEl.classList.add('border-[#e2e8f0]', 'bg-white', 'text-slate-500');
+        }
+      }
+    }
+
+    // ========================
+    // STEP 1: File Upload & Inspection
+    // ========================
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file-input');
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dropzone-active');
+    });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dropzone-active'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dropzone-active');
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleFile(e.dataTransfer.files[0]);
+      }
+    });
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        handleFile(e.target.files[0]);
+      }
+    });
+
+    function handleFile(file) {
+      hideAlert();
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (!['xls', 'xlsx'].includes(ext)) {
+        showAlert('error', '<strong>지원하지 않는 파일 형식입니다.</strong> <code>.xls</code> 또는 <code>.xlsx</code> 엑셀 파일을 선택해 주세요.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const wb = XLSX.read(data, { type: 'array', cellFormula: true, cellNF: true });
+
+          const mainSheetName = wb.SheetNames.find(n => n.includes('미결')) || wb.SheetNames[0];
+          const ws = wb.Sheets[mainSheetName];
+          const rawRows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null });
+
+          // Locate sections (1번~4번)
+          const sections = [];
+          for (let i = 0; i < rawRows.length; i++) {
+            const c0 = rawRows[i][0];
+            if (typeof c0 === 'string' && /^[1-9]번$/.test(c0.trim())) {
+              sections.push({ name: c0.trim(), titleRow: i, headerRow: i + 1 });
+            }
+          }
+
+          if (sections.length === 0) {
+            showAlert('error', `<strong>항목 구간(1번~4번)을 찾을 수 없습니다.</strong> 시트 <code>${escHtml(mainSheetName)}</code>의 A열에 <code>1번</code>~<code>4번</code> 구분 행이 있는지 확인해 주세요.`);
+            return;
+          }
+
+          let totalRows = 0;
+          let totalNegs = 0;
+          let totalSum = 0;
+
+          for (let s = 0; s < sections.length; s++) {
+            const start = sections[s].headerRow + 1;
+            let end = s + 1 < sections.length ? sections[s + 1].titleRow - 1 : rawRows.length;
+            while (end > start && rawRows[end - 1].every(v => v === null || v === '')) end--;
+            sections[s].startRow = start;
+            sections[s].endRow = end;
+            sections[s].header = (rawRows[sections[s].headerRow] || []).slice(0, 16);
+
+            let strDateCnt = 0, serialDateCnt = 0;
+            for (let r = start; r < end; r++) {
+              const row = rawRows[r] || [];
+              if (row.every(v => v === null || v === '')) continue;
+              totalRows++;
+              const m = Number(row[13] || 0);
+              totalSum += m;
+              if (m < -1e-9) totalNegs++;
+              if (typeof row[7] === 'string' && /^\d{2}\/\d{2}$/.test(row[7].trim())) strDateCnt++;
+              else if (typeof row[7] === 'number' && row[7] > 20000) serialDateCnt++;
+            }
+            sections[s].isStrDateSection = strDateCnt >= serialDateCnt && (strDateCnt > 0 || sections[s].name === '1번');
+          }
+
+          loadedFileName = file.name;
+          parsedWorkbook = wb;
+          rawMainRows = rawRows;
+          rawJipgyeRows = wb.Sheets['집계']
+            ? XLSX.utils.sheet_to_json(wb.Sheets['집계'], { header: 1, raw: true, defval: null })
+            : null;
+          detectedSections = sections;
+          cleanupResult = null;
+
+          // Update UI
+          document.getElementById('file-info-panel').classList.remove('hidden');
+          document.getElementById('btn-reset').classList.remove('hidden');
+          document.getElementById('meta-filename').textContent = file.name;
+          document.getElementById('meta-filesize').textContent = `${(file.size / 1024).toFixed(1)} KB`;
+          document.getElementById('meta-sections').textContent = sections.map(s => s.name).join(', ');
+          document.getElementById('meta-rows').textContent = `${fmtInt(totalRows)} 행`;
+          document.getElementById('meta-negs').textContent = `${fmtInt(totalNegs)} 건`;
+          document.getElementById('meta-total').textContent = fmtNum(totalSum);
+
+          const baseName = file.name.replace(/\.(xlsx|xls)$/i, '');
+          document.getElementById('opt-outname').value = `${baseName}_정리완료.xlsx`;
+
+          document.getElementById('btn-process').disabled = false;
+          document.getElementById('btn-download').disabled = true;
+          document.getElementById('result-section').classList.add('hidden');
+          setStepState(2);
+
+          showAlert('info', `<strong>파일 로드 완료:</strong> <code>${escHtml(mainSheetName)}</code> 시트에서 <strong>${sections.length}개 항목(${sections.map(s => s.name).join(', ')})</strong>, 총 <strong>${fmtInt(totalRows)}행</strong>을 인식했습니다. 우측에서 기준 확인 후 <strong>[미결 내용 정리 실행]</strong>을 클릭하세요.`);
+        } catch (err) {
+          console.error(err);
+          showAlert('error', `<strong>파일 파싱 오류:</strong> ${escHtml(err.message)}`);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function resetAll() {
+      loadedFileName = '';
+      parsedWorkbook = null;
+      rawMainRows = null;
+      rawJipgyeRows = null;
+      detectedSections = [];
+      cleanupResult = null;
+      fileInput.value = '';
+      document.getElementById('file-info-panel').classList.add('hidden');
+      document.getElementById('btn-reset').classList.add('hidden');
+      document.getElementById('result-section').classList.add('hidden');
+      document.getElementById('btn-process').disabled = true;
+      document.getElementById('btn-download').disabled = true;
+      document.getElementById('opt-outname').value = '';
+      hideAlert();
+      setStepState(1);
+    }
+
+    // ========================
+    // STEP 2: Core Cleanup Logic (exact port of verified process.js)
+    // ========================
+    function runCleanup() {
+      if (!rawMainRows || detectedSections.length === 0) return;
+      hideAlert();
+
+      const cutoffYM = document.getElementById('opt-cutoff').value || '2025-01';
+      const maxTier = Number(document.getElementById('opt-tier').value || '3');
+      const cutoffShortStr = ymToShortStr(cutoffYM);
+      const cutoffSerial = ymToExcelSerial(cutoffYM);
+
+      try {
+        const processedSections = [];
+        const tier3Log = [];
+        const sectionSummaries = [];
+
+        for (const sec of detectedSections) {
+          const isStrDateSection = sec.isStrDateSection;
+          const items = [];
+
+          for (let r = sec.startRow; r < sec.endRow; r++) {
+            const rawR = rawMainRows[r] || [];
+            if (rawR.every(v => v === null || v === '')) continue;
+            const cells = rawR.slice(0, 16);
+            while (cells.length < 16) cells.push(null);
+            const dt = parseDateInfo(cells[7], cells[10]);
+            items.push({
+              section: sec.name,
+              origRow: r + 1,
+              cells,
+              supplier: String(cells[1] ?? '').trim(),
+              client: String(cells[14] ?? '').trim(),
+              migyeol: Number(cells[13] || 0),
+              ym: dt.ym,
+              sortKey: dt.sortKey,
+              deleted: false
+            });
+          }
+
+          const origCount = items.length;
+          const sumBefore = items.reduce((a, b) => a + b.migyeol, 0);
+          const negBeforeCount = items.filter(x => x.migyeol < -1e-9).length;
+          const negBeforeSum = items.filter(x => x.migyeol < -1e-9).reduce((a, b) => a + b.migyeol, 0);
+
+          // Step 2-1: Pre-cutoff -> cutoffYM consolidation
+          const targetMap = new Map();
+          for (const it of items) {
+            if (it.ym === cutoffYM) {
+              const key = `${it.supplier}||${it.client}`;
+              if (!targetMap.has(key)) targetMap.set(key, it);
+            }
+          }
+
+          let preMergedCount = 0;
+          let preRedatedCount = 0;
+          let preTotalAmount = 0;
+
+          for (const it of items) {
+            if (it.ym !== null && it.ym < cutoffYM) {
+              preTotalAmount += it.migyeol;
+              const key = `${it.supplier}||${it.client}`;
+              if (targetMap.has(key)) {
+                const target = targetMap.get(key);
+                target.migyeol = roundTiny(target.migyeol + it.migyeol);
+                it.migyeol = 0;
+                it.deleted = true;
+                preMergedCount++;
+              } else {
+                it.cells[7] = isStrDateSection ? cutoffShortStr : cutoffSerial;
+                it.ym = cutoffYM;
+                it.sortKey = `${cutoffYM}-01`;
+                targetMap.set(key, it);
+                preRedatedCount++;
+              }
+            }
+          }
+
+          const active = items.filter(x => !x.deleted);
+
+          // Step 2-2: 3-tier waterfall FIFO offset (earliest date first)
+          const tierStats = { tier1: 0, tier2: 0, tier3: 0 };
+
+          function runTier(groupKeyFn, tierName) {
+            const groups = new Map();
+            for (const it of active) {
+              const k = groupKeyFn(it);
+              if (!groups.has(k)) groups.set(k, []);
+              groups.get(k).push(it);
+            }
+            for (const [, grp] of groups) {
+              const negs = grp
+                .filter(x => x.migyeol < -1e-9)
+                .sort((a, b) => a.sortKey.localeCompare(b.sortKey) || a.origRow - b.origRow);
+              const poss = grp
+                .filter(x => x.migyeol > 1e-9)
+                .sort((a, b) => a.sortKey.localeCompare(b.sortKey) || a.origRow - b.origRow);
+
+              let p = 0;
+              for (const neg of negs) {
+                while (neg.migyeol < -1e-9 && p < poss.length) {
+                  const pos = poss[p];
+                  if (pos.migyeol <= 1e-9) { p++; continue; }
+                  const take = Math.min(pos.migyeol, -neg.migyeol);
+                  pos.migyeol = roundTiny(pos.migyeol - take);
+                  neg.migyeol = roundTiny(neg.migyeol + take);
+                  tierStats[tierName] += take;
+
+                  if (tierName === 'tier3') {
+                    tier3Log.push({
+                      section: sec.name,
+                      fromSupplier: neg.supplier,
+                      fromClient: neg.client,
+                      fromDate: neg.ym || neg.sortKey,
+                      toSupplier: pos.supplier,
+                      toClient: pos.client,
+                      toDate: pos.ym || pos.sortKey,
+                      amount: take
+                    });
+                  }
+                  if (pos.migyeol <= 1e-9) {
+                    pos.migyeol = 0;
+                    p++;
+                  }
+                }
+              }
+            }
+          }
+
+          runTier(it => `${it.supplier}||${it.client}`, 'tier1');
+          runTier(it => it.supplier, 'tier2');
+          if (maxTier >= 3) {
+            runTier(() => '__ALL__', 'tier3');
+          }
+
+          // Write back migyeol to cells[13]
+          for (const it of active) {
+            it.migyeol = roundTiny(it.migyeol);
+            it.cells[13] = it.migyeol;
+          }
+
+          const sumAfter = active.reduce((a, b) => a + b.migyeol, 0);
+          const negAfterCount = active.filter(x => x.migyeol < -1e-9).length;
+          const preAfterCount = active.filter(x => x.ym !== null && x.ym < cutoffYM).length;
+
+          if (Math.abs(sumBefore - sumAfter) > 1e-5) {
+            throw new Error(`${sec.name} 총액 불일치 감지 (전: ${sumBefore}, 후: ${sumAfter})`);
+          }
+          if (preAfterCount > 0) {
+            throw new Error(`${sec.name} 기준월(${cutoffYM}) 이전 행이 ${preAfterCount}건 잔존합니다.`);
+          }
+
+          sectionSummaries.push({
+            name: sec.name,
+            origCount,
+            afterCount: active.length,
+            deletedCount: origCount - active.length,
+            preMergedCount,
+            preRedatedCount,
+            preTotalAmount,
+            negBeforeCount,
+            negBeforeSum,
+            negAfterCount,
+            sumBefore,
+            sumAfter,
+            diff: roundTiny(sumAfter - sumBefore),
+            tier1: tierStats.tier1,
+            tier2: tierStats.tier2,
+            tier3: tierStats.tier3
+          });
+
+          processedSections.push({
+            name: sec.name,
+            header: sec.header,
+            rows: active,
+            isStrDateSection
+          });
+        }
+
+        // Build 집계 preview data
+        const jipgyePreview = buildJipgyePreview(processedSections);
+
+        cleanupResult = {
+          cutoffYM,
+          maxTier,
+          processedSections,
+          sectionSummaries,
+          tier3Log,
+          jipgyePreview
+        };
+
+        renderResults();
+        document.getElementById('btn-download').disabled = false;
+        document.getElementById('result-section').classList.remove('hidden');
+        setStepState(3);
+
+        const grandNegAfter = sectionSummaries.reduce((a, b) => a + b.negAfterCount, 0);
+        showAlert('success', `<strong>미결 내용 정리 완료!</strong> 모든 항목의 정리 전·후 총 미결금액 차액 <strong>0원</strong> 검증을 통과했으며, 잔존 -미결 건수는 <strong>${grandNegAfter}건</strong>입니다. <strong>[정리완료 엑셀 생성]</strong> 버튼을 눌러 파일을 다운로드하세요.`);
+      } catch (err) {
+        console.error(err);
+        showAlert('error', `<strong>정리 처리 중 오류 발생:</strong> ${escHtml(err.message)}`);
+      }
+    }
+
+    function sumForSupplier(processedSections, secName, supName) {
+      const sec = processedSections.find(s => s.name === secName);
+      if (!sec) return 0;
+      return sec.rows.filter(r => r.supplier === supName).reduce((a, b) => a + b.migyeol, 0);
+    }
+
+    function buildJipgyePreview(processedSections) {
+      let supplierList = [];
+      if (rawJipgyeRows) {
+        const totalRowIdx = rawJipgyeRows.findIndex(r => r && String(r[0] ?? '').trim() === '총합계');
+        const limit = totalRowIdx > 1 ? totalRowIdx : rawJipgyeRows.length;
+        for (let i = 1; i < limit; i++) {
+          const name = rawJipgyeRows[i]?.[0];
+          if (name !== null && name !== undefined && String(name).trim() !== '') {
+            supplierList.push(String(name));
+          }
+        }
+      } else {
+        const set = new Set();
+        for (const sec of processedSections) {
+          for (const r of sec.rows) {
+            if (r.supplier) set.add(r.supplier);
+          }
+        }
+        supplierList = [...set].sort((a, b) => a.localeCompare(b, 'ko'));
+      }
+
+      return supplierList.map(sup => {
+        const sahu = roundTiny(sumForSupplier(processedSections, '1번', sup) + sumForSupplier(processedSections, '2번', sup));
+        const yakga = roundTiny(sumForSupplier(processedSections, '4번', sup));
+        const jeoga = roundTiny(sumForSupplier(processedSections, '3번', sup));
+        const total = roundTiny(sahu + yakga + jeoga);
+        return { supplier: sup, sahu, yakga, jeoga, total };
+      });
+    }
+
+    // ========================
+    // Render Results UI
+    // ========================
+    function renderResults() {
+      const { sectionSummaries, tier3Log, processedSections } = cleanupResult;
+
+      const grandOrig = sectionSummaries.reduce((a, b) => a + b.origCount, 0);
+      const grandAfter = sectionSummaries.reduce((a, b) => a + b.afterCount, 0);
+      const grandPreMerged = sectionSummaries.reduce((a, b) => a + b.preMergedCount, 0);
+      const grandPreRedated = sectionSummaries.reduce((a, b) => a + b.preRedatedCount, 0);
+      const grandNegBefore = sectionSummaries.reduce((a, b) => a + b.negBeforeCount, 0);
+      const grandNegAfter = sectionSummaries.reduce((a, b) => a + b.negAfterCount, 0);
+      const grandSumBefore = sectionSummaries.reduce((a, b) => a + b.sumBefore, 0);
+      const grandSumAfter = sectionSummaries.reduce((a, b) => a + b.sumAfter, 0);
+      const grandDiff = roundTiny(grandSumAfter - grandSumBefore);
+      const grandT1 = sectionSummaries.reduce((a, b) => a + b.tier1, 0);
+      const grandT2 = sectionSummaries.reduce((a, b) => a + b.tier2, 0);
+      const grandT3 = sectionSummaries.reduce((a, b) => a + b.tier3, 0);
+
+      // KPIs
+      document.getElementById('kpi-total-after').textContent = fmtNum(grandSumAfter);
+      document.getElementById('kpi-total-before').textContent = `정리 전: ${fmtNum(grandSumBefore)}`;
+      document.getElementById('kpi-diff-badge').textContent = `차액 ${fmtNum(grandDiff)}`;
+
+      document.getElementById('kpi-neg-after').textContent = `${fmtInt(grandNegAfter)} 건`;
+      document.getElementById('kpi-neg-after').className =
+        `text-xl font-bold num-font mt-1.5 ${grandNegAfter === 0 ? 'text-[#059669]' : 'text-[#dc2626]'}`;
+      document.getElementById('kpi-neg-before').textContent = `정리 전: ${fmtInt(grandNegBefore)} 건`;
+
+      document.getElementById('kpi-pre-summary').textContent = `${fmtInt(grandPreMerged + grandPreRedated)} 건`;
+      document.getElementById('kpi-pre-detail').textContent = `합산삭제 ${fmtInt(grandPreMerged)}건 · 일자변경 ${fmtInt(grandPreRedated)}건`;
+
+      document.getElementById('kpi-tier3-count').textContent = `${fmtInt(tier3Log.length)} 건`;
+      document.getElementById('kpi-tier3-amount').textContent = `상계액: ${fmtNum(grandT3)}`;
+
+      document.getElementById('badge-tier3').textContent = fmtInt(tier3Log.length);
+      document.getElementById('badge-detail').textContent = fmtInt(grandAfter);
+
+      // Summary table
+      document.getElementById('summary-tbody').innerHTML = sectionSummaries.map(s => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-2.5 text-center font-bold text-[#00236f]">${escHtml(s.name)}</td>
+          <td class="p-2.5 text-right num-font">${fmtInt(s.origCount)}</td>
+          <td class="p-2.5 text-right num-font font-semibold">${fmtInt(s.afterCount)}</td>
+          <td class="p-2.5 text-right num-font text-[#2563eb]">${fmtInt(s.preMergedCount)}</td>
+          <td class="p-2.5 text-right num-font text-[#d97706]">${fmtInt(s.preRedatedCount)}</td>
+          <td class="p-2.5 text-right num-font text-[#dc2626]">${fmtInt(s.negBeforeCount)}</td>
+          <td class="p-2.5 text-right num-font font-bold ${s.negAfterCount === 0 ? 'text-[#059669]' : 'text-[#dc2626]'}">${fmtInt(s.negAfterCount)}</td>
+          <td class="p-2.5 text-right num-font">${fmtNum(s.sumBefore)}</td>
+          <td class="p-2.5 text-right num-font font-bold text-[#00236f]">${fmtNum(s.sumAfter)}</td>
+          <td class="p-2.5 text-right num-font font-bold text-[#059669]">${fmtNum(s.diff)}</td>
+          <td class="p-2.5 text-right num-font">${fmtNum(s.tier1)}</td>
+          <td class="p-2.5 text-right num-font">${fmtNum(s.tier2)}</td>
+          <td class="p-2.5 text-right num-font text-[#d97706]">${fmtNum(s.tier3)}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('summary-tfoot').innerHTML = `
+        <tr>
+          <td class="p-2.5 text-center text-[#00236f]">전체 합계</td>
+          <td class="p-2.5 text-right num-font">${fmtInt(grandOrig)}</td>
+          <td class="p-2.5 text-right num-font">${fmtInt(grandAfter)}</td>
+          <td class="p-2.5 text-right num-font text-[#2563eb]">${fmtInt(grandPreMerged)}</td>
+          <td class="p-2.5 text-right num-font text-[#d97706]">${fmtInt(grandPreRedated)}</td>
+          <td class="p-2.5 text-right num-font text-[#dc2626]">${fmtInt(grandNegBefore)}</td>
+          <td class="p-2.5 text-right num-font ${grandNegAfter === 0 ? 'text-[#059669]' : 'text-[#dc2626]'}">${fmtInt(grandNegAfter)}</td>
+          <td class="p-2.5 text-right num-font">${fmtNum(grandSumBefore)}</td>
+          <td class="p-2.5 text-right num-font text-[#00236f]">${fmtNum(grandSumAfter)}</td>
+          <td class="p-2.5 text-right num-font text-[#059669]">${fmtNum(grandDiff)}</td>
+          <td class="p-2.5 text-right num-font">${fmtNum(grandT1)}</td>
+          <td class="p-2.5 text-right num-font">${fmtNum(grandT2)}</td>
+          <td class="p-2.5 text-right num-font text-[#d97706]">${fmtNum(grandT3)}</td>
+        </tr>
+      `;
+
+      // Populate section filter dropdown
+      const filterSec = document.getElementById('filter-sec');
+      filterSec.innerHTML = `<option value="ALL">전체 항목 (${fmtInt(grandAfter)}행)</option>` +
+        processedSections.map(s => `<option value="${escHtml(s.name)}">${escHtml(s.name)} (${fmtInt(s.rows.length)}행)</option>`).join('');
+
+      detailPage = 1;
+      renderTier3Table();
+      renderJipgyeTable();
+      renderDetailTable();
+      switchTab('summary');
+    }
+
+    function switchTab(name) {
+      const tabs = ['summary', 'tier3', 'jipgye', 'detail'];
+      for (const t of tabs) {
+        document.getElementById(`pane-${t}`).classList.toggle('hidden', t !== name);
+        const btn = document.getElementById(`tab-${t}`);
+        btn.className = `px-3 py-1.5 rounded-lg border text-xs font-bold ${t === name ? 'tab-btn-active' : 'tab-btn-idle'}`;
+      }
+    }
+
+    function renderTier3Table() {
+      if (!cleanupResult) return;
+      const q = (document.getElementById('search-tier3').value || '').trim().toLowerCase();
+      const list = cleanupResult.tier3Log.filter(e =>
+        !q ||
+        e.fromSupplier.toLowerCase().includes(q) ||
+        e.fromClient.toLowerCase().includes(q) ||
+        e.toSupplier.toLowerCase().includes(q) ||
+        e.toClient.toLowerCase().includes(q) ||
+        e.section.includes(q)
+      );
+
+      const tbody = document.getElementById('tier3-tbody');
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-400">표시할 3차 상계 내역이 없습니다.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = list.map(e => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-2 text-center font-bold text-[#00236f]">${escHtml(e.section)}</td>
+          <td class="p-2 font-medium text-[#dc2626]">${escHtml(e.fromSupplier)}</td>
+          <td class="p-2">${escHtml(e.fromClient)}</td>
+          <td class="p-2 text-center num-font">${escHtml(e.fromDate)}</td>
+          <td class="p-2 font-medium text-[#00236f]">${escHtml(e.toSupplier)}</td>
+          <td class="p-2">${escHtml(e.toClient)}</td>
+          <td class="p-2 text-center num-font">${escHtml(e.toDate)}</td>
+          <td class="p-2 text-right num-font font-bold text-[#d97706]">${fmtNum(e.amount)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderJipgyeTable() {
+      if (!cleanupResult) return;
+      const q = (document.getElementById('search-jipgye').value || '').trim().toLowerCase();
+      const list = cleanupResult.jipgyePreview.filter(r => !q || r.supplier.toLowerCase().includes(q));
+
+      const tbody = document.getElementById('jipgye-tbody');
+      tbody.innerHTML = list.map(r => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-2 font-medium">${escHtml(r.supplier)}</td>
+          <td class="p-2 text-right num-font">${r.sahu !== 0 ? fmtNum(r.sahu) : '-'}</td>
+          <td class="p-2 text-right num-font">${r.yakga !== 0 ? fmtNum(r.yakga) : '-'}</td>
+          <td class="p-2 text-right num-font">${r.jeoga !== 0 ? fmtNum(r.jeoga) : '-'}</td>
+          <td class="p-2 text-right num-font font-bold ${r.total < -1e-9 ? 'text-[#dc2626]' : 'text-[#00236f]'}">${fmtNum(r.total)}</td>
+        </tr>
+      `).join('');
+
+      const sB = list.reduce((a, b) => a + b.sahu, 0);
+      const sC = list.reduce((a, b) => a + b.yakga, 0);
+      const sD = list.reduce((a, b) => a + b.jeoga, 0);
+      const sT = list.reduce((a, b) => a + b.total, 0);
+
+      document.getElementById('jipgye-tfoot').innerHTML = `
+        <tr>
+          <td class="p-2.5 text-[#00236f]">총합계 (${fmtInt(list.length)}개사)</td>
+          <td class="p-2.5 text-right num-font">${fmtNum(sB)}</td>
+          <td class="p-2.5 text-right num-font">${fmtNum(sC)}</td>
+          <td class="p-2.5 text-right num-font">${fmtNum(sD)}</td>
+          <td class="p-2.5 text-right num-font text-[#00236f]">${fmtNum(sT)}</td>
+        </tr>
+      `;
+    }
+
+    function getFilteredDetailRows() {
+      if (!cleanupResult) return [];
+      const secVal = document.getElementById('filter-sec').value;
+      const q = (document.getElementById('search-detail').value || '').trim().toLowerCase();
+      const hideZero = document.getElementById('chk-hide-zero').checked;
+
+      const out = [];
+      for (const sec of cleanupResult.processedSections) {
+        if (secVal !== 'ALL' && sec.name !== secVal) continue;
+        for (const r of sec.rows) {
+          if (hideZero && Math.abs(r.migyeol) < 1e-9) continue;
+          if (q) {
+            const hay = `${r.supplier} ${r.client} ${r.cells[8] ?? ''} ${r.cells[15] ?? ''}`.toLowerCase();
+            if (!hay.includes(q)) continue;
+          }
+          out.push({ sec, row: r });
+        }
+      }
+      return out;
+    }
+
+    function renderDetailTable() {
+      const list = getFilteredDetailRows();
+      const totalPages = Math.max(1, Math.ceil(list.length / DETAIL_PAGE_SIZE));
+      if (detailPage > totalPages) detailPage = totalPages;
+      if (detailPage < 1) detailPage = 1;
+
+      const start = (detailPage - 1) * DETAIL_PAGE_SIZE;
+      const slice = list.slice(start, start + DETAIL_PAGE_SIZE);
+
+      document.getElementById('detail-count-info').textContent = `검색 결과: ${fmtInt(list.length)}건`;
+      document.getElementById('detail-page-info').textContent = `${detailPage} / ${totalPages}`;
+
+      const tbody = document.getElementById('detail-tbody');
+      if (slice.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" class="p-6 text-center text-slate-400">조건에 맞는 내역이 없습니다.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = slice.map(({ sec, row }) => {
+        const c = row.cells;
+        const dtStr = formatDisplayDate(c[7], sec.isStrDateSection);
+        const mCls = row.migyeol < -1e-9 ? 'text-[#dc2626]' : (row.migyeol === 0 ? 'text-slate-400' : 'text-[#00236f]');
+        return `
+          <tr class="hover:bg-slate-50">
+            <td class="p-2 text-center font-bold text-[#1e3a8a]">${escHtml(sec.name)}</td>
+            <td class="p-2 num-font text-slate-500">${escHtml(c[0] ?? '')}</td>
+            <td class="p-2 font-medium">${escHtml(c[1] ?? '')}</td>
+            <td class="p-2 text-center num-font">${escHtml(dtStr)}</td>
+            <td class="p-2 max-w-[200px] truncate" title="${escHtml(c[8] ?? '')}">${escHtml(c[8] ?? '')}</td>
+            <td class="p-2 text-right num-font text-slate-600">${c[9] !== null ? fmtNum(c[9]) : ''}</td>
+            <td class="p-2 text-right num-font text-slate-600">${c[12] !== null ? fmtNum(c[12]) : ''}</td>
+            <td class="p-2 text-right num-font font-bold ${mCls}">${fmtNum(row.migyeol)}</td>
+            <td class="p-2">${escHtml(c[14] ?? '')}</td>
+            <td class="p-2 text-slate-500 max-w-[160px] truncate" title="${escHtml(c[15] ?? '')}">${escHtml(c[15] ?? '')}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function changeDetailPage(delta) {
+      detailPage += delta;
+      renderDetailTable();
+    }
+
+    // ========================
+    // STEP 3: Generate & Download Styled .xlsx with ExcelJS
+    // ========================
+    async function downloadExcel() {
+      if (!cleanupResult) return;
+
+      const btn = document.getElementById('btn-download');
+      const prevText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '⏳ 엑셀 파일 생성 중...';
+
+      try {
+        const { processedSections, sectionSummaries, tier3Log, cutoffYM, jipgyePreview } = cleanupResult;
+
+        const outWb = new ExcelJS.Workbook();
+        outWb.creator = 'Clinical Ledger Precision';
+        outWb.created = new Date();
+
+        const fontBase = { name: '맑은 고딕', size: 10 };
+        const fontBold = { name: '맑은 고딕', size: 10, bold: true };
+        const fontTitle = { name: '맑은 고딕', size: 11, bold: true };
+        const borderThin = {
+          top: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+          left: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+          bottom: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+          right: { style: 'thin', color: { argb: 'FFD9D9D9' } }
+        };
+        const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } };
+        const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF2CC' } };
+        const totalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEDF2F8' } };
+
+        // -------- Sheet 1: 미결(병원부) --------
+        const ws1 = outWb.addWorksheet('미결(병원부)');
+        const sectionRanges = {};
+        let curRow = 1;
+
+        for (let sIdx = 0; sIdx < processedSections.length; sIdx++) {
+          const sec = processedSections[sIdx];
+          if (sIdx > 0) curRow++;
+
+          const tRow = ws1.getRow(curRow);
+          tRow.getCell(1).value = sec.name;
+          tRow.getCell(1).font = fontTitle;
+          tRow.getCell(1).fill = titleFill;
+          curRow++;
+
+          const hRow = ws1.getRow(curRow);
+          for (let c = 0; c < 16; c++) {
+            const cell = hRow.getCell(c + 1);
+            cell.value = sec.header[c];
+            cell.font = fontBold;
+            cell.fill = headerFill;
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.border = borderThin;
+          }
+          curRow++;
+
+          const dataStart = curRow;
+          for (const it of sec.rows) {
+            const r = ws1.getRow(curRow);
+            for (let c = 0; c < 16; c++) {
+              const val = it.cells[c];
+              const cell = r.getCell(c + 1);
+
+              if (c === 7 && !sec.isStrDateSection && typeof val === 'number' && val > 30000) {
+                cell.value = excelSerialToJSDate(val);
+                cell.numFmt = 'yyyy-mm-dd';
+              } else if (c === 10 && typeof val === 'number' && val > 30000) {
+                cell.value = excelSerialToJSDate(val);
+                cell.numFmt = 'yyyy-mm-dd';
+              } else {
+                cell.value = val;
+              }
+
+              cell.font = fontBase;
+              cell.border = borderThin;
+
+              if (c === 2 && typeof val === 'number') {
+                cell.numFmt = '0.0%';
+              } else if (c === 9 || c === 12 || c === 13) {
+                cell.numFmt = '#,##0';
+                cell.alignment = { horizontal: 'right', vertical: 'middle' };
+              } else if (c === 3 || c === 4 || c === 5 || c === 6 || c === 7 || c === 10) {
+                cell.alignment = { horizontal: 'center', vertical: 'middle' };
+              }
+            }
+            curRow++;
+          }
+          sectionRanges[sec.name] = { start: dataStart, end: curRow - 1 };
+        }
+
+        const colWidths1 = [11, 28, 8, 7, 7, 7, 6, 12, 24, 16, 12, 16, 16, 16, 18, 20];
+        colWidths1.forEach((w, i) => { ws1.getColumn(i + 1).width = w; });
+
+        // -------- Sheet 2: 집계 --------
+        const ws2 = outWb.addWorksheet('집계');
+        const r1 = sectionRanges['1번'];
+        const r2 = sectionRanges['2번'];
+        const r3 = sectionRanges['3번'];
+        const r4 = sectionRanges['4번'];
+
+        function buildSumIf(range, excelR) {
+          return `SUMIF('미결(병원부)'!$B$${range.start}:$B$${range.end},A${excelR},'미결(병원부)'!$N$${range.start}:$N$${range.end})`;
+        }
+
+        if (rawJipgyeRows && rawJipgyeRows.findIndex(r => r && String(r[0] ?? '').trim() === '총합계') >= 1) {
+          const totalRowIdx = rawJipgyeRows.findIndex(r => r && String(r[0] ?? '').trim() === '총합계');
+          const lastSupExcelRow = totalRowIdx;
+          const totExcelRow = totalRowIdx + 1;
+          const maxCols = Math.max(11, (rawJipgyeRows[0] || []).length);
+
+          const jHeader = ws2.getRow(1);
+          for (let c = 0; c < maxCols; c++) {
+            const val = rawJipgyeRows[0]?.[c] ?? null;
+            if (val !== null) {
+              const cell = jHeader.getCell(c + 1);
+              cell.value = val;
+              cell.font = fontBold;
+              cell.fill = headerFill;
+              cell.alignment = { horizontal: 'center', vertical: 'middle' };
+              cell.border = borderThin;
+            }
+          }
+
+          let sumB = 0, sumC = 0, sumD = 0;
+          for (let i = 1; i < totalRowIdx; i++) {
+            const origRow = rawJipgyeRows[i] || [];
+            const excelR = i + 1;
+            const row = ws2.getRow(excelR);
+            const supName = origRow[0];
+
+            row.getCell(1).value = supName;
+            row.getCell(1).font = fontBase;
+            row.getCell(1).border = borderThin;
+
+            const valB = roundTiny(sumForSupplier(processedSections, '1번', supName) + sumForSupplier(processedSections, '2번', supName));
+            const valC = roundTiny(sumForSupplier(processedSections, '4번', supName));
+            const valD = roundTiny(sumForSupplier(processedSections, '3번', supName));
+            sumB += valB; sumC += valC; sumD += valD;
+
+            if (origRow[1] !== null || valB !== 0) {
+              const parts = [];
+              if (r1) parts.push(buildSumIf(r1, excelR));
+              if (r2) parts.push(buildSumIf(r2, excelR));
+              row.getCell(2).value = parts.length ? { formula: parts.join('+'), result: valB } : valB;
+            }
+            if (origRow[2] !== null || valC !== 0) {
+              row.getCell(3).value = r4 ? { formula: buildSumIf(r4, excelR), result: valC } : valC;
+            }
+            if (origRow[3] !== null || valD !== 0) {
+              row.getCell(4).value = r3 ? { formula: buildSumIf(r3, excelR), result: valD } : valD;
+            }
+            row.getCell(5).value = { formula: `SUM(B${excelR}:D${excelR})`, result: roundTiny(valB + valC + valD) };
+
+            for (let c = 2; c <= 5; c++) {
+              const cell = row.getCell(c);
+              cell.font = c === 5 ? fontBold : fontBase;
+              cell.numFmt = '#,##0';
+              cell.alignment = { horizontal: 'right', vertical: 'middle' };
+              cell.border = borderThin;
+            }
+
+            for (let c = 6; c < maxCols; c++) {
+              const v = origRow[c];
+              if (v !== null && v !== undefined) {
+                const cell = row.getCell(c + 1);
+                if (excelR === 6 && c >= 7) {
+                  const colLet = String.fromCharCode(65 + c);
+                  cell.value = { formula: `${colLet}2+${colLet}3-${colLet}4+${colLet}5`, result: Number(v) };
+                  cell.font = fontBold;
+                  cell.fill = totalFill;
+                } else {
+                  cell.value = v;
+                  cell.font = (c === 6 || excelR === 8) ? fontBold : fontBase;
+                }
+                if (typeof v === 'number') {
+                  cell.numFmt = '#,##0';
+                  cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                }
+                if (excelR <= 6) cell.border = borderThin;
+              }
+            }
+          }
+
+          const totRow = ws2.getRow(totExcelRow);
+          totRow.getCell(1).value = '총합계';
+          totRow.getCell(2).value = { formula: `SUM(B2:B${lastSupExcelRow})`, result: sumB };
+          totRow.getCell(3).value = { formula: `SUM(C2:C${lastSupExcelRow})`, result: sumC };
+          totRow.getCell(4).value = { formula: `SUM(D2:D${lastSupExcelRow})`, result: sumD };
+          totRow.getCell(5).value = { formula: `SUM(E2:E${lastSupExcelRow})`, result: sumB + sumC + sumD };
+          for (let c = 1; c <= 5; c++) {
+            const cell = totRow.getCell(c);
+            cell.font = fontBold;
+            cell.fill = totalFill;
+            cell.border = borderThin;
+            if (c >= 2) {
+              cell.numFmt = '#,##0';
+              cell.alignment = { horizontal: 'right', vertical: 'middle' };
+            }
+          }
+        } else {
+          // Fallback auto-generated 집계 sheet
+          const headers = ['매입처명', '사후', '약가', '저가', '총합계'];
+          const hRow = ws2.getRow(1);
+          headers.forEach((h, i) => {
+            const cell = hRow.getCell(i + 1);
+            cell.value = h;
+            cell.font = fontBold;
+            cell.fill = headerFill;
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.border = borderThin;
+          });
+          jipgyePreview.forEach((item, idx) => {
+            const excelR = idx + 2;
+            const row = ws2.getRow(excelR);
+            row.getCell(1).value = item.supplier;
+            row.getCell(1).font = fontBase;
+            row.getCell(1).border = borderThin;
+            const parts = [];
+            if (r1) parts.push(buildSumIf(r1, excelR));
+            if (r2) parts.push(buildSumIf(r2, excelR));
+            row.getCell(2).value = parts.length ? { formula: parts.join('+'), result: item.sahu } : item.sahu;
+            row.getCell(3).value = r4 ? { formula: buildSumIf(r4, excelR), result: item.yakga } : item.yakga;
+            row.getCell(4).value = r3 ? { formula: buildSumIf(r3, excelR), result: item.jeoga } : item.jeoga;
+            row.getCell(5).value = { formula: `SUM(B${excelR}:D${excelR})`, result: item.total };
+            for (let c = 2; c <= 5; c++) {
+              const cell = row.getCell(c);
+              cell.font = c === 5 ? fontBold : fontBase;
+              cell.numFmt = '#,##0';
+              cell.alignment = { horizontal: 'right', vertical: 'middle' };
+              cell.border = borderThin;
+            }
+          });
+          const lastR = jipgyePreview.length + 1;
+          const totRow = ws2.getRow(lastR + 1);
+          totRow.getCell(1).value = '총합계';
+          for (let c = 2; c <= 5; c++) {
+            const colLet = String.fromCharCode(64 + c);
+            totRow.getCell(c).value = { formula: `SUM(${colLet}2:${colLet}${lastR})` };
+          }
+          for (let c = 1; c <= 5; c++) {
+            const cell = totRow.getCell(c);
+            cell.font = fontBold;
+            cell.fill = totalFill;
+            cell.border = borderThin;
+            if (c >= 2) {
+              cell.numFmt = '#,##0';
+              cell.alignment = { horizontal: 'right', vertical: 'middle' };
+            }
+          }
+        }
+
+        const colWidths2 = [30, 18, 16, 18, 18, 4, 16, 18, 18, 18, 18];
+        colWidths2.forEach((w, i) => { ws2.getColumn(i + 1).width = w; });
+
+        // -------- Sheet 3: 정리요약 --------
+        const ws3 = outWb.addWorksheet('정리요약');
+        ws3.getCell('A1').value = `미결금액 정리 검증 요약 (기준년월: ${cutoffYM})`;
+        ws3.getCell('A1').font = fontTitle;
+
+        const sumHeaders = [
+          '항목', '정리 전 행수', '정리 후 행수', '이전 합산삭제', '이전 일자변경',
+          '정리 전 -미결 건수', '정리 후 -미결 건수', '정리 전 총 미결금액', '정리 후 총 미결금액', '차액',
+          '1차 상계(동일매입처+거래처)', '2차 상계(동일매입처)', '3차 상계(타매입처)'
+        ];
+        const shRow = ws3.getRow(3);
+        sumHeaders.forEach((h, i) => {
+          const cell = shRow.getCell(i + 1);
+          cell.value = h;
+          cell.font = fontBold;
+          cell.fill = headerFill;
+          cell.alignment = { horizontal: 'center', vertical: 'middle' };
+          cell.border = borderThin;
+        });
+
+        sectionSummaries.forEach((s, idx) => {
+          const r = ws3.getRow(4 + idx);
+          const vals = [
+            s.name, s.origCount, s.afterCount, s.preMergedCount, s.preRedatedCount,
+            s.negBeforeCount, s.negAfterCount, s.sumBefore, s.sumAfter, s.diff,
+            s.tier1, s.tier2, s.tier3
+          ];
+          vals.forEach((v, i) => {
+            const cell = r.getCell(i + 1);
+            cell.value = v;
+            cell.font = fontBase;
+            cell.border = borderThin;
+            if (i === 0) cell.alignment = { horizontal: 'center' };
+            else {
+              cell.numFmt = '#,##0';
+              cell.alignment = { horizontal: 'right' };
+            }
+          });
+        });
+
+        const gtRowNum = 4 + sectionSummaries.length;
+        const gtRow = ws3.getRow(gtRowNum);
+        gtRow.getCell(1).value = '전체 합계';
+        for (let c = 2; c <= 13; c++) {
+          const colLet = String.fromCharCode(64 + c);
+          gtRow.getCell(c).value = { formula: `SUM(${colLet}4:${colLet}${gtRowNum - 1})` };
+        }
+        for (let c = 1; c <= 13; c++) {
+          const cell = gtRow.getCell(c);
+          cell.font = fontBold;
+          cell.fill = totalFill;
+          cell.border = borderThin;
+          if (c === 1) cell.alignment = { horizontal: 'center' };
+          else {
+            cell.numFmt = '#,##0';
+            cell.alignment = { horizontal: 'right' };
+          }
+        }
+
+        const t3TitleRow = gtRowNum + 3;
+        ws3.getCell(`A${t3TitleRow}`).value = '3차 상계 내역 (매입처 순액 마이너스 → 동일 항목 내 타 매입처 +금액 상계)';
+        ws3.getCell(`A${t3TitleRow}`).font = fontTitle;
+        const t3Headers = ['항목', '마이너스 매입처', '마이너스 거래처', '일자', '상계 대상 매입처', '상계 대상 거래처', '대상 일자', '상계 금액'];
+        const t3hRow = ws3.getRow(t3TitleRow + 1);
+        t3Headers.forEach((h, i) => {
+          const cell = t3hRow.getCell(i + 1);
+          cell.value = h;
+          cell.font = fontBold;
+          cell.fill = headerFill;
+          cell.alignment = { horizontal: 'center', vertical: 'middle' };
+          cell.border = borderThin;
+        });
+
+        tier3Log.forEach((entry, idx) => {
+          const r = ws3.getRow(t3TitleRow + 2 + idx);
+          const vals = [
+            entry.section, entry.fromSupplier, entry.fromClient, entry.fromDate,
+            entry.toSupplier, entry.toClient, entry.toDate, entry.amount
+          ];
+          vals.forEach((v, i) => {
+            const cell = r.getCell(i + 1);
+            cell.value = v;
+            cell.font = fontBase;
+            cell.border = borderThin;
+            if (i === 7) {
+              cell.numFmt = '#,##0';
+              cell.alignment = { horizontal: 'right' };
+            } else if (i === 0 || i === 3 || i === 6) {
+              cell.alignment = { horizontal: 'center' };
+            }
+          });
+        });
+
+        const colWidths3 = [10, 26, 18, 12, 26, 18, 12, 18, 18, 12, 22, 18, 18];
+        colWidths3.forEach((w, i) => { ws3.getColumn(i + 1).width = w; });
+
+        // Trigger download
+        const buffer = await outWb.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        let outName = (document.getElementById('opt-outname').value || '미결(병원부)_정리완료.xlsx').trim();
+        if (!outName.toLowerCase().endsWith('.xlsx')) outName += '.xlsx';
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = outName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+        showAlert('success', `<strong>엑셀 파일 생성 완료:</strong> <code>${escHtml(outName)}</code> 파일이 다운로드되었습니다. (시트 구성: <code>미결(병원부)</code>, <code>집계</code>, <code>정리요약</code>)`);
+      } catch (err) {
+        console.error(err);
+        showAlert('error', `<strong>엑셀 생성 중 오류 발생:</strong> ${escHtml(err.message)}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = prevText;
+      }
+    }
+  </script>
+</body>
+</html>

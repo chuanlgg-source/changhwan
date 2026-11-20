@@ -1,6 +1,6 @@
 {
   "$schema": "./schema/portal-spec.schema.json",
-  "version": "2.9.14",
+  "version": "2.9.15",
   "systemTitle": "Clinical Ledger Precision",
   "systemSubtitle": "병원부 미결 원장 대사 및 업무 통합 포털",
   "themes": [
@@ -28,6 +28,16 @@
           "badgeColor": "blue",
           "role": "all",
           "description": "Pyodide WASM 기반 병원부 미결 원장 대사 엔진 (reconcile_engine.py 연동)"
+        },
+        {
+          "id": "quarterly-pending-cleanup",
+          "title": "병원부 미결 정리 (분기)",
+          "type": "iframe",
+          "url": "quarterly-pending-cleanup.html",
+          "badge": "분기정리",
+          "badgeColor": "amber",
+          "role": "all",
+          "description": "분기별 병원부 미결 엑셀 업로드 → 기준월 이전 합산 및 3단계 마이너스(-) 상계 정리 → 엑셀 생성"
         },
         {
           "id": "email-classification",
