@@ -58,6 +58,16 @@
           "badgeColor": "green",
           "role": "all",
           "description": "회사 메일(chuanl@geo-young.com / POP3 SSL 995) 최근 3개월 수신함 업무 내용 분류 및 정리"
+        },
+        {
+          "id": "geoyoung-payment-automation",
+          "title": "지오영 지급집계표 자동화",
+          "type": "iframe",
+          "url": "geoyoung-payment-automation.html",
+          "badge": "지급자동화",
+          "badgeColor": "green",
+          "role": "all",
+          "description": "매월 20~30일 POP3 메일 3종 첨부파일 저장, 결재집행비교 자동 반영(정렬·서식유지), 매입처별 집계표 생성 및 최종금액 0원 일치 검증"
         }
       ]
     },

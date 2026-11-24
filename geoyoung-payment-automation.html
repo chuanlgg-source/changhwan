@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>지오영 지급집계표 자동화 — Clinical Ledger Precision</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #faf8ff;
+      color: #131b2e;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 13px;
+    }
+    .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .num-font { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body class="p-4 sm:p-6">
+  <div class="max-w-7xl mx-auto space-y-5">
+    <!-- 상단 헤더 카드 -->
+    <div class="bg-white rounded-xl border border-[#cbd5e1] p-5 sm:p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+      <div>
+        <div class="text-[11px] font-bold text-[#1e3a8a] uppercase tracking-wider mb-1">
+          PERSONAL WORK · GEO-YOUNG PAYMENT AUTOMATION (POP3 + EXCEL COM)
+        </div>
+        <h1 class="text-xl font-bold font-headline text-[#00236f] flex flex-wrap items-center gap-2">
+          <span>지오영 병원부 지급집계표 메일·엑셀 자동화</span>
+          <span id="serverBadge" class="px-2.5 py-0.5 rounded bg-[#fffbeb] text-[#d97706] border border-[#fde68a] text-[11px] font-bold">
+            로컬 엔진 확인 중...
+          </span>
+        </h1>
+        <p class="text-xs text-[#444651] mt-1">
+          매월 20~30일 <code class="num-font bg-[#f2f3ff] px-1.5 py-0.5 rounded text-[#00236f] font-semibold">chuanl@geo-young.com</code> (POP3 SSL <code class="num-font">gw.geo-young.com:995</code>) 수신 첨부파일 3종 자동 저장, 결재집행비교 서식 100% 유지·정렬 반영 및 매입처별 집계표 자동 생성
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <a href="index.html" class="px-3 py-2 bg-white text-[#1e3a8a] border border-[#cbd5e1] text-xs font-bold rounded-lg hover:bg-slate-50 transition">
+          ← 포털 홈
+        </a>
+        <button onclick="openTargetFolder()" class="px-3 py-2 bg-[#f2f3ff] text-[#1e3a8a] border border-[#cbd5e1] text-xs font-bold rounded-lg hover:bg-[#eaedff] transition">
+          저장 폴더 열기
+        </button>
+        <button onclick="toggleSettings()" class="px-3 py-2 bg-white text-[#444651] border border-[#cbd5e1] text-xs font-bold rounded-lg hover:bg-slate-50 transition">
+          POP3 · 경로 설정
+        </button>
+        <button id="btnCheckMails" onclick="checkMails()" class="px-4 py-2 bg-[#00236f] text-white text-xs font-bold rounded-lg hover:bg-[#1e3a8a] disabled:opacity-50 transition">
+          지금 메일 수신 확인
+        </button>
+      </div>
+    </div>
+
+    <!-- 로컬 엔진 연결 안내 배너 -->
+    <div id="offlineBanner" class="hidden bg-[#fef2f2] border border-[#fecaca] rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div class="text-xs text-[#dc2626] leading-relaxed">
+        <strong>로컬 File Check 자동화 서버(<span id="apiBaseLabel" class="num-font">http://localhost:3001</span>)에 연결할 수 없습니다.</strong><br>
+        PC에서 <code class="num-font bg-white px-1.5 py-0.5 rounded border border-[#fecaca]">File Check\start.bat</code>을 실행한 뒤 우측의 <strong>[다시 연결]</strong>을 눌러 주세요. (POP3 소켓 접속 및 Windows Excel COM 서식 유지 반영은 로컬 엔진을 통해 안전하게 실행됩니다.)
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <input id="apiBaseInput" type="text" value="http://localhost:3001" class="num-font text-xs px-2.5 py-1.5 rounded border border-[#fecaca] bg-white w-48" />
+        <button onclick="reconnectServer()" class="px-3 py-1.5 bg-[#dc2626] text-white text-xs font-bold rounded hover:bg-red-700">
+          다시 연결
+        </button>
+      </div>
+    </div>
+
+    <!-- 알림 토스트 영역 -->
+    <div id="toastBox" class="hidden rounded-xl border px-4 py-3 text-xs font-semibold"></div>
+
+    <!-- 4단계 자동화 워크플로우 요약 카드 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div class="bg-white p-4 rounded-xl border border-[#cbd5e1] border-l-4 border-l-[#00236f]">
+        <div class="text-[11px] font-bold text-[#757682]">STEP 1 · 월별자금수지계획표</div>
+        <div class="text-xs font-bold text-[#00236f] mt-1">파일명 자동 변환 저장</div>
+        <div class="num-font text-[11px] text-[#444651] mt-1 truncate">월별자금수지계획표(병원부)YYYY.MM_예정.xlsx</div>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-[#cbd5e1] border-l-4 border-l-[#1e3a8a]">
+        <div class="text-[11px] font-bold text-[#757682]">STEP 2 · 결재집행비교</div>
+        <div class="text-xs font-bold text-[#1e3a8a] mt-1">지급품의서 반영 · 서식 유지 · 정렬</div>
+        <div class="num-font text-[11px] text-[#444651] mt-1 truncate">유형 &gt; 매입처명 &gt; 거래처명 + 누락행 삽입</div>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-[#cbd5e1] border-l-4 border-l-[#059669]">
+        <div class="text-[11px] font-bold text-[#757682]">STEP 3 · 매입처별 집계표</div>
+        <div class="text-xs font-bold text-[#059669] mt-1">기존 양식 그대로 자동 생성</div>
+        <div class="num-font text-[11px] text-[#444651] mt-1 truncate">..._첨부(매입처별 집계표)_예정.xlsx</div>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-[#cbd5e1] border-l-4 border-l-[#d97706]">
+        <div class="text-[11px] font-bold text-[#757682]">STEP 4 · 최종금액 검증</div>
+        <div id="kpiAutoSchedule" class="text-xs font-bold text-[#d97706] mt-1">어음 · 현금 · 총합계 0원 차이 확인</div>
+        <div id="kpiLastCheck" class="num-font text-[11px] text-[#444651] mt-1 truncate">마지막 확인: -</div>
+      </div>
+    </div>
+
+    <!-- POP3 및 경로 설정 패널 (접기/펼치기) -->
+    <form id="settingsPanel" onsubmit="saveConfig(event)" class="hidden bg-white rounded-xl border border-[#cbd5e1] p-5 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#e2e8f0] pb-3">
+        <h2 class="text-sm font-bold text-[#00236f]">POP3 메일 계정 및 자동화 규칙 설정</h2>
+        <span class="text-[11px] text-[#757682] num-font">비밀번호는 로컬 AES-256 암호화 저장 · 서버 메일은 삭제하지 않음</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <label class="flex flex-col gap-1">
+          <span class="text-[11px] font-semibold text-[#444651]">POP3 서버</span>
+          <input id="cfgHost" type="text" value="gw.geo-young.com" class="num-font bg-[#faf8ff] border border-[#cbd5e1] rounded-lg px-3 py-2 text-xs" />
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-[11px] font-semibold text-[#444651]">포트 / SSL</span>
+          <div class="flex items-center gap-2">
+            <input id="cfgPort" type="number" value="995" class="num-font w-24 bg-[#faf8ff] border border-[#cbd5e1] rounded-lg px-3 py-2 text-xs" />
+            <label class="flex items-center gap-1.5 text-xs text-[#444651]">
+              <input id="cfgSsl" type="checkbox" checked /> SSL 사용
+            </label>
+          </div>
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-[11px] font-semibold text-[#444651]">이메일 계정 (ID)</span>
+          <input id="cfgUser" type="text" value="chuanl@geo-young.com" class="num-font bg-[#faf8ff] border border-[#cbd5e1] rounded-lg px-3 py-2 text-xs" />
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-[11px] font-semibold text-[#444651]">비밀번호 <span id="cfgPwdSaved" class="text-[#059669] hidden">(저장됨)</span></span>
+          <input id="cfgPassword" type="password" placeholder="변경 시에만 입력" class="bg-[#faf8ff] border border-[#cbd5e1] rounded-lg px-3 py-2 text-xs" />
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-[11px] font-semibold text-[#444651]">발신자 필터</span>
+          <input id="cfgSender" type="text" value="sky3483@geo-young.com" class="num-font bg-[#faf8ff] border border-[#cbd5e1] rounded-lg px-3 py-2 text-xs" />
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-[11px] font-semibold text-[#444651]">제목 키워드</span>
+          <input id="cfgSubject" type="text" value="지오영병원부 지급집계표" class="bg-[#faf8ff] border border-[#cbd5e1] rounded-lg px-3 py-2 text-xs" />
+        </label>
+        <label class="flex flex-col gap-1 md:col-span-2">
+          <span class="text-[11px] font-semibold text-[#444651]">저장 대상 폴더</span>
+          <input id="cfgTargetDir" type="text" value="E:\OneDrive\업무\지오영_지불결의서_집계표" class="num-font bg-[#faf8ff] border border-[#cbd5e1] rounded-lg px-3 py-2 text-xs" />
+        </label>
+      </div>
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#e2e8f0]">
+        <div class="flex flex-wrap items-center gap-4 text-xs text-[#444651]">
+          <label class="flex items-center gap-1.5"><input id="cfgAutoEnabled" type="checkbox" checked /> 자동 감시</label>
+          <span class="num-font">매월 <input id="cfgDayStart" type="number" value="20" class="w-12 text-center border border-[#cbd5e1] rounded py-0.5 bg-[#faf8ff]" /> ~ <input id="cfgDayEnd" type="number" value="30" class="w-12 text-center border border-[#cbd5e1] rounded py-0.5 bg-[#faf8ff]" />일 · <input id="cfgInterval" type="number" value="15" class="w-12 text-center border border-[#cbd5e1] rounded py-0.5 bg-[#faf8ff]" />분</span>
+          <label class="flex items-center gap-1.5"><input id="cfgDueDate" type="checkbox" checked /> 어음 만기일(I열) 반영</label>
+          <label class="flex items-center gap-1.5"><input id="cfgSummarySheet" type="checkbox" checked /> 집계 시트 소계 갱신</label>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="testConnection()" class="px-3.5 py-2 bg-[#f2f3ff] text-[#1e3a8a] border border-[#cbd5e1] text-xs font-bold rounded-lg hover:bg-[#eaedff]">
+            POP3 연결 테스트
+          </button>
+          <button type="submit" class="px-4 py-2 bg-[#00236f] text-white text-xs font-bold rounded-lg hover:bg-[#1e3a8a]">
+            설정 저장
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- 메인 2단 그리드 -->
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-5">
+      <!-- 좌측: 수신 메일 / 로컬 실행 + 이력 -->
+      <div class="xl:col-span-7 space-y-5">
+        <div class="bg-white rounded-xl border border-[#cbd5e1] overflow-hidden">
+          <div class="flex items-center justify-between px-4 pt-3 border-b border-[#e2e8f0] bg-[#f2f3ff]/60">
+            <div class="flex gap-1">
+              <button id="tabMail" onclick="switchMode('mail')" class="px-3.5 py-2 text-xs font-bold border-b-2 border-[#00236f] text-[#00236f]">
+                POP3 수신 메일 (<span id="mailCountLabel">0</span>)
+              </button>
+              <button id="tabLocal" onclick="switchMode('local')" class="px-3.5 py-2 text-xs font-bold border-b-2 border-transparent text-[#757682] hover:text-[#00236f]">
+                로컬 파일 직접 실행 · 테스트
+              </button>
+            </div>
+            <span id="scanInfoLabel" class="num-font text-[11px] text-[#757682] pb-2"></span>
+          </div>
+
+          <!-- POP3 메일 목록 -->
+          <div id="panelMail" class="p-4">
+            <div id="mailList" class="space-y-2.5">
+              <div class="py-10 text-center text-[#757682] text-xs">
+                상단의 <strong>[지금 메일 수신 확인]</strong> 버튼을 눌러 조건에 맞는 메일을 조회하세요.
+              </div>
+            </div>
+          </div>
+
+          <!-- 로컬 파일 직접 실행 -->
+          <div id="panelLocal" class="hidden p-4 space-y-3">
+            <p class="text-xs text-[#444651]">
+              PC에 저장된 <strong>지급품의서(.xls)</strong>와 <strong>결재집행비교(.xlsx)</strong> 경로를 지정해 미리보기 또는 실제 반영(매입처별 집계표 자동 생성 포함)을 실행할 수 있습니다.
+            </p>
+            <label class="flex flex-col gap-1">
+              <span class="text-[11px] font-semibold text-[#444651]">1. 지급품의서 원본 (.xls / .xlsx) *</span>
+              <input id="localProposal" type="text" placeholder="예: C:\Users\chuan\Downloads\지오영병원부26년11월지급품의서(11.24).xls" class="num-font bg-[#faf8ff] border border-[#cbd5e1] rounded-lg px-3 py-2 text-xs" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-[11px] font-semibold text-[#444651]">2. 결재집행비교 대상 (.xlsx) *</span>
+              <input id="localComparison" type="text" placeholder="예: E:\OneDrive\업무\지오영_지불결의서_집계표\결재집행비교(병원부_결제시_제출비교표)2026.10~2026.11.xlsx" class="num-font bg-[#faf8ff] border border-[#cbd5e1] rounded-lg px-3 py-2 text-xs" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-[11px] font-semibold text-[#444651]">3. 월별자금수지계획표 (.xlsx, 선택)</span>
+              <input id="localCashflow" type="text" placeholder="(선택) 월별자금수지계획표집계(병원부)(26.11).xlsx" class="num-font bg-[#faf8ff] border border-[#cbd5e1] rounded-lg px-3 py-2 text-xs" />
+            </label>
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#e2e8f0]">
+              <label class="flex items-center gap-1.5 text-xs text-[#444651]">
+                <input id="localCopyToTarget" type="checkbox" /> 저장 폴더로 표준 파일명 복사 후 반영
+              </label>
+              <div class="flex items-center gap-2">
+                <button onclick="runLocal(true)" class="px-3.5 py-2 bg-[#f2f3ff] text-[#1e3a8a] border border-[#cbd5e1] text-xs font-bold rounded-lg hover:bg-[#eaedff]">
+                  매칭 미리보기 (Dry-Run)
+                </button>
+                <button onclick="runLocal(false)" class="px-4 py-2 bg-[#00236f] text-white text-xs font-bold rounded-lg hover:bg-[#1e3a8a]">
+                  실제 엑셀 반영 실행
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 최근 처리 이력 -->
+        <div class="bg-white rounded-xl border border-[#cbd5e1] p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-[#00236f]">최근 처리 · 검증 이력</h3>
+            <button onclick="clearHistory()" class="text-[11px] text-[#757682] hover:text-[#dc2626]">이력 비우기</button>
+          </div>
+          <div id="historyList" class="space-y-2 max-h-64 overflow-y-auto">
+            <p class="text-xs text-[#757682] text-center py-4">아직 실행 이력이 없습니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 우측: 최종금액 일치여부 검토 리포트 -->
+      <div class="xl:col-span-5">
+        <div class="bg-white rounded-xl border border-[#cbd5e1] p-5 space-y-4">
+          <div class="flex items-center justify-between border-b border-[#e2e8f0] pb-3">
+            <h3 class="text-sm font-bold text-[#00236f]">최종금액 일치여부 검토 리포트</h3>
+            <span id="verifBadge" class="hidden px-2.5 py-0.5 rounded-full text-[11px] font-bold border"></span>
+          </div>
+          <div id="reportBody" class="py-14 text-center text-xs text-[#757682]">
+            메일 처리 또는 로컬 실행 후 최종금액 검증 결과가 여기에 표시됩니다.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let API_BASE = localStorage.getItem('gy_api_base') || 'http://localhost:3001';
+    let currentHistory = [];
+    let selectedRecord = null;
+    let currentMails = [];
+
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    }
+
+    function fmtKRW(v) {
+      if (v === null || v === undefined || Number.isNaN(Number(v))) return '-';
+      return Math.round(Number(v)).toLocaleString('ko-KR') + '원';
+    }
+
+    function fmtDt(iso) {
+      if (!iso) return '-';
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return iso;
+      const p = n => String(n).padStart(2, '0');
+      return `${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+    }
+
+    function showToast(type, msg) {
+      const box = document.getElementById('toastBox');
+      box.className = 'rounded-xl border px-4 py-3 text-xs font-semibold ' + (
+        type === 'success' ? 'bg-[#ecfdf5] text-[#059669] border-[#a7f3d0]' :
+        type === 'error' ? 'bg-[#fef2f2] text-[#dc2626] border-[#fecaca]' :
+        'bg-[#eff6ff] text-[#2563eb] border-[#bfdbfe]'
+      );
+      box.textContent = msg;
+      box.classList.remove('hidden');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => box.classList.add('hidden'), 5000);
+    }
+
+    async function apiReq(path, options = {}) {
+      const res = await fetch(`${API_BASE}/api/geoyoung-mail${path}`, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `요청 실패 (${res.status})`);
+      return data;
+    }
+
+    function setOnlineState(online, cfg = null) {
+      const badge = document.getElementById('serverBadge');
+      const banner = document.getElementById('offlineBanner');
+      document.getElementById('apiBaseLabel').textContent = API_BASE;
+      document.getElementById('apiBaseInput').value = API_BASE;
+
+      if (online) {
+        banner.classList.add('hidden');
+        if (cfg && cfg.autoCheckEnabled && cfg.hasPassword) {
+          badge.className = 'px-2.5 py-0.5 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] text-[11px] font-bold';
+          badge.textContent = `로컬 엔진 연결됨 · 매월 ${cfg.autoCheckDayStart}~${cfg.autoCheckDayEnd}일 자동감시`;
+        } else {
+          badge.className = 'px-2.5 py-0.5 rounded bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe] text-[11px] font-bold';
+          badge.textContent = cfg && !cfg.hasPassword ? '로컬 엔진 연결됨 · 비밀번호 설정 필요' : '로컬 엔진 연결됨';
+        }
+      } else {
+        banner.classList.remove('hidden');
+        badge.className = 'px-2.5 py-0.5 rounded bg-[#fef2f2] text-[#dc2626] border border-[#fecaca] text-[11px] font-bold';
+        badge.textContent = '로컬 엔진 미연결';
+      }
+    }
+
+    async function loadConfig() {
+      try {
+        const data = await apiReq('/config');
+        const c = data.config || {};
+        setOnlineState(true, c);
+
+        document.getElementById('cfgHost').value = c.host || 'gw.geo-young.com';
+        document.getElementById('cfgPort').value = c.port || 995;
+        document.getElementById('cfgSsl').checked = Boolean(c.useSsl);
+        document.getElementById('cfgUser').value = c.user || 'chuanl@geo-young.com';
+        document.getElementById('cfgSender').value = c.senderFilter || 'sky3483@geo-young.com';
+        document.getElementById('cfgSubject').value = c.subjectKeyword || '지오영병원부 지급집계표';
+        document.getElementById('cfgTargetDir').value = c.targetDir || 'E:\\OneDrive\\업무\\지오영_지불결의서_집계표';
+        document.getElementById('cfgAutoEnabled').checked = Boolean(c.autoCheckEnabled);
+        document.getElementById('cfgDayStart').value = c.autoCheckDayStart || 20;
+        document.getElementById('cfgDayEnd').value = c.autoCheckDayEnd || 30;
+        document.getElementById('cfgInterval').value = c.autoCheckIntervalMin || 15;
+        document.getElementById('cfgDueDate').checked = Boolean(c.updateDueDate);
+        document.getElementById('cfgSummarySheet').checked = Boolean(c.updateSummarySheet);
+        document.getElementById('cfgPwdSaved').classList.toggle('hidden', !c.hasPassword);
+
+        document.getElementById('kpiLastCheck').textContent =
+          `마지막 확인: ${data.lastAutoCheckAt ? fmtDt(data.lastAutoCheckAt) : '기록 없음'}${data.lastCheckStatus ? ' · ' + data.lastCheckStatus : ''}`;
+
+        currentHistory = data.history || [];
+        renderHistory();
+        if (currentHistory.length && !selectedRecord) {
+          selectedRecord = currentHistory[0];
+          renderReport();
+        }
+      } catch (err) {
+        setOnlineState(false);
+      }
+    }
+
+    function reconnectServer() {
+      const v = document.getElementById('apiBaseInput').value.trim().replace(/\/+$/, '');
+      if (v) {
+        API_BASE = v;
+        localStorage.setItem('gy_api_base', API_BASE);
+      }
+      loadConfig();
+    }
+
+    function toggleSettings() {
+      document.getElementById('settingsPanel').classList.toggle('hidden');
+    }
+
+    function switchMode(mode) {
+      const isMail = mode === 'mail';
+      document.getElementById('panelMail').classList.toggle('hidden', !isMail);
+      document.getElementById('panelLocal').classList.toggle('hidden', isMail);
+      document.getElementById('tabMail').className = isMail
+        ? 'px-3.5 py-2 text-xs font-bold border-b-2 border-[#00236f] text-[#00236f]'
+        : 'px-3.5 py-2 text-xs font-bold border-b-2 border-transparent text-[#757682] hover:text-[#00236f]';
+      document.getElementById('tabLocal').className = !isMail
+        ? 'px-3.5 py-2 text-xs font-bold border-b-2 border-[#00236f] text-[#00236f]'
+        : 'px-3.5 py-2 text-xs font-bold border-b-2 border-transparent text-[#757682] hover:text-[#00236f]';
+    }
+
+    function readConfigPayload() {
+      const payload = {
+        host: document.getElementById('cfgHost').value.trim(),
+        port: Number(document.getElementById('cfgPort').value) || 995,
+        useSsl: document.getElementById('cfgSsl').checked,
+        user: document.getElementById('cfgUser').value.trim(),
+        senderFilter: document.getElementById('cfgSender').value.trim(),
+        subjectKeyword: document.getElementById('cfgSubject').value.trim(),
+        targetDir: document.getElementById('cfgTargetDir').value.trim(),
+        autoCheckEnabled: document.getElementById('cfgAutoEnabled').checked,
+        autoCheckDayStart: Number(document.getElementById('cfgDayStart').value) || 20,
+        autoCheckDayEnd: Number(document.getElementById('cfgDayEnd').value) || 30,
+        autoCheckIntervalMin: Number(document.getElementById('cfgInterval').value) || 15,
+        updateDueDate: document.getElementById('cfgDueDate').checked,
+        updateSummarySheet: document.getElementById('cfgSummarySheet').checked,
+      };
+      const pwd = document.getElementById('cfgPassword').value.trim();
+      if (pwd) payload.password = pwd;
+      return payload;
+    }
+
+    async function saveConfig(e) {
+      e.preventDefault();
+      try {
+        await apiReq('/config', { method: 'PUT', body: JSON.stringify(readConfigPayload()) });
+        document.getElementById('cfgPassword').value = '';
+        showToast('success', 'POP3 메일 및 자동화 설정이 저장되었습니다.');
+        await loadConfig();
+      } catch (err) {
+        showToast('error', err.message);
+      }
+    }
+
+    async function testConnection() {
+      try {
+        showToast('info', 'POP3 서버 연결을 확인하는 중...');
+        const res = await apiReq('/test', { method: 'POST', body: JSON.stringify(readConfigPayload()) });
+        showToast('success', res.message || 'POP3 서버 연결 성공!');
+      } catch (err) {
+        showToast('error', 'POP3 연결 실패: ' + err.message);
+      }
+    }
+
+    async function checkMails() {
+      const btn = document.getElementById('btnCheckMails');
+      btn.disabled = true;
+      btn.textContent = '메일함 확인 중...';
+      try {
+        const res = await apiReq('/check', { method: 'POST', body: JSON.stringify({ scanLimit: 60 }) });
+        currentMails = res.mails || [];
+        document.getElementById('mailCountLabel').textContent = currentMails.length;
+        document.getElementById('scanInfoLabel').textContent = `전체 ${res.totalMessages}통 중 최근 ${res.scanned}통 스캔`;
+        renderMails();
+        await loadConfig();
+        showToast('info', `메일 확인 완료: 조건 일치 ${currentMails.length}통 발견`);
+      } catch (err) {
+        showToast('error', '메일 확인 실패: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '지금 메일 수신 확인';
+      }
+    }
+
+    function renderMails() {
+      const el = document.getElementById('mailList');
+      if (!currentMails.length) {
+        el.innerHTML = '<div class="py-10 text-center text-[#757682] text-xs">조건에 일치하는 수신 메일이 없습니다.</div>';
+        return;
+      }
+      el.innerHTML = currentMails.map((m, idx) => `
+        <div class="p-3.5 rounded-xl bg-[#faf8ff] border border-[#e2e8f0] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="num-font text-[11px] px-1.5 py-0.5 rounded bg-[#f2f3ff] text-[#1e3a8a] font-semibold">#${m.msgNum}</span>
+              <span class="text-xs font-bold text-[#131b2e] truncate">${esc(m.subject)}</span>
+              ${m.processed ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] shrink-0">처리완료</span>' : ''}
+            </div>
+            <div class="num-font text-[11px] text-[#757682] mt-1 flex flex-wrap gap-3">
+              <span>발신: ${esc(m.fromAddr || m.from)}</span>
+              <span>수신: ${esc(fmtDt(m.date))}</span>
+              <span>대상월: ${m.year}.${String(m.month).padStart(2,'0')}</span>
+            </div>
+          </div>
+          <button onclick="processMail(${idx}, this)" class="px-3.5 py-2 bg-[#00236f] text-white text-xs font-bold rounded-lg hover:bg-[#1e3a8a] disabled:opacity-50 shrink-0">
+            ${m.processed ? '다시 처리' : '첨부 저장 & 엑셀 반영'}
+          </button>
+        </div>
+      `).join('');
+    }
+
+    async function processMail(idx, btn) {
+      const mail = currentMails[idx];
+      if (!mail) return;
+      btn.disabled = true;
+      btn.textContent = '엑셀 반영 중...';
+      try {
+        const res = await apiReq('/process-mail', { method: 'POST', body: JSON.stringify(mail) });
+        selectedRecord = res.record;
+        currentMails[idx].processed = true;
+        renderMails();
+        renderReport();
+        await loadConfig();
+        const exact = res.record?.excelResult?.verification?.isExactMatch;
+        showToast(exact === false ? 'error' : 'success', res.record?.summary || '처리 완료');
+      } catch (err) {
+        showToast('error', '메일 처리 실패: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '다시 처리';
+      }
+    }
+
+    async function runLocal(dryRun) {
+      const proposalPath = document.getElementById('localProposal').value.trim();
+      const comparisonPath = document.getElementById('localComparison').value.trim();
+      const cashflowPath = document.getElementById('localCashflow').value.trim();
+      const copyToTargetDir = document.getElementById('localCopyToTarget').checked;
+      if (!proposalPath || !comparisonPath) {
+        showToast('error', '지급품의서(.xls)와 결재집행비교(.xlsx) 경로를 모두 입력해 주세요.');
+        return;
+      }
+      showToast('info', dryRun ? '매칭 미리보기 분석 중...' : 'Excel COM 반영 및 매입처별 집계표 생성 중...');
+      try {
+        const res = await apiReq('/process-local', {
+          method: 'POST',
+          body: JSON.stringify({ proposalPath, comparisonPath, cashflowPath: cashflowPath || undefined, copyToTargetDir, dryRun }),
+        });
+        selectedRecord = res.record;
+        renderReport();
+        if (!dryRun) await loadConfig();
+        const exact = res.record?.excelResult?.verification?.isExactMatch;
+        showToast(exact ? 'success' : 'error', res.record?.summary || '완료');
+      } catch (err) {
+        showToast('error', err.message);
+      }
+    }
+
+    async function openTargetFolder(targetPath = '') {
+      try {
+        await apiReq('/open-folder', { method: 'POST', body: JSON.stringify({ path: targetPath }) });
+      } catch (err) {
+        showToast('error', err.message);
+      }
+    }
+
+    async function clearHistory() {
+      if (!confirm('처리 이력을 모두 삭제할까요?')) return;
+      try {
+        await apiReq('/history', { method: 'DELETE' });
+        currentHistory = [];
+        selectedRecord = null;
+        renderHistory();
+        renderReport();
+        showToast('info', '처리 이력을 초기화했습니다.');
+      } catch (err) {
+        showToast('error', err.message);
+      }
+    }
+
+    function renderHistory() {
+      const el = document.getElementById('historyList');
+      if (!currentHistory.length) {
+        el.innerHTML = '<p class="text-xs text-[#757682] text-center py-4">아직 실행 이력이 없습니다.</p>';
+        return;
+      }
+      el.innerHTML = currentHistory.map((item, idx) => `
+        <button onclick="selectHistory(${idx})" class="w-full text-left p-3 rounded-xl border transition ${
+          selectedRecord && selectedRecord.id === item.id
+            ? 'bg-[#eff6ff] border-[#2563eb]'
+            : 'bg-[#faf8ff] border-[#e2e8f0] hover:bg-[#f2f3ff]'
+        }">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-[#131b2e] truncate">${esc(item.title)}</span>
+            <span class="num-font text-[11px] text-[#757682] shrink-0">${esc(fmtDt(item.executedAt))}</span>
+          </div>
+          <div class="text-[11px] text-[#444651] mt-1 truncate">${esc(item.summary)}</div>
+        </button>
+      `).join('');
+    }
+
+    function selectHistory(idx) {
+      selectedRecord = currentHistory[idx];
+      renderHistory();
+      renderReport();
+    }
+
+    function renderReport() {
+      const body = document.getElementById('reportBody');
+      const badge = document.getElementById('verifBadge');
+      if (!selectedRecord || !selectedRecord.excelResult) {
+        badge.classList.add('hidden');
+        body.innerHTML = '<div class="py-14 text-center text-xs text-[#757682]">메일 처리 또는 로컬 실행 후 최종금액 검증 결과가 여기에 표시됩니다.</div>';
+        return;
+      }
+      const ex = selectedRecord.excelResult;
+      const v = ex.verification || {};
+      badge.classList.remove('hidden');
+      badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold border ' + (
+        v.isExactMatch
+          ? 'bg-[#ecfdf5] text-[#059669] border-[#a7f3d0]'
+          : 'bg-[#fef2f2] text-[#dc2626] border-[#fecaca]'
+      );
+      badge.textContent = v.isExactMatch ? '완벽 일치 (차이 0원)' : '금액 차이 확인 필요';
+
+      const f = selectedRecord.files || {};
+      const billTarget = ex.dryRun ? v.plannedBillSum : ex.result?.detailBillSum;
+      const cashTarget = ex.dryRun ? v.plannedCashSum : ex.result?.detailCashSum;
+      const totalTarget = ex.dryRun ? v.plannedTotalSum : ex.result?.detailTotalSum;
+
+      body.innerHTML = `
+        <div class="text-left space-y-4">
+          <div class="p-3 rounded-xl bg-[#f2f3ff]/70 border border-[#cbd5e1] space-y-1 text-[11.5px]">
+            <div class="font-bold text-[#00236f] truncate">${esc(selectedRecord.title)}</div>
+            ${f.cashflow ? `<div class="num-font truncate">1. 자금수지: <span class="text-[#059669] font-semibold">${esc(f.cashflow.savedName)}</span></div>` : ''}
+            ${f.comparison ? `<div class="num-font flex justify-between gap-2"><span class="truncate">2. 비교표: <span class="text-[#00236f] font-semibold">${esc(f.comparison.savedName)}</span></span>${!ex.dryRun ? `<button onclick="openTargetFolder('${esc(f.comparison.savedPath).replace(/\\/g,'\\\\')}')" class="text-[#2563eb] hover:underline shrink-0">위치 열기</button>` : ''}</div>` : ''}
+            ${f.proposal ? `<div class="num-font truncate">3. 품의서: <span class="text-[#444651]">${esc(f.proposal.originalName)}</span></div>` : ''}
+            ${f.vendorSummary ? `<div class="num-font flex justify-between gap-2"><span class="truncate">4. 매입처별 집계표: <span class="text-[#d97706] font-semibold">${esc(f.vendorSummary.savedName)}</span></span><button onclick="openTargetFolder('${esc(f.vendorSummary.savedPath).replace(/\\/g,'\\\\')}')" class="text-[#2563eb] hover:underline shrink-0">위치 열기</button></div>` : ''}
+          </div>
+
+          <div class="overflow-x-auto rounded-xl border border-[#cbd5e1]">
+            <table class="w-full text-xs num-font">
+              <thead class="bg-[#f2f3ff] text-[#1e3a8a] text-[11px]">
+                <tr>
+                  <th class="py-2 px-2.5 text-left font-sans">구분</th>
+                  <th class="py-2 px-2.5 text-right">지급품의서(원본)</th>
+                  <th class="py-2 px-2.5 text-right">${ex.dryRun ? '반영 예정액' : '비교표(내역)'}</th>
+                  <th class="py-2 px-2.5 text-right">차이</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[#e2e8f0]">
+                <tr>
+                  <td class="py-2.5 px-2.5 font-sans font-semibold">어음 소계</td>
+                  <td class="py-2.5 px-2.5 text-right">${fmtKRW(ex.source.billSum)}</td>
+                  <td class="py-2.5 px-2.5 text-right">${fmtKRW(billTarget)}</td>
+                  <td class="py-2.5 px-2.5 text-right font-bold ${v.billDiff === 0 ? 'text-[#059669]' : 'text-[#dc2626]'}">${fmtKRW(v.billDiff)}</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-2.5 font-sans font-semibold">현금 소계</td>
+                  <td class="py-2.5 px-2.5 text-right">${fmtKRW(ex.source.cashSum)}</td>
+                  <td class="py-2.5 px-2.5 text-right">${fmtKRW(cashTarget)}</td>
+                  <td class="py-2.5 px-2.5 text-right font-bold ${v.cashDiff === 0 ? 'text-[#059669]' : 'text-[#dc2626]'}">${fmtKRW(v.cashDiff)}</td>
+                </tr>
+                <tr class="bg-[#f2f3ff]/60 font-bold text-[#00236f]">
+                  <td class="py-2.5 px-2.5 font-sans">총 합계</td>
+                  <td class="py-2.5 px-2.5 text-right">${fmtKRW(ex.source.totalSum)}</td>
+                  <td class="py-2.5 px-2.5 text-right">${fmtKRW(totalTarget)}</td>
+                  <td class="py-2.5 px-2.5 text-right ${v.totalDiff === 0 ? 'text-[#059669]' : 'text-[#dc2626]'}">${fmtKRW(v.totalDiff)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div class="p-2.5 rounded-lg bg-[#faf8ff] border border-[#e2e8f0]">
+              <div class="text-[11px] text-[#757682]">기존행 반영</div>
+              <div class="num-font text-base font-bold text-[#00236f]">${ex.matching.updatedRowCount}건</div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-[#faf8ff] border border-[#e2e8f0]">
+              <div class="text-[11px] text-[#757682]">신규행 삽입</div>
+              <div class="num-font text-base font-bold text-[#d97706]">${ex.matching.insertedBillCount + ex.matching.insertedCashCount}건</div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-[#faf8ff] border border-[#e2e8f0]">
+              <div class="text-[11px] text-[#757682]">합산 반영</div>
+              <div class="num-font text-base font-bold text-[#2563eb]">${ex.matching.mergedCount}건</div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-[#faf8ff] border border-[#e2e8f0]">
+              <div class="text-[11px] text-[#757682]">분리 매칭</div>
+              <div class="num-font text-base font-bold text-[#059669]">${ex.matching.splitCount}건</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    loadConfig();
+  </script>
+</body>
+</html>
