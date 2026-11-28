@@ -114,6 +114,33 @@
       "subMenus": []
     },
     {
+      "id": "curiosity",
+      "themeId": "curiosity",
+      "title": "💡 호기심",
+      "themeTitle": "💡 호기심",
+      "description": "개인 프로젝트 및 클럽 행사 유틸리티 모음",
+      "themeDesc": "개인 프로젝트 및 클럽 행사 유틸리티 모음",
+      "adminOnly": false,
+      "dashboard": {
+        "id": "todang-club-sponsor-flyer",
+        "title": "토당클럽(테미모) 찬조자 광고지",
+        "type": "iframe",
+        "url": "todang-club-sponsor-flyer.html"
+      },
+      "subMenus": [
+        {
+          "id": "todang-club-sponsor-flyer-menu",
+          "title": "토당클럽(테미모) 찬조자 광고지",
+          "type": "iframe",
+          "url": "todang-club-sponsor-flyer.html",
+          "badge": "광고지",
+          "badgeColor": "amber",
+          "role": "all",
+          "description": "토당클럽(테미모) 4분기 클럽데이 찬조자 감사 광고지 (A4 가로 2쪽 · 엑셀/CSV 업로드)"
+        }
+      ]
+    },
+    {
       "id": "internal-admin",
       "themeId": "internal-admin",
       "title": "⚙️ 내부관리",
