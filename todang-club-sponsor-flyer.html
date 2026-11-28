@@ -4,11 +4,30 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>토당클럽(테미모) 4분기 클럽데이 | 찬조자 광고지 (A4 2쪽)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Noto+Sans+KR:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet" />
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <!-- SheetJS for Excel (.xlsx, .xls, .csv) Upload -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <style>
     :root {
+      --sage-primary: #0F5238;
+      --sage-primary-container: #2D6A4F;
+      --sage-secondary-container: #CFE9D8;
+      --sage-on-secondary-container: #1F352A;
+      --sage-tertiary: #783300;
+      --sage-tertiary-container: #FFDBCA;
+      --sage-surface: #F7FAF7;
+      --sage-surface-lowest: #FFFFFF;
+      --sage-surface-low: #F1F4F1;
+      --sage-surface-container: #ECEFEC;
+      --sage-on-surface: #181C1B;
+      --sage-on-surface-variant: #404943;
+      --sage-outline: #707973;
+      --sage-outline-variant: #BFC9C1;
+
       --ink: #0f172a;
       --ink-soft: #334155;
       --muted: #64748b;
@@ -24,6 +43,24 @@
       --item-border: #7dd3fc;
       --item-text: #075985;
       --item-badge: #0284c7;
+    }
+
+    [data-theme="sage"] {
+      --ink: #181C1B;
+      --ink-soft: #404943;
+      --muted: #707973;
+      --line: #BFC9C1;
+      --surface: #F7FAF7;
+      --accent: #0F5238;
+      --gold: #783300;
+      --cash-bg: #FFF8F4;
+      --cash-border: #FFDBCA;
+      --cash-text: #783300;
+      --cash-badge: #B45309;
+      --item-bg: #F1F4F1;
+      --item-border: #CFE9D8;
+      --item-text: #0F5238;
+      --item-badge: #2D6A4F;
     }
 
     [data-theme="emerald"] {
@@ -66,13 +103,13 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      font-family: 'Noto Sans KR', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
       -webkit-font-smoothing: antialiased;
     }
 
     body {
-      background: #e2e8f0;
-      color: var(--ink);
+      background: var(--sage-surface);
+      color: var(--sage-on-surface);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -81,15 +118,14 @@
       gap: 18px;
     }
 
-    /* ── Screen Control Bar ── */
+    /* ── Screen Control Bar (Sage Studio) ── */
     .toolbar {
       width: 100%;
       max-width: 297mm;
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-radius: 14px;
+      background: var(--sage-surface-lowest);
+      border: 1px solid var(--sage-outline-variant);
+      border-radius: 8px;
       padding: 14px 18px;
-      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
       display: flex;
       flex-wrap: wrap;
       align-items: center;
@@ -107,37 +143,39 @@
     .back-link {
       text-decoration: none;
       font-size: 12.5px;
-      font-weight: 700;
-      color: #475569;
-      background: #f1f5f9;
-      padding: 6px 10px;
+      font-weight: 600;
+      color: var(--sage-on-surface-variant);
+      background: var(--sage-surface-low);
+      padding: 6px 12px;
       border-radius: 8px;
-      border: 1px solid #e2e8f0;
-      transition: all 0.15s ease;
+      border: 1px solid var(--sage-outline-variant);
+      transition: all 120ms ease-out;
     }
 
     .back-link:hover {
-      background: #e2e8f0;
-      color: #0f172a;
+      background: var(--sage-surface-container);
+      color: var(--sage-primary);
+      border-color: var(--sage-primary);
     }
 
     .toolbar-title {
-      font-size: 14px;
-      font-weight: 800;
-      color: #0f172a;
+      font-family: 'Space Grotesk', 'Noto Sans KR', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--sage-on-surface);
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
     .toolbar-badge {
+      font-family: 'Fira Code', monospace;
       font-size: 11px;
       font-weight: 600;
-      background: #f1f5f9;
-      color: #475569;
-      padding: 3px 8px;
-      border-radius: 999px;
-      border: 1px solid #e2e8f0;
+      background: var(--sage-secondary-container);
+      color: var(--sage-on-secondary-container);
+      padding: 3px 10px;
+      border-radius: 9999px;
     }
 
     .toolbar-controls {
@@ -149,59 +187,62 @@
 
     .btn {
       appearance: none;
-      border: 1px solid #cbd5e1;
-      background: #ffffff;
-      color: #1e293b;
+      border: 1px solid var(--sage-outline-variant);
+      background: var(--sage-surface-lowest);
+      color: var(--sage-on-surface);
       font-size: 12.5px;
-      font-weight: 600;
+      font-weight: 500;
       padding: 7px 12px;
       border-radius: 8px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.15s ease;
+      transition: all 120ms ease-out;
     }
 
     .btn:hover {
-      background: #f8fafc;
-      border-color: #94a3b8;
+      background: var(--sage-surface-low);
+      border-color: var(--sage-primary);
     }
 
     .btn.active {
-      background: #0f172a;
-      color: #ffffff;
-      border-color: #0f172a;
+      background: var(--sage-primary);
+      color: #FFFFFF;
+      border-color: var(--sage-primary);
     }
 
     .btn-primary {
-      background: #0f172a;
-      color: #ffffff;
-      border-color: #0f172a;
+      background: var(--sage-primary);
+      color: #FFFFFF;
+      border-color: var(--sage-primary);
       padding: 8px 16px;
+      font-weight: 600;
     }
 
     .btn-primary:hover {
-      background: #1e293b;
-      border-color: #1e293b;
+      background: var(--sage-primary-container);
+      border-color: var(--sage-primary-container);
     }
 
     .btn-upload {
-      background: #eff6ff;
-      color: #1d4ed8;
-      border-color: #bfdbfe;
+      background: var(--sage-secondary-container);
+      color: var(--sage-on-secondary-container);
+      border-color: var(--sage-outline-variant);
+      font-weight: 600;
     }
 
     .btn-upload:hover {
-      background: #dbeafe;
-      border-color: #93c5fd;
+      background: #BDE0C9;
+      border-color: var(--sage-primary);
     }
 
     .select-group {
       display: inline-flex;
-      background: #f1f5f9;
+      background: var(--sage-surface-container);
+      border: 1px solid var(--sage-outline-variant);
       padding: 3px;
-      border-radius: 9px;
+      border-radius: 8px;
       gap: 2px;
     }
 
@@ -211,24 +252,24 @@
       padding: 5px 10px;
       font-size: 12px;
       border-radius: 6px;
-      color: #475569;
+      color: var(--sage-on-surface-variant);
     }
 
     .select-group .btn.active {
-      background: #ffffff;
-      color: #0f172a;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      background: var(--sage-surface-lowest);
+      color: var(--sage-primary);
+      font-weight: 600;
     }
 
     /* ── Status Toast ── */
     .status-banner {
       width: 100%;
       max-width: 297mm;
-      background: #ecfdf5;
-      border: 1px solid #a7f3d0;
-      color: #065f46;
+      background: var(--sage-secondary-container);
+      border: 1px solid var(--sage-outline-variant);
+      color: var(--sage-on-secondary-container);
       padding: 10px 16px;
-      border-radius: 10px;
+      border-radius: 8px;
       font-size: 12.5px;
       font-weight: 600;
       display: none;
@@ -244,11 +285,10 @@
     .editor-panel {
       width: 100%;
       max-width: 297mm;
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-radius: 14px;
+      background: var(--sage-surface-lowest);
+      border: 1px solid var(--sage-outline-variant);
+      border-radius: 8px;
       padding: 18px 20px;
-      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
       display: none;
       flex-direction: column;
       gap: 16px;
@@ -272,28 +312,31 @@
 
     .field label {
       font-size: 11.5px;
-      font-weight: 700;
-      color: #475569;
+      font-weight: 600;
+      color: var(--sage-on-surface-variant);
     }
 
     .field input {
-      border: 1px solid #cbd5e1;
+      border: 1px solid var(--sage-outline-variant);
+      background: var(--sage-surface-low);
       border-radius: 8px;
       padding: 7px 10px;
       font-size: 13px;
-      color: #0f172a;
+      color: var(--sage-on-surface);
       outline: none;
+      transition: all 120ms ease-out;
     }
 
     .field input:focus {
-      border-color: #0f172a;
+      background: var(--sage-surface-lowest);
+      border-color: var(--sage-primary);
     }
 
     .sponsor-editor-box {
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
+      border: 1px solid var(--sage-outline-variant);
+      border-radius: 8px;
       padding: 12px;
-      background: #f8fafc;
+      background: var(--sage-surface-low);
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -719,7 +762,7 @@
     }
   </style>
 </head>
-<body data-theme="navy">
+<body data-theme="sage">
   <!-- Screen Toolbar (Hidden when printing) -->
   <div class="toolbar">
     <div class="toolbar-left">
@@ -736,7 +779,8 @@
       <button class="btn" onclick="downloadTemplate()">양식 다운로드</button>
 
       <div class="select-group" role="group" aria-label="컬러 테마">
-        <button class="btn active" data-theme-btn="navy" onclick="setTheme('navy')">네이비·골드</button>
+        <button class="btn active" data-theme-btn="sage" onclick="setTheme('sage')">Sage Studio</button>
+        <button class="btn" data-theme-btn="navy" onclick="setTheme('navy')">네이비·골드</button>
         <button class="btn" data-theme-btn="emerald" onclick="setTheme('emerald')">에메랄드</button>
         <button class="btn" data-theme-btn="mono" onclick="setTheme('mono')">모노크롬</button>
       </div>
@@ -808,7 +852,7 @@
     const STORAGE_KEY = 'todang_temimo_4q_flyer_v2';
 
     const DEFAULT_STATE = {
-      theme: 'navy',
+      theme: 'sage',
       showCut: true,
       meta: {
         kicker: '2026 4Q CLUB DAY · SPECIAL THANKS',
