@@ -3,34 +3,139 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clinical Ledger Precision — 업무 통합 포털 시스템</title>
-  <!-- Google Fonts: Plus Jakarta Sans, Noto Sans KR, JetBrains Mono -->
+  <title>Sage Studio — 업무·코딩 통합 포털</title>
+  <!-- Google Fonts: Space Grotesk, Noto Sans KR, Fira Code, Material Symbols Outlined -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Noto+Sans+KR:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet">
   <!-- Tailwind CSS & Supabase JS SDK -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    globalThis.tailwind = globalThis.tailwind || {};
+    globalThis.tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'success': '#15803D',
+            'warning': '#B45309',
+            'light-primary': '#0F5238',
+            'light-on-primary': '#FFFFFF',
+            'light-primary-container': '#2D6A4F',
+            'light-on-primary-container': '#A8E7C5',
+            'light-secondary': '#4C6357',
+            'light-on-secondary': '#FFFFFF',
+            'light-secondary-container': '#CFE9D8',
+            'light-on-secondary-container': '#1F352A',
+            'light-tertiary': '#783300',
+            'light-on-tertiary': '#FFFFFF',
+            'light-tertiary-container': '#FFDBCA',
+            'light-on-tertiary-container': '#331200',
+            'light-error': '#BA1A1A',
+            'light-on-error': '#FFFFFF',
+            'light-error-container': '#FFDAD6',
+            'light-on-error-container': '#93000A',
+            'light-background': '#F7FAF7',
+            'light-on-background': '#181C1B',
+            'light-surface': '#F7FAF7',
+            'light-surface-dim': '#D8DBD8',
+            'light-surface-bright': '#F7FAF7',
+            'light-surface-container-lowest': '#FFFFFF',
+            'light-surface-container-low': '#F1F4F1',
+            'light-surface-container': '#ECEFEC',
+            'light-surface-container-high': '#E6E9E6',
+            'light-surface-container-highest': '#E0E3E0',
+            'light-on-surface': '#181C1B',
+            'light-surface-variant': '#DBE5DD',
+            'light-on-surface-variant': '#404943',
+            'light-outline': '#707973',
+            'light-outline-variant': '#BFC9C1',
+            'light-inverse-surface': '#2D3130',
+            'light-inverse-on-surface': '#EEF1EE',
+            'light-inverse-primary': '#95D4B3',
+          },
+          borderRadius: {
+            'sm': '6px',
+            'DEFAULT': '8px',
+            'md': '12px',
+            'lg': '16px',
+            'full': '9999px',
+          },
+          spacing: {
+            'gutter-xs': '4px',
+            'gutter-sm': '8px',
+            'gutter-md': '16px',
+            'gutter-lg': '24px',
+            'gutter-xl': '32px',
+            'section': '40px',
+            'page-margin': '24px',
+          },
+          fontFamily: {
+            'display': ['"Space Grotesk"', 'sans-serif'],
+            'headline': ['"Noto Sans KR"', 'sans-serif'],
+            'title': ['"Noto Sans KR"', 'sans-serif'],
+            'body': ['"Noto Sans KR"', 'sans-serif'],
+            'label': ['"Noto Sans KR"', 'sans-serif'],
+            'code': ['"Fira Code"', 'monospace'],
+          },
+          fontSize: {
+            'display-lg': ['36px', { lineHeight: '44px', letterSpacing: '-0.5px', fontWeight: '700' }],
+            'headline-lg': ['26px', { lineHeight: '34px', letterSpacing: '-0.25px', fontWeight: '700' }],
+            'headline-md': ['20px', { lineHeight: '28px', letterSpacing: '-0.2px', fontWeight: '700' }],
+            'headline-sm': ['17px', { lineHeight: '24px', letterSpacing: '-0.1px', fontWeight: '600' }],
+            'title-md': ['15px', { lineHeight: '22px', letterSpacing: '0px', fontWeight: '600' }],
+            'body-lg': ['15px', { lineHeight: '24px', letterSpacing: '0px', fontWeight: '400' }],
+            'body-md': ['14px', { lineHeight: '21px', letterSpacing: '0px', fontWeight: '400' }],
+            'body-sm': ['13px', { lineHeight: '19px', letterSpacing: '0px', fontWeight: '400' }],
+            'label-lg': ['14px', { lineHeight: '20px', letterSpacing: '0px', fontWeight: '500' }],
+            'label-md': ['12px', { lineHeight: '16px', letterSpacing: '0.1px', fontWeight: '500' }],
+            'label-sm': ['11px', { lineHeight: '14px', letterSpacing: '0.4px', fontWeight: '600' }],
+            'code-md': ['13px', { lineHeight: '20px', letterSpacing: '0px', fontWeight: '400' }],
+            'code-sm': ['12px', { lineHeight: '18px', letterSpacing: '0px', fontWeight: '400' }],
+          },
+          transitionDuration: {
+            'state-change': '120ms',
+          },
+          transitionTimingFunction: {
+            'state-change': 'ease-out',
+          },
+        },
+      },
+    };
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --surface: #faf8ff;
-      --surface-lowest: #ffffff;
-      --surface-low: #f2f3ff;
-      --surface-container: #eaedff;
-      --primary: #00236f;
-      --primary-container: #1e3a8a;
+      --surface: #F7FAF7;
+      --surface-lowest: #FFFFFF;
+      --surface-low: #F1F4F1;
+      --surface-container: #ECEFEC;
+      --primary: #0F5238;
+      --primary-container: #2D6A4F;
     }
     body {
-      background-color: #faf8ff;
-      color: #131b2e;
+      background-color: #F7FAF7;
+      color: #181C1B;
       font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 13px;
       margin: 0;
       padding: 0;
       -webkit-font-smoothing: antialiased;
     }
-    .font-headline { font-family: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif; }
-    .num-font { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+    .material-symbols-outlined {
+      display: inline-block;
+      width: 1em;
+      height: 1em;
+      line-height: 1 !important;
+      box-sizing: content-box;
+      overflow: hidden;
+      white-space: nowrap;
+      direction: ltr;
+      vertical-align: middle;
+    }
+    .font-headline { font-family: 'Space Grotesk', 'Noto Sans KR', sans-serif; }
+    .num-font { font-family: 'Fira Code', monospace; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
     .fade-in { animation: fadeIn 0.2s ease-out; }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(4px); }
@@ -38,125 +143,310 @@
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col bg-light-surface text-light-on-surface font-body antialiased">
 
   <!-- ========================================================================= -->
-  <!-- 1. LOGIN SCREEN (클린 엔터프라이즈 로그인)                                  -->
+  <!-- 1. LOGIN SCREEN (Sage Studio 로그인)                                       -->
   <!-- ========================================================================= -->
-  <div id="screen-login" class="flex-1 flex flex-col justify-center items-center p-4 sm:p-6 bg-[#faf8ff] relative overflow-hidden">
-    <div class="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-3xl h-72 bg-gradient-to-b from-[#eaedff] to-transparent rounded-full blur-3xl pointer-events-none opacity-70"></div>
+  <div id="screen-login" class="flex-1 flex flex-col justify-center items-center p-4 sm:p-6 bg-light-surface relative overflow-hidden">
+    <div class="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-3xl h-72 bg-gradient-to-b from-light-secondary-container/50 to-transparent rounded-full blur-3xl pointer-events-none opacity-80"></div>
 
     <div class="w-full max-w-md relative z-10 fade-in">
       <!-- Title Header -->
       <div class="text-center mb-7">
-        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1e3a8a]/10 border border-[#1e3a8a]/20 text-[#1e3a8a] text-[11px] font-bold tracking-wider mb-2.5">
-          <span>CLINICAL LEDGER PRECISION</span>
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded bg-light-primary text-light-on-primary mb-3 shadow-sm">
+          <span class="material-symbols-outlined text-[24px]" aria-hidden="true">terminal</span>
         </div>
-        <h1 class="text-2xl sm:text-3xl font-bold font-headline text-[#00236f] tracking-tight">
-          업무 통합 포털 시스템
+        <h1 class="font-display text-2xl sm:text-3xl font-bold text-light-on-surface tracking-tight">
+          Sage Studio
         </h1>
-        <p class="text-xs sm:text-sm text-[#444651] mt-1.5">
-          병원부 미결 원장 대사, 금융 시뮬레이터, 업무 지식 허브
+        <p class="font-body text-body-sm text-light-on-surface-variant mt-1.5">
+          개인 업무포털 · 아이디어 코딩 허브
         </p>
       </div>
 
       <!-- Login Card -->
-      <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-lg p-6 sm:p-8">
+      <div class="bg-light-surface-container-lowest rounded border border-light-outline-variant p-6 sm:p-8 shadow-sm">
         <form onsubmit="event.preventDefault(); handleFormLogin();" class="space-y-4" autocomplete="off">
           <div>
-            <label class="block text-xs font-bold text-[#131b2e] mb-1.5">업무용 이메일 (ID)</label>
+            <label class="block font-label text-label-md text-light-on-surface mb-1.5">업무용 이메일 (ID)</label>
             <input type="email" id="input-email" value="" required autocomplete="off"
-              class="w-full px-3.5 py-2.5 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white">
+              class="w-full px-3.5 py-2.5 text-body-sm bg-light-surface-container-low border border-light-outline-variant rounded focus:outline-none focus:border-light-primary focus:ring-1 focus:ring-light-primary focus:bg-light-surface-container-lowest transition-colors duration-state-change">
           </div>
           <div>
-            <label class="block text-xs font-bold text-[#131b2e] mb-1.5">비밀번호 (Password)</label>
+            <label class="block font-label text-label-md text-light-on-surface mb-1.5">비밀번호 (Password)</label>
             <input type="password" id="input-password" value="" required autocomplete="new-password"
-              class="w-full px-3.5 py-2.5 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white">
+              class="w-full px-3.5 py-2.5 text-body-sm bg-light-surface-container-low border border-light-outline-variant rounded focus:outline-none focus:border-light-primary focus:ring-1 focus:ring-light-primary focus:bg-light-surface-container-lowest transition-colors duration-state-change">
           </div>
           <div class="flex items-center justify-between">
-            <label class="inline-flex items-center gap-2 text-xs text-[#444651] cursor-pointer select-none">
-              <input type="checkbox" id="remember-email" class="w-3.5 h-3.5 rounded border-[#cbd5e1] text-[#00236f] focus:ring-[#1e3a8a] cursor-pointer">
+            <label class="inline-flex items-center gap-2 text-body-sm text-light-on-surface-variant cursor-pointer select-none">
+              <input type="checkbox" id="remember-email" class="w-3.5 h-3.5 rounded-sm border-light-outline text-light-primary focus:ring-light-primary cursor-pointer">
               <span class="font-medium">아이디 저장</span>
             </label>
           </div>
-          <div id="login-error" class="hidden p-2.5 rounded bg-[#fef2f2] border border-[#fecaca] text-[#dc2626] text-xs font-semibold"></div>
-          <button type="submit" id="btn-login-submit" class="w-full py-2.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-md shadow transition cursor-pointer">
+          <div id="login-error" class="hidden p-2.5 rounded bg-light-error-container border border-light-error/30 text-light-on-error-container text-body-sm font-semibold"></div>
+          <button type="submit" id="btn-login-submit" class="w-full py-2.5 bg-light-primary hover:bg-light-primary-container text-light-on-primary font-label text-label-lg rounded transition-colors duration-state-change cursor-pointer">
             포털 시스템 로그인 →
           </button>
         </form>
       </div>
 
-      <div class="text-center mt-5 text-xs text-[#757682]">
-        © 2026 Clinical Ledger Precision. All rights reserved.
+      <div class="text-center mt-5 font-body text-body-sm text-light-outline">
+        © 2026 Sage Studio · Clinical Ledger Portal. All rights reserved.
       </div>
     </div>
   </div>
 
   <!-- ========================================================================= -->
-  <!-- 2. PORTAL MAIN WORKSPACE (클린 상단 GNB: 메뉴추가/DB설정 버튼 완전 제거)     -->
+  <!-- 2. PORTAL MAIN WORKSPACE (Sage Studio Header + Pill Tabs + 3-Col Hub)     -->
   <!-- ========================================================================= -->
   <div id="screen-portal" class="hidden flex-1 flex flex-col min-h-screen">
-    <!-- TOP GNB -->
-    <header class="sticky top-0 z-40 bg-[#00236f] text-white border-b border-[#1e3a8a] shadow-sm">
-      <div class="max-w-[1800px] mx-auto px-4 h-14 flex items-center justify-between gap-3">
-        <!-- Brand -->
-        <div class="flex items-center gap-3 cursor-pointer" onclick="selectTheme('finance');">
-          <span class="bg-[#1e3a8a] border border-[#3b82f6]/40 text-[#90a8ff] px-2 py-0.5 rounded text-xs font-headline font-bold tracking-wider">CLP</span>
-          <span class="font-headline font-bold text-sm tracking-tight hidden sm:inline">Clinical Ledger Precision</span>
-          <span class="text-[11px] text-[#dae2fd] hidden xl:inline border-l border-white/20 pl-2.5">업무 통합 포털</span>
+    <!-- Top App Header -->
+    <header class="sticky top-0 z-40 bg-light-surface border-b border-light-outline-variant">
+      <div class="max-w-[1440px] mx-auto px-gutter-lg py-gutter-md flex flex-col lg:flex-row lg:items-center lg:justify-between gap-gutter-md">
+        <!-- Brand & Date -->
+        <div class="flex items-center justify-between gap-gutter-md">
+          <div class="flex items-center gap-gutter-sm cursor-pointer" onclick="selectTheme('sage-home');">
+            <div class="w-9 h-9 rounded bg-light-primary text-light-on-primary flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[20px]" aria-hidden="true">terminal</span>
+            </div>
+            <div>
+              <h1 class="font-display text-headline-md text-light-on-surface leading-tight">Sage Studio</h1>
+              <p class="font-body text-body-sm text-light-on-surface-variant">개인 업무포털 · 아이디어 코딩 허브</p>
+            </div>
+          </div>
+          <span id="header-date-mobile" class="lg:hidden font-label text-label-md text-light-on-surface-variant tabular-nums">2026.11.27 (금)</span>
         </div>
 
-        <!-- Dynamic Theme Tabs (GNB) -->
-        <nav id="gnb-theme-tabs" class="flex items-center gap-1 overflow-x-auto py-1">
-          <!-- Populated dynamically based on user role -->
-        </nav>
+        <!-- Search, Quick Idea & User Controls -->
+        <div class="flex flex-wrap items-center gap-gutter-sm flex-1 lg:justify-end">
+          <div class="hidden xl:flex items-center gap-gutter-xs px-gutter-sm py-gutter-xs rounded-full bg-light-surface-container-low border border-light-outline-variant shrink-0">
+            <span class="material-symbols-outlined text-[16px] text-light-primary" aria-hidden="true">calendar_today</span>
+            <span id="header-date-desktop" class="font-label text-label-md text-light-on-surface tabular-nums">2026.11.27 (금)</span>
+          </div>
 
-        <!-- Clean Right Controls: User Profile, My Password Change & Logout ONLY -->
-        <div class="flex items-center gap-2.5 shrink-0">
-          <div class="flex items-center gap-2">
-            <div id="gnb-user-avatar" class="w-7 h-7 rounded-full bg-[#1e3a8a] border border-[#90a8ff]/40 flex items-center justify-center font-bold text-xs text-white">이</div>
+          <label class="flex-1 min-w-[200px] max-w-xs">
+            <span class="sr-only">통합 검색</span>
+            <div class="relative flex items-center">
+              <span class="material-symbols-outlined text-[18px] text-light-outline absolute left-3 pointer-events-none" aria-hidden="true">search</span>
+              <input id="global-search" type="search" placeholder="툴, 스니펫, 아이디어 검색..." class="w-full rounded bg-light-surface-container-low border border-light-outline-variant pl-10 pr-12 py-1.5 font-body text-body-sm text-light-on-surface placeholder:text-light-outline focus:bg-light-surface-container-lowest focus:border-light-primary focus:ring-1 focus:ring-light-primary transition-colors duration-state-change">
+              <kbd class="absolute right-2.5 px-1.5 py-0.5 rounded-sm bg-light-surface-container-lowest border border-light-outline-variant font-code text-code-sm text-light-on-surface-variant">⌘K</kbd>
+            </div>
+          </label>
+
+          <button id="focus-idea-btn" type="button" class="inline-flex items-center justify-center gap-gutter-xs px-gutter-md py-1.5 rounded bg-light-primary text-light-on-primary hover:bg-light-primary-container transition-colors duration-state-change shrink-0 cursor-pointer">
+            <span class="material-symbols-outlined text-[18px]" aria-hidden="true">add</span>
+            <span class="font-label text-label-md whitespace-nowrap">새 아이디어</span>
+          </button>
+
+          <!-- User Profile & Controls -->
+          <div class="flex items-center gap-2 pl-2 border-l border-light-outline-variant shrink-0">
+            <div id="gnb-user-avatar" class="w-7 h-7 rounded-full bg-light-secondary-container text-light-on-secondary-container border border-light-outline-variant flex items-center justify-center font-bold text-xs">이</div>
             <div class="hidden md:block text-left leading-tight">
               <div class="flex items-center gap-1.5">
-                <span id="gnb-user-name" class="text-xs font-bold">이창환</span>
-                <span id="gnb-user-role-badge" class="text-[10px] px-1.5 py-0.2 rounded bg-[#1e3a8a] text-[#90a8ff] font-semibold">Manager</span>
+                <span id="gnb-user-name" class="text-xs font-bold text-light-on-surface">이창환</span>
+                <span id="gnb-user-role-badge" class="text-[10px] px-1.5 py-0.2 rounded-full bg-light-secondary-container text-light-on-secondary-container font-semibold">Manager</span>
               </div>
-              <div id="gnb-user-dept" class="text-[10px] text-[#dae2fd]/75">병원사업부</div>
+              <div id="gnb-user-dept" class="text-[10px] text-light-on-surface-variant">병원사업부</div>
             </div>
-            <button onclick="openMyPasswordModal();" class="text-[11px] text-[#dae2fd] hover:text-white px-2 py-1 rounded hover:bg-white/10 transition ml-1 border border-white/15">
+            <button onclick="openMyPasswordModal();" class="text-[11px] text-light-on-surface-variant hover:text-light-on-surface px-2 py-1 rounded border border-light-outline-variant bg-light-surface-container-lowest hover:bg-light-surface-container-low transition cursor-pointer">
               비밀번호 변경
             </button>
-            <button onclick="logoutPortal();" class="text-xs text-white/80 hover:text-white px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 transition font-semibold">
+            <button onclick="logoutPortal();" class="text-[11px] text-light-on-surface-variant hover:text-light-error px-2 py-1 rounded border border-light-outline-variant bg-light-surface-container-lowest hover:bg-light-error-container/50 transition font-semibold cursor-pointer">
               로그아웃
             </button>
           </div>
         </div>
       </div>
+
+      <!-- Top Theme / Sector Switcher Bar -->
+      <div class="max-w-[1440px] mx-auto px-gutter-lg pb-gutter-md">
+        <nav id="gnb-theme-tabs" role="tablist" aria-label="포털 테마 분류" class="flex flex-wrap items-center gap-gutter-sm">
+          <!-- Populated dynamically based on user role -->
+        </nav>
+      </div>
     </header>
 
-    <!-- WORKSPACE BODY: SIDEBAR + CONTENT -->
-    <div class="max-w-[1800px] w-full mx-auto flex-1 flex flex-col lg:flex-row">
-      <!-- LNB SIDEBAR (하단 메뉴추가 버튼 제거, 클린 구성) -->
-      <aside class="w-full lg:w-64 shrink-0 bg-white border-b lg:border-b-0 lg:border-r border-[#e2e8f0] flex flex-col justify-between">
+    <!-- ======================================================================= -->
+    <!-- A. SAGE STUDIO HOME (3-Column Command Grid Dashboard)                   -->
+    <!-- ======================================================================= -->
+    <div id="sage-home-container" class="flex-1 w-full max-w-[1440px] mx-auto px-gutter-lg py-gutter-lg">
+      <!-- Sector Sub-Filter Pills -->
+      <div class="flex flex-wrap items-center justify-between gap-gutter-sm mb-gutter-md">
+        <div id="sector-tablist" role="tablist" aria-label="대시보드 섹터 필터" class="flex flex-wrap items-center gap-gutter-xs">
+          <button role="tab" data-sector="all" aria-selected="true" class="sector-tab inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-light-secondary-container text-light-on-secondary-container font-label text-label-md transition-colors duration-state-change cursor-pointer">
+            <span class="material-symbols-outlined text-[15px]" aria-hidden="true">dashboard</span>
+            <span>전체 보기</span>
+          </button>
+          <button role="tab" data-sector="schedule" aria-selected="false" class="sector-tab inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-light-surface-container-lowest text-light-on-surface-variant border border-light-outline-variant hover:bg-light-surface-container-low font-label text-label-md transition-colors duration-state-change cursor-pointer">
+            <span class="material-symbols-outlined text-[15px]" aria-hidden="true">calendar_today</span>
+            <span>스케줄</span>
+          </button>
+          <button role="tab" data-sector="tools" aria-selected="false" class="sector-tab inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-light-surface-container-lowest text-light-on-surface-variant border border-light-outline-variant hover:bg-light-surface-container-low font-label text-label-md transition-colors duration-state-change cursor-pointer">
+            <span class="material-symbols-outlined text-[15px]" aria-hidden="true">apps</span>
+            <span>업무툴</span>
+          </button>
+          <button role="tab" data-sector="coding" aria-selected="false" class="sector-tab inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-light-surface-container-lowest text-light-on-surface-variant border border-light-outline-variant hover:bg-light-surface-container-low font-label text-label-md transition-colors duration-state-change cursor-pointer">
+            <span class="material-symbols-outlined text-[15px]" aria-hidden="true">code</span>
+            <span>개인코딩</span>
+          </button>
+          <button role="tab" data-sector="ideas" aria-selected="false" class="sector-tab inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-light-surface-container-lowest text-light-on-surface-variant border border-light-outline-variant hover:bg-light-surface-container-low font-label text-label-md transition-colors duration-state-change cursor-pointer">
+            <span class="material-symbols-outlined text-[15px]" aria-hidden="true">lightbulb</span>
+            <span>아이디어 기록</span>
+          </button>
+        </div>
+        <span class="font-body text-body-sm text-light-on-surface-variant">카드를 클릭하면 해당 포털 업무 화면으로 바로 이동합니다</span>
+      </div>
+
+      <div id="command-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-gutter-lg items-start">
+        <!-- COLUMN 1: 오늘의 스케줄 -->
+        <section data-sector-panel="schedule" class="lg:col-span-4 flex flex-col gap-gutter-md">
+          <article class="bg-light-surface-container-lowest border border-light-outline-variant rounded p-gutter-lg flex flex-col gap-gutter-md">
+            <header class="flex items-center justify-between gap-gutter-sm">
+              <div class="flex items-center gap-gutter-sm">
+                <span class="material-symbols-outlined text-[20px] text-light-primary" aria-hidden="true">schedule</span>
+                <div>
+                  <h2 class="font-headline text-headline-sm text-light-on-surface">오늘의 스케줄</h2>
+                  <p class="font-body text-body-sm text-light-on-surface-variant">업무 일정 및 개인 집중 타임</p>
+                </div>
+              </div>
+              <span id="schedule-counter" class="font-label text-label-md text-light-on-secondary-container bg-light-secondary-container px-gutter-sm py-gutter-xs rounded-full tabular-nums">1/4 완료</span>
+            </header>
+
+            <ul id="schedule-list" class="flex flex-col gap-gutter-sm"></ul>
+
+            <form id="add-schedule-form" class="flex items-center gap-gutter-sm pt-gutter-xs border-t border-light-outline-variant">
+              <input id="new-schedule-input" type="text" placeholder="새 일정 빠르게 추가 (예: 18:00 러닝)" class="flex-1 rounded bg-light-surface-container-low border border-light-outline-variant px-gutter-sm py-gutter-xs font-body text-body-sm text-light-on-surface placeholder:text-light-outline focus:bg-light-surface-container-lowest focus:border-light-primary focus:ring-1 focus:ring-light-primary transition-colors duration-state-change">
+              <button type="submit" class="inline-flex items-center justify-center px-gutter-md py-gutter-xs rounded bg-light-surface-container-low text-light-on-surface border border-light-outline-variant hover:bg-light-surface-container transition-colors duration-state-change cursor-pointer">
+                <span class="font-label text-label-md">추가</span>
+              </button>
+            </form>
+
+            <div class="flex justify-end pt-1">
+              <button type="button" onclick="openPortalTool('finance', 'work-schedule');" class="inline-flex items-center gap-1 font-label text-label-md text-light-primary hover:underline cursor-pointer">
+                <span>개인업무 일정 캘린더 전체 열기</span>
+                <span class="material-symbols-outlined text-[15px]" aria-hidden="true">arrow_forward</span>
+              </button>
+            </div>
+          </article>
+        </section>
+
+        <!-- COLUMN 2: 업무툴 허브 (포털 메뉴 연동) -->
+        <section data-sector-panel="tools" class="lg:col-span-4 flex flex-col gap-gutter-md">
+          <article class="bg-light-surface-container-lowest border border-light-outline-variant rounded p-gutter-lg flex flex-col gap-gutter-md">
+            <header class="flex items-center justify-between gap-gutter-sm">
+              <div class="flex items-center gap-gutter-sm">
+                <span class="material-symbols-outlined text-[20px] text-light-primary" aria-hidden="true">apps</span>
+                <div>
+                  <h2 class="font-headline text-headline-sm text-light-on-surface">업무툴 허브</h2>
+                  <p class="font-body text-body-sm text-light-on-surface-variant">원클릭 포털 기능 바로가기</p>
+                </div>
+              </div>
+              <span id="tools-hub-count" class="font-label text-label-md text-light-on-surface-variant bg-light-surface-container px-gutter-sm py-gutter-xs rounded-full tabular-nums">연결됨</span>
+            </header>
+
+            <div id="sage-tools-hub-list" class="grid grid-cols-1 gap-gutter-sm"></div>
+          </article>
+        </section>
+
+        <!-- COLUMN 3: 개인코딩 스니펫 & 아이디어 기록 -->
+        <div class="lg:col-span-4 flex flex-col gap-gutter-lg">
+          <section data-sector-panel="coding">
+            <article class="searchable-item bg-light-surface-container-lowest border border-light-outline-variant rounded p-gutter-lg flex flex-col gap-gutter-md">
+              <header class="flex items-start justify-between gap-gutter-sm">
+                <div class="flex items-center gap-gutter-sm">
+                  <span class="material-symbols-outlined text-[20px] text-light-tertiary" aria-hidden="true">code</span>
+                  <div>
+                    <h2 class="font-headline text-headline-sm text-light-on-surface">개인코딩 스니펫</h2>
+                    <p class="font-body text-body-sm text-light-on-surface-variant">자주 쓰는 코드 조각 및 실험실</p>
+                  </div>
+                </div>
+                <span id="snippet-lang-badge" class="font-code text-code-sm text-light-on-tertiary-container bg-light-tertiary-container px-gutter-sm py-gutter-xs rounded-sm">TS</span>
+              </header>
+
+              <div role="tablist" aria-label="코드 스니펫 선택" class="flex items-center gap-gutter-xs p-gutter-xs rounded bg-light-surface-container border border-light-outline-variant overflow-x-auto">
+                <button role="tab" data-snippet="ts" aria-selected="true" class="snippet-tab px-gutter-sm py-gutter-xs rounded-sm bg-light-surface-container-lowest text-light-on-surface font-code text-code-sm transition-colors duration-state-change cursor-pointer">useLocalSync.ts</button>
+                <button role="tab" data-snippet="py" aria-selected="false" class="snippet-tab px-gutter-sm py-gutter-xs rounded-sm text-light-on-surface-variant hover:text-light-on-surface font-code text-code-sm transition-colors duration-state-change cursor-pointer">fetch_retry.py</button>
+                <button role="tab" data-snippet="sh" aria-selected="false" class="snippet-tab px-gutter-sm py-gutter-xs rounded-sm text-light-on-surface-variant hover:text-light-on-surface font-code text-code-sm transition-colors duration-state-change cursor-pointer">git_clean.sh</button>
+              </div>
+
+              <div class="bg-light-surface-container-low border border-light-outline-variant rounded p-gutter-md overflow-x-auto">
+                <pre id="snippet-code-block" class="font-code text-code-sm text-light-on-surface leading-relaxed whitespace-pre"><code>export function useLocalSync&lt;T&gt;(key: string, init: T) {
+  const [val, setVal] = useState&lt;T&gt;(() =&gt; {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : init;
+  });
+  useEffect(() =&gt; localStorage.setItem(key, JSON.stringify(val)), [key, val]);
+  return [val, setVal] as const;
+}</code></pre>
+              </div>
+
+              <footer class="flex items-center justify-between gap-gutter-sm">
+                <span id="snippet-meta" class="font-body text-body-sm text-light-on-surface-variant">React 상태 동기화 훅</span>
+                <button id="copy-snippet-btn" type="button" class="inline-flex items-center gap-gutter-xs px-gutter-md py-gutter-xs rounded bg-light-surface-container-low text-light-on-surface border border-light-outline-variant hover:bg-light-surface-container transition-colors duration-state-change cursor-pointer">
+                  <span class="material-symbols-outlined text-[16px]" aria-hidden="true">content_copy</span>
+                  <span id="copy-snippet-label" class="font-label text-label-md">스니펫 복사</span>
+                </button>
+              </footer>
+            </article>
+          </section>
+
+          <section data-sector-panel="ideas">
+            <article class="bg-light-surface-container-lowest border border-light-outline-variant rounded p-gutter-lg flex flex-col gap-gutter-md">
+              <header class="flex items-center justify-between gap-gutter-sm">
+                <div class="flex items-center gap-gutter-sm">
+                  <span class="material-symbols-outlined text-[20px] text-light-tertiary" aria-hidden="true">lightbulb</span>
+                  <div>
+                    <h2 class="font-headline text-headline-sm text-light-on-surface">아이디어 기록</h2>
+                    <p class="font-body text-body-sm text-light-on-surface-variant">떠오른 영감과 사이드 프로젝트 메모</p>
+                  </div>
+                </div>
+                <span id="idea-counter" class="font-label text-label-md text-light-on-tertiary-container bg-light-tertiary-container px-gutter-sm py-gutter-xs rounded-full tabular-nums">3건</span>
+              </header>
+
+              <form id="idea-capture-form" class="flex items-center gap-gutter-sm">
+                <label class="flex-1">
+                  <span class="sr-only">새 아이디어 입력</span>
+                  <input id="idea-input" type="text" placeholder="아이디어 한 줄 기록 후 Enter..." class="w-full rounded bg-light-surface-container-low border border-light-outline-variant px-gutter-md py-gutter-sm font-body text-body-sm text-light-on-surface placeholder:text-light-outline focus:bg-light-surface-container-lowest focus:border-light-primary focus:ring-1 focus:ring-light-primary transition-colors duration-state-change">
+                </label>
+                <button type="submit" class="inline-flex items-center justify-center px-gutter-md py-gutter-sm rounded bg-light-primary text-light-on-primary hover:bg-light-primary-container transition-colors duration-state-change shrink-0 cursor-pointer">
+                  <span class="font-label text-label-md">저장</span>
+                </button>
+              </form>
+
+              <ul id="idea-list" class="flex flex-col gap-gutter-sm"></ul>
+            </article>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- B. THEME WORKSPACE BODY (LNB Sidebar + Main Viewport for Theme Views)   -->
+    <!-- ======================================================================= -->
+    <div id="theme-workspace" class="hidden max-w-[1440px] w-full mx-auto flex-1 flex flex-col lg:flex-row">
+      <!-- LNB SIDEBAR -->
+      <aside class="w-full lg:w-64 shrink-0 bg-light-surface-container-lowest border-b lg:border-b-0 lg:border-r border-light-outline-variant flex flex-col justify-between">
         <div class="p-4 space-y-5">
           <!-- Active Theme Box -->
-          <div class="p-3.5 rounded-lg bg-[#f2f3ff] border border-[#dae2fd]">
+          <div class="p-3.5 rounded bg-light-surface-container-low border border-light-outline-variant">
             <div class="flex items-center justify-between">
-              <span class="text-[10px] font-bold text-[#1e3a8a] uppercase tracking-wider">선택된 업무 테마</span>
-              <span id="lnb-menu-count" class="text-[10px] font-bold px-1.5 py-0.2 bg-white text-[#00236f] rounded border border-[#cbd5e1]">3개 메뉴</span>
+              <span class="text-[10px] font-bold text-light-primary uppercase tracking-wider">선택된 업무 테마</span>
+              <span id="lnb-menu-count" class="text-[10px] font-bold px-1.5 py-0.2 bg-light-surface-container-lowest text-light-primary rounded-full border border-light-outline-variant">3개 메뉴</span>
             </div>
-            <div id="lnb-theme-title" class="text-sm font-bold text-[#00236f] mt-1">병원부 정산/재무</div>
-            <p id="lnb-theme-desc" class="text-[11px] text-[#444651] mt-1 leading-snug">병원 제약 공급망 정산 원장 대사 및 미결 금액 관리</p>
+            <div id="lnb-theme-title" class="text-sm font-bold text-light-on-surface mt-1">개인업무</div>
+            <p id="lnb-theme-desc" class="text-[11px] text-light-on-surface-variant mt-1 leading-snug">월간 개인업무 일정 달력 기록 및 병원부 정산 원장 관리</p>
           </div>
 
           <!-- Dashboard Item -->
           <div>
-            <div class="text-[11px] font-bold text-[#757682] px-2 mb-1.5 uppercase tracking-wider">메인 대시보드</div>
+            <div class="text-[11px] font-bold text-light-outline px-2 mb-1.5 uppercase tracking-wider">메인 대시보드</div>
             <div id="lnb-dashboard-slot"></div>
           </div>
 
           <!-- Submenus Tree -->
           <div>
-            <div class="flex items-center justify-between text-[11px] font-bold text-[#757682] px-2 mb-1.5 uppercase tracking-wider">
+            <div class="flex items-center justify-between text-[11px] font-bold text-light-outline px-2 mb-1.5 uppercase tracking-wider">
               <span>하위 세부메뉴</span>
             </div>
             <div id="lnb-submenus-slot" class="space-y-1"></div>
@@ -164,22 +454,22 @@
         </div>
 
         <!-- Clean Sidebar Footer -->
-        <div class="p-3 border-t border-[#e2e8f0] bg-[#faf8ff] text-[11px] text-[#757682] flex items-center justify-between">
-          <span>Clinical Ledger v2.6</span>
+        <div class="p-3 border-t border-light-outline-variant bg-light-surface text-[11px] text-light-outline flex items-center justify-between">
+          <span>Sage Studio v3.0</span>
           <span id="lnb-user-email" class="num-font truncate max-w-[140px]">chuan@hospital.com</span>
         </div>
       </aside>
 
       <!-- MAIN CONTENT VIEWPORT -->
-      <main class="flex-1 flex flex-col min-w-0 bg-[#faf8ff] p-4 sm:p-6 overflow-y-auto">
+      <main class="flex-1 flex flex-col min-w-0 bg-light-surface p-4 sm:p-6 overflow-y-auto">
         <!-- Breadcrumb & Top Bar -->
-        <div class="flex flex-wrap items-center justify-between gap-2 pb-4 mb-4 border-b border-[#e2e8f0]">
-          <div class="flex items-center gap-1.5 text-xs text-[#757682]">
-            <span class="cursor-pointer hover:text-[#00236f]" onclick="selectTheme('finance');">포털 홈</span>
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-4 mb-4 border-b border-light-outline-variant">
+          <div class="flex items-center gap-1.5 text-xs text-light-outline">
+            <span class="cursor-pointer hover:text-light-primary" onclick="selectTheme('sage-home');">Sage Studio 홈</span>
             <span>›</span>
-            <span id="crumb-theme" class="font-semibold text-[#1e3a8a]">병원부 정산/재무</span>
+            <span id="crumb-theme" class="font-semibold text-light-primary">개인업무</span>
             <span>›</span>
-            <span id="crumb-page" class="font-bold text-[#00236f]">미결 정산 총괄 대시보드</span>
+            <span id="crumb-page" class="font-bold text-light-on-surface">대시보드</span>
           </div>
 
           <div id="viewport-actions" class="flex items-center gap-2"></div>
@@ -195,30 +485,30 @@
   <!-- 3. MODAL: 내 비밀번호 변경 (본인 계정 보안 관리)                           -->
   <!-- ========================================================================= -->
   <div id="modal-my-password" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-2xl w-full max-w-md p-6 fade-in">
-      <div class="flex items-center justify-between pb-3 border-b border-[#e2e8f0] mb-4">
+    <div class="bg-white rounded-xl border border-[#BFC9C1] shadow-2xl w-full max-w-md p-6 fade-in">
+      <div class="flex items-center justify-between pb-3 border-b border-[#BFC9C1] mb-4">
         <div>
-          <span class="text-[10px] font-bold text-[#1e3a8a] uppercase tracking-wider">ACCOUNT SECURITY</span>
-          <h2 class="text-base font-bold font-headline text-[#00236f]">내 비밀번호 변경</h2>
+          <span class="text-[10px] font-bold text-[#2D6A4F] uppercase tracking-wider">ACCOUNT SECURITY</span>
+          <h2 class="text-base font-bold font-headline text-[#0F5238]">내 비밀번호 변경</h2>
         </div>
         <button onclick="closeMyPasswordModal();" class="text-gray-400 hover:text-gray-700 text-xl font-bold">&times;</button>
       </div>
       <form onsubmit="event.preventDefault(); handleUpdateMyPassword();" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-[#131b2e] mb-1">현재 로그인 계정</label>
-          <input type="text" id="mp-email" disabled class="w-full px-3 py-2 text-xs bg-slate-100 border border-[#cbd5e1] rounded text-[#444651] num-font">
+          <label class="block text-xs font-bold text-[#181C1B] mb-1">현재 로그인 계정</label>
+          <input type="text" id="mp-email" disabled class="w-full px-3 py-2 text-xs bg-slate-100 border border-[#BFC9C1] rounded text-[#404943] num-font">
         </div>
         <div>
-          <label class="block text-xs font-bold text-[#131b2e] mb-1">새 비밀번호 입력 *</label>
-          <input type="password" id="mp-new-pw" required minlength="4" placeholder="새로운 비밀번호 입력" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+          <label class="block text-xs font-bold text-[#181C1B] mb-1">새 비밀번호 입력 *</label>
+          <input type="password" id="mp-new-pw" required minlength="4" placeholder="새로운 비밀번호 입력" class="w-full px-3 py-2 text-xs bg-[#F7FAF7] border border-[#BFC9C1] rounded">
         </div>
         <div>
-          <label class="block text-xs font-bold text-[#131b2e] mb-1">새 비밀번호 확인 *</label>
-          <input type="password" id="mp-confirm-pw" required minlength="4" placeholder="새로운 비밀번호 재입력" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+          <label class="block text-xs font-bold text-[#181C1B] mb-1">새 비밀번호 확인 *</label>
+          <input type="password" id="mp-confirm-pw" required minlength="4" placeholder="새로운 비밀번호 재입력" class="w-full px-3 py-2 text-xs bg-[#F7FAF7] border border-[#BFC9C1] rounded">
         </div>
-        <div class="flex justify-end gap-2 pt-3 border-t border-[#e2e8f0]">
-          <button type="button" onclick="closeMyPasswordModal();" class="px-4 py-1.5 border border-[#cbd5e1] text-xs font-semibold rounded">취소</button>
-          <button type="submit" class="px-4 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow">비밀번호 변경 저장</button>
+        <div class="flex justify-end gap-2 pt-3 border-t border-[#BFC9C1]">
+          <button type="button" onclick="closeMyPasswordModal();" class="px-4 py-1.5 border border-[#BFC9C1] text-xs font-semibold rounded">취소</button>
+          <button type="submit" class="px-4 py-1.5 bg-[#0F5238] hover:bg-[#2D6A4F] text-white text-xs font-bold rounded shadow">비밀번호 변경 저장</button>
         </div>
       </form>
     </div>
@@ -228,20 +518,20 @@
   <!-- 4. MODAL: BLOG WRITE & DETAIL                                             -->
   <!-- ========================================================================= -->
   <div id="modal-blog-write" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-2xl w-full max-w-xl p-6 fade-in">
-      <div class="flex items-center justify-between pb-3 border-b border-[#e2e8f0] mb-4">
-        <h2 class="text-base font-bold font-headline text-[#00236f]">새 업무 지식 / 공지사항 등록</h2>
+    <div class="bg-white rounded-xl border border-[#BFC9C1] shadow-2xl w-full max-w-xl p-6 fade-in">
+      <div class="flex items-center justify-between pb-3 border-b border-[#BFC9C1] mb-4">
+        <h2 class="text-base font-bold font-headline text-[#0F5238]">새 업무 지식 / 공지사항 등록</h2>
         <button onclick="closeBlogWriteModal();" class="text-gray-400 hover:text-gray-700 text-xl font-bold">&times;</button>
       </div>
       <form onsubmit="event.preventDefault(); saveBlogPost();" class="space-y-4">
         <div class="grid grid-cols-3 gap-3">
           <div class="col-span-2">
-            <label class="block text-xs font-bold text-[#131b2e] mb-1">제목 *</label>
-            <input type="text" id="bw-title" required placeholder="게시글 제목을 입력하세요" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+            <label class="block text-xs font-bold text-[#181C1B] mb-1">제목 *</label>
+            <input type="text" id="bw-title" required placeholder="게시글 제목을 입력하세요" class="w-full px-3 py-2 text-xs bg-[#F7FAF7] border border-[#BFC9C1] rounded">
           </div>
           <div>
-            <label class="block text-xs font-bold text-[#131b2e] mb-1">카테고리</label>
-            <select id="bw-category" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+            <label class="block text-xs font-bold text-[#181C1B] mb-1">카테고리</label>
+            <select id="bw-category" class="w-full px-3 py-2 text-xs bg-[#F7FAF7] border border-[#BFC9C1] rounded">
               <option value="공지">공지</option>
               <option value="업무가이드">업무가이드</option>
               <option value="정산리포트">정산리포트</option>
@@ -250,47 +540,47 @@
           </div>
         </div>
         <div>
-          <label class="block text-xs font-bold text-[#131b2e] mb-1">목록 요약 설명</label>
-          <input type="text" id="bw-summary" placeholder="목록에 표시될 1~2줄 요약" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+          <label class="block text-xs font-bold text-[#181C1B] mb-1">목록 요약 설명</label>
+          <input type="text" id="bw-summary" placeholder="목록에 표시될 1~2줄 요약" class="w-full px-3 py-2 text-xs bg-[#F7FAF7] border border-[#BFC9C1] rounded">
         </div>
         <div>
-          <label class="block text-xs font-bold text-[#131b2e] mb-1">태그 (쉼표로 구분)</label>
-          <input type="text" id="bw-tags" value="병원부, 정산, 업무공유" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+          <label class="block text-xs font-bold text-[#181C1B] mb-1">태그 (쉼표로 구분)</label>
+          <input type="text" id="bw-tags" value="병원부, 정산, 업무공유" class="w-full px-3 py-2 text-xs bg-[#F7FAF7] border border-[#BFC9C1] rounded">
         </div>
         <div>
-          <label class="block text-xs font-bold text-[#131b2e] mb-1">본문 내용 *</label>
-          <textarea id="bw-content" rows="7" required placeholder="공유할 업무 지식이나 공지 내용을 입력해 주세요..." class="w-full p-3 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded leading-relaxed"></textarea>
+          <label class="block text-xs font-bold text-[#181C1B] mb-1">본문 내용 *</label>
+          <textarea id="bw-content" rows="7" required placeholder="공유할 업무 지식이나 공지 내용을 입력해 주세요..." class="w-full p-3 text-xs bg-[#F7FAF7] border border-[#BFC9C1] rounded leading-relaxed"></textarea>
         </div>
-        <div class="flex justify-end gap-2 pt-3 border-t border-[#e2e8f0]">
-          <button type="button" onclick="closeBlogWriteModal();" class="px-4 py-1.5 border border-[#cbd5e1] text-xs font-semibold rounded">취소</button>
-          <button type="submit" class="px-5 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow">저장 및 게시</button>
+        <div class="flex justify-end gap-2 pt-3 border-t border-[#BFC9C1]">
+          <button type="button" onclick="closeBlogWriteModal();" class="px-4 py-1.5 border border-[#BFC9C1] text-xs font-semibold rounded">취소</button>
+          <button type="submit" class="px-5 py-1.5 bg-[#0F5238] hover:bg-[#2D6A4F] text-white text-xs font-bold rounded shadow">저장 및 게시</button>
         </div>
       </form>
     </div>
   </div>
 
   <div id="modal-blog-detail" onclick="if(event.target===this) closeBlogDetailModal();" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-2xl w-full max-w-3xl fade-in max-h-[88vh] flex flex-col overflow-hidden">
-      <div class="shrink-0 px-6 pt-5 pb-3 border-b border-[#e2e8f0]">
+    <div class="bg-white rounded-xl border border-[#BFC9C1] shadow-2xl w-full max-w-3xl fade-in max-h-[88vh] flex flex-col overflow-hidden">
+      <div class="shrink-0 px-6 pt-5 pb-3 border-b border-[#BFC9C1]">
         <div class="flex items-center justify-between pb-2.5 border-b border-[#f1f5f9] mb-2.5">
           <div class="flex items-center gap-2">
             <span id="bd-category" class="text-[10px] font-bold px-2.5 py-0.5 rounded bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]">공지</span>
-            <span id="bd-date" class="text-xs text-[#757682]">2026-11-13</span>
+            <span id="bd-date" class="text-xs text-[#707973]">2026-11-13</span>
           </div>
           <button onclick="closeBlogDetailModal();" class="text-gray-400 hover:text-gray-700 text-xl font-bold leading-none">&times;</button>
         </div>
-        <h2 id="bd-title" class="text-lg font-bold font-headline text-[#00236f] mb-1.5">제목</h2>
-        <div class="flex items-center justify-between text-xs text-[#757682]">
+        <h2 id="bd-title" class="text-lg font-bold font-headline text-[#0F5238] mb-1.5">제목</h2>
+        <div class="flex items-center justify-between text-xs text-[#707973]">
           <span id="bd-author">작성자: 이창환</span>
           <span id="bd-views">조회 100</span>
         </div>
       </div>
       <div id="bd-scroll-body" class="flex-1 overflow-y-auto px-6 py-4">
-        <div id="bd-content" class="text-xs text-[#131b2e] leading-relaxed whitespace-pre-line bg-[#faf8ff] p-4 rounded-lg border border-[#e2e8f0]"></div>
+        <div id="bd-content" class="text-xs text-[#181C1B] leading-relaxed whitespace-pre-line bg-[#F7FAF7] p-4 rounded-lg border border-[#BFC9C1]"></div>
       </div>
-      <div class="shrink-0 flex justify-between items-center px-6 py-3.5 border-t border-[#e2e8f0] bg-white">
+      <div class="shrink-0 flex justify-between items-center px-6 py-3.5 border-t border-[#BFC9C1] bg-white">
         <button id="bd-delete-btn" class="text-xs text-[#dc2626] hover:underline font-semibold">게시글 삭제</button>
-        <button onclick="closeBlogDetailModal();" class="px-5 py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-lg shadow-sm transition">닫기</button>
+        <button onclick="closeBlogDetailModal();" class="px-5 py-2 bg-[#0F5238] hover:bg-[#2D6A4F] text-white text-xs font-bold rounded-lg shadow-sm transition">닫기</button>
       </div>
     </div>
   </div>
@@ -704,7 +994,7 @@
     let portalUsers = [];
     let menuGroups = [];
     let blogPosts = [];
-    let activeThemeId = 'finance';
+    let activeThemeId = 'sage-home';
     let activeViewId = 'finance-dash';
     let blogFilterCategory = '전체';
 
@@ -938,7 +1228,7 @@
         role: userObj.role
       };
       localStorage.setItem('clp_session_user_v3', JSON.stringify(currentUser));
-      activeThemeId = 'finance';
+      activeThemeId = 'sage-home';
       enterPortal();
     }
 
@@ -978,15 +1268,17 @@
       const roleBadge = document.getElementById('gnb-user-role-badge');
       if (currentUser.role === 'admin') {
         roleBadge.innerText = '내부관리자';
-        roleBadge.className = 'text-[10px] px-1.5 py-0.2 rounded bg-[#eff6ff] text-[#2563eb] font-bold';
+        roleBadge.className = 'text-[10px] px-1.5 py-0.2 rounded-full bg-light-tertiary-container text-light-on-tertiary-container font-bold';
       } else if (currentUser.role === 'finance_manager') {
         roleBadge.innerText = '총괄매니저';
-        roleBadge.className = 'text-[10px] px-1.5 py-0.2 rounded bg-[#ecfdf5] text-[#059669] font-bold';
+        roleBadge.className = 'text-[10px] px-1.5 py-0.2 rounded-full bg-light-secondary-container text-light-on-secondary-container font-bold';
       } else {
         roleBadge.innerText = '일반임직원';
-        roleBadge.className = 'text-[10px] px-1.5 py-0.2 rounded bg-white/15 text-[#dae2fd] font-semibold';
+        roleBadge.className = 'text-[10px] px-1.5 py-0.2 rounded-full bg-light-surface-container text-light-on-surface-variant font-semibold';
       }
 
+      initSageStudioWidgets();
+      renderSageToolsHub();
       renderGNB();
       selectTheme(activeThemeId);
     }
@@ -1032,7 +1324,7 @@
     }
 
     // -------------------------------------------------------------------------
-    // 5. NAVIGATION (GNB & LNB) RENDERING — 내부관리 계정 분리 적용
+    // 5. NAVIGATION (GNB & LNB) RENDERING — Sage Studio Pill Tabs & LNB
     // -------------------------------------------------------------------------
     function getVisibleMenuGroups() {
       return menuGroups.filter(g => !g.adminOnly || currentUser.role === 'admin');
@@ -1042,6 +1334,20 @@
       const nav = document.getElementById('gnb-theme-tabs');
       nav.innerHTML = '';
 
+      // 1) Sage Studio 통합 허브 탭
+      const isHomeActive = activeThemeId === 'sage-home';
+      const homeBtn = document.createElement('button');
+      homeBtn.type = 'button';
+      homeBtn.className = `inline-flex items-center gap-gutter-xs px-gutter-md py-gutter-xs rounded-full font-label text-label-md whitespace-nowrap transition-colors duration-state-change cursor-pointer ${
+        isHomeActive
+          ? 'bg-light-primary text-light-on-primary'
+          : 'bg-light-surface-container-lowest text-light-on-surface-variant border border-light-outline-variant hover:bg-light-surface-container-low hover:text-light-on-surface'
+      }`;
+      homeBtn.innerHTML = `<span class="material-symbols-outlined text-[16px]" aria-hidden="true">dashboard</span><span>전체 통합</span>`;
+      homeBtn.onclick = () => selectTheme('sage-home');
+      nav.appendChild(homeBtn);
+
+      // 2) Portal Theme Tabs
       const visibleGroups = getVisibleMenuGroups();
       visibleGroups.forEach(group => {
         const tId = group.themeId || group.id;
@@ -1049,14 +1355,15 @@
         const isActive = tId === activeThemeId;
         const isInternalAdmin = tId === 'internal-admin';
         const btn = document.createElement('button');
-        btn.className = `px-3.5 py-1.5 rounded-md text-xs font-bold whitespace-nowrap transition cursor-pointer ${
+        btn.type = 'button';
+        btn.className = `inline-flex items-center gap-gutter-xs px-gutter-md py-gutter-xs rounded-full font-label text-label-md whitespace-nowrap transition-colors duration-state-change cursor-pointer ${
           isActive
             ? isInternalAdmin
-              ? 'bg-[#dc2626] text-white shadow-inner border border-red-400'
-              : 'bg-[#1e3a8a] text-white shadow-inner border border-[#3b82f6]/50'
+              ? 'bg-light-error text-light-on-error'
+              : 'bg-light-primary text-light-on-primary'
             : isInternalAdmin
-            ? 'text-amber-300 hover:bg-white/10 hover:text-amber-200 border border-amber-400/30'
-            : 'text-white/80 hover:bg-white/10 hover:text-white'
+            ? 'bg-light-surface-container-lowest text-light-tertiary border border-light-outline-variant hover:bg-light-tertiary-container/40'
+            : 'bg-light-surface-container-lowest text-light-on-surface-variant border border-light-outline-variant hover:bg-light-surface-container-low hover:text-light-on-surface'
         }`;
         btn.innerText = tTitle;
         btn.onclick = () => selectTheme(tId);
@@ -1065,12 +1372,38 @@
     }
 
     function selectTheme(themeId) {
+      const homeContainer = document.getElementById('sage-home-container');
+      const themeWorkspace = document.getElementById('theme-workspace');
+
+      if (themeId === 'sage-home') {
+        activeThemeId = 'sage-home';
+        homeContainer.classList.remove('hidden');
+        themeWorkspace.classList.add('hidden');
+        renderSageToolsHub();
+        renderGNB();
+        return;
+      }
+
+      homeContainer.classList.add('hidden');
+      themeWorkspace.classList.remove('hidden');
+
       const visibleGroups = getVisibleMenuGroups();
       const group = visibleGroups.find(g => (g.themeId || g.id) === themeId) || visibleGroups[0];
       activeThemeId = group.themeId || group.id;
       renderGNB();
       renderLNB();
       openView(group.dashboard.id);
+    }
+
+    function openPortalTool(themeId, viewId) {
+      const visibleGroups = getVisibleMenuGroups();
+      const group = visibleGroups.find(g => (g.themeId || g.id) === themeId) || visibleGroups[0];
+      if (!group) return;
+      document.getElementById('sage-home-container').classList.add('hidden');
+      document.getElementById('theme-workspace').classList.remove('hidden');
+      activeThemeId = group.themeId || group.id;
+      renderGNB();
+      openView(viewId || group.dashboard.id);
     }
 
     function renderLNB() {
@@ -1085,8 +1418,8 @@
       const isDashActive = activeViewId === group.dashboard.id;
       dashSlot.innerHTML = `
         <button onclick="openView('${group.dashboard.id}');"
-          class="w-full text-left px-3 py-2 rounded-md text-xs font-bold flex items-center justify-between transition cursor-pointer ${
-            isDashActive ? 'bg-[#00236f] text-white shadow-sm' : 'text-[#131b2e] hover:bg-[#eaedff]'
+          class="w-full text-left px-3 py-2 rounded text-xs font-bold flex items-center justify-between transition-colors duration-state-change cursor-pointer ${
+            isDashActive ? 'bg-light-primary text-light-on-primary' : 'text-light-on-surface hover:bg-light-surface-container-low'
           }">
           <span class="truncate">📊 ${group.dashboard.title}</span>
         </button>
@@ -1101,38 +1434,345 @@
         const isActive = activeViewId === sub.id;
 
         const btn = document.createElement('button');
-        btn.className = `w-full text-left px-3 py-2 rounded-md text-xs font-medium flex items-center justify-between transition ${
+        btn.className = `w-full text-left px-3 py-2 rounded text-xs font-medium flex items-center justify-between transition-colors duration-state-change ${
           isActive
-            ? 'bg-[#00236f] text-white font-bold shadow-sm'
+            ? 'bg-light-primary text-light-on-primary font-bold'
             : isLocked
-            ? 'bg-slate-50 text-slate-400 cursor-not-allowed border border-dashed border-slate-200'
-            : 'text-[#334155] hover:bg-[#eaedff] hover:text-[#00236f] cursor-pointer'
+            ? 'bg-light-surface-container-low text-light-outline cursor-not-allowed border border-dashed border-light-outline-variant'
+            : 'text-light-on-surface-variant hover:bg-light-surface-container-low hover:text-light-primary cursor-pointer'
         }`;
 
         if (isLocked) {
           btn.innerHTML = `
             <span class="truncate">🔒 ${sub.title}</span>
-            <span class="text-[10px] px-1.5 py-0.2 rounded bg-red-50 text-red-600 font-bold">Admin</span>
+            <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-light-error-container text-light-on-error-container font-bold">Admin</span>
           `;
           btn.onclick = () => alert('이 메뉴는 내부관리자(Admin) 전용입니다.');
         } else {
           const badgeClasses = isActive
             ? 'bg-white/20 text-white'
             : sub.badgeColor === 'green'
-            ? 'bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0]'
+            ? 'bg-light-secondary-container text-light-on-secondary-container'
             : sub.badgeColor === 'red'
-            ? 'bg-[#fef2f2] text-[#dc2626] border border-[#fecaca]'
+            ? 'bg-light-error-container text-light-on-error-container'
             : sub.badgeColor === 'amber'
-            ? 'bg-[#fffbeb] text-[#d97706] border border-[#fde68a]'
-            : 'bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]';
+            ? 'bg-light-tertiary-container text-light-on-tertiary-container'
+            : 'bg-light-surface-container text-light-primary border border-light-outline-variant';
 
           btn.innerHTML = `
             <span class="truncate">• ${sub.title}</span>
-            ${sub.badge ? `<span class="text-[10px] px-1.5 py-0.2 rounded font-bold shrink-0 ml-1 ${badgeClasses}">${sub.badge}</span>` : ''}
+            ${sub.badge ? `<span class="text-[10px] px-1.5 py-0.2 rounded-full font-bold shrink-0 ml-1 ${badgeClasses}">${sub.badge}</span>` : ''}
           `;
           btn.onclick = () => openView(sub.id);
         }
         subSlot.appendChild(btn);
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // 5-1. SAGE STUDIO HOME WIDGETS (Schedule, Tools Hub, Snippets, Ideas)
+    // -------------------------------------------------------------------------
+    let sageWidgetsInitialized = false;
+
+    function renderSageToolsHub() {
+      const container = document.getElementById('sage-tools-hub-list');
+      const countBadge = document.getElementById('tools-hub-count');
+      if (!container) return;
+
+      const iconMap = {
+        'work-schedule': 'calendar_month',
+        'reconcile-ui': 'account_balance',
+        'quarterly-pending-cleanup': 'cleaning_services',
+        'email-classification': 'mail',
+        'email-classification-company': 'mark_email_read',
+        'geoyoung-payment-automation': 'payments',
+        'financial-info': 'trending_up',
+        'deposit-savings-sim': 'savings',
+        'blog-main': 'menu_book',
+        'todang-club-sponsor-flyer': 'campaign'
+      };
+
+      const items = [];
+      getVisibleMenuGroups().forEach(group => {
+        const tId = group.themeId || group.id;
+        if (tId === 'internal-admin') return;
+        if (group.dashboard) {
+          items.push({
+            themeId: tId,
+            themeTitle: group.themeTitle || group.title,
+            id: group.dashboard.id,
+            title: group.dashboard.title,
+            desc: group.themeDesc || group.description || '',
+            icon: iconMap[group.dashboard.id] || 'dashboard'
+          });
+        }
+        (group.subMenus || []).forEach(sub => {
+          if (sub.role === 'admin' && currentUser?.role !== 'admin') return;
+          if (sub.id === 'todang-club-sponsor-flyer-menu') return;
+          items.push({
+            themeId: tId,
+            themeTitle: group.themeTitle || group.title,
+            id: sub.id,
+            title: sub.title,
+            desc: sub.description || (group.themeTitle || group.title),
+            icon: iconMap[sub.id] || 'apps'
+          });
+        });
+      });
+
+      if (countBadge) countBadge.textContent = `${items.length}개 연결`;
+      container.innerHTML = items.map(item => `
+        <button type="button" onclick="openPortalTool('${item.themeId}', '${item.id}');"
+          class="searchable-item w-full text-left bg-light-surface-container-lowest border border-light-outline-variant rounded p-gutter-md flex items-center justify-between gap-gutter-md hover:border-light-primary hover:bg-light-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-light-primary transition-colors duration-state-change cursor-pointer">
+          <div class="flex items-center gap-gutter-md min-w-0">
+            <div class="w-10 h-10 rounded bg-light-secondary-container text-light-on-secondary-container flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[20px]" aria-hidden="true">${item.icon}</span>
+            </div>
+            <div class="min-w-0">
+              <h3 class="font-title text-title-md text-light-on-surface truncate">${item.title}</h3>
+              <p class="font-body text-body-sm text-light-on-surface-variant truncate">${item.desc}</p>
+            </div>
+          </div>
+          <span class="material-symbols-outlined text-[18px] text-light-outline shrink-0" aria-hidden="true">arrow_outward</span>
+        </button>
+      `).join('');
+    }
+
+    function initSageStudioWidgets() {
+      // Dynamic Date
+      const now = new Date();
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} (${days[now.getDay()]})`;
+      const dDesktop = document.getElementById('header-date-desktop');
+      const dMobile = document.getElementById('header-date-mobile');
+      if (dDesktop) dDesktop.textContent = dateStr;
+      if (dMobile) dMobile.textContent = dateStr;
+
+      if (sageWidgetsInitialized) return;
+      sageWidgetsInitialized = true;
+
+      // 1. Sector Filter Tabs
+      const sectorTabs = document.querySelectorAll('.sector-tab');
+      const sectorPanels = document.querySelectorAll('[data-sector-panel]');
+      sectorTabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+          const target = tab.getAttribute('data-sector');
+          sectorTabs.forEach((t) => {
+            const isSelected = t === tab;
+            t.setAttribute('aria-selected', String(isSelected));
+            if (isSelected) {
+              t.classList.remove('bg-light-surface-container-lowest', 'text-light-on-surface-variant', 'border', 'border-light-outline-variant');
+              t.classList.add('bg-light-secondary-container', 'text-light-on-secondary-container');
+            } else {
+              t.classList.remove('bg-light-secondary-container', 'text-light-on-secondary-container');
+              t.classList.add('bg-light-surface-container-lowest', 'text-light-on-surface-variant', 'border', 'border-light-outline-variant');
+            }
+          });
+          sectorPanels.forEach((panel) => {
+            const panelSector = panel.getAttribute('data-sector-panel');
+            if (target === 'all' || panelSector === target) panel.classList.remove('hidden');
+            else panel.classList.add('hidden');
+          });
+        });
+      });
+
+      // 2. Schedule Checklist with localStorage
+      const DEFAULT_SCHEDULES = [
+        { title: '주간 프로덕트 스프린트 점검', time: '09:30', desc: '업무 · 데일리 스탠드업', done: true },
+        { title: '결제 API 스키마 문서 정리', time: '11:00', desc: '업무 · Notion 문서 업데이트', done: false },
+        { title: 'CLI 스니펫 동기화 프로토타입', time: '14:00', desc: '개인코딩 · 딥워크 2시간 블록', done: false },
+        { title: '디자인 시스템 토큰 PR 리뷰', time: '16:30', desc: '업무 · GitHub 코드 리뷰', done: false }
+      ];
+      let schedules = [];
+      try {
+        schedules = JSON.parse(localStorage.getItem('sage_schedule_v1') || 'null') || DEFAULT_SCHEDULES;
+      } catch {
+        schedules = DEFAULT_SCHEDULES;
+      }
+
+      const scheduleList = document.getElementById('schedule-list');
+      const scheduleCounter = document.getElementById('schedule-counter');
+
+      function saveAndRenderSchedules() {
+        localStorage.setItem('sage_schedule_v1', JSON.stringify(schedules));
+        scheduleList.innerHTML = '';
+        schedules.forEach((item, idx) => {
+          const li = document.createElement('li');
+          li.className = `searchable-item flex items-start gap-gutter-sm p-gutter-sm rounded border border-light-outline-variant transition-colors duration-state-change ${
+            item.done ? 'bg-light-surface-container-low' : 'bg-light-surface-container-lowest hover:border-light-primary'
+          }`;
+          li.innerHTML = `
+            <input type="checkbox" ${item.done ? 'checked' : ''} data-idx="${idx}" class="schedule-check mt-0.5 rounded-sm border-light-outline text-light-primary focus:ring-light-primary cursor-pointer">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-gutter-xs">
+                <span class="schedule-title font-title text-title-md ${item.done ? 'text-light-on-surface-variant line-through' : 'text-light-on-surface'}"></span>
+                <span class="font-code text-code-sm ${item.done ? 'text-light-on-surface-variant' : 'text-light-primary'} tabular-nums shrink-0">${item.time || '오늘'}</span>
+              </div>
+              <p class="font-body text-body-sm text-light-on-surface-variant">${item.desc || '빠른 추가 일정'}</p>
+            </div>
+          `;
+          li.querySelector('.schedule-title').textContent = item.title;
+          scheduleList.appendChild(li);
+        });
+        const doneCount = schedules.filter(s => s.done).length;
+        scheduleCounter.textContent = `${doneCount}/${schedules.length} 완료`;
+      }
+
+      saveAndRenderSchedules();
+
+      scheduleList.addEventListener('change', (e) => {
+        if (e.target.classList.contains('schedule-check')) {
+          const idx = Number(e.target.getAttribute('data-idx'));
+          if (schedules[idx]) {
+            schedules[idx].done = e.target.checked;
+            saveAndRenderSchedules();
+          }
+        }
+      });
+
+      const addScheduleForm = document.getElementById('add-schedule-form');
+      const newScheduleInput = document.getElementById('new-schedule-input');
+      addScheduleForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = newScheduleInput.value.trim();
+        if (!text) return;
+        schedules.push({ title: text, time: '오늘', desc: '빠른 추가 일정', done: false });
+        newScheduleInput.value = '';
+        saveAndRenderSchedules();
+      });
+
+      // 3. Code Snippet Switcher & Copy
+      const snippets = {
+        ts: {
+          lang: 'TS',
+          meta: 'React 상태 동기화 훅',
+          code: `export function useLocalSync<T>(key: string, init: T) {\n  const [val, setVal] = useState<T>(() => {\n    const saved = localStorage.getItem(key);\n    return saved ? JSON.parse(saved) : init;\n  });\n  useEffect(() => localStorage.setItem(key, JSON.stringify(val)), [key, val]);\n  return [val, setVal] as const;\n}`
+        },
+        py: {
+          lang: 'PY',
+          meta: '지수 백오프 재시도 데코레이터',
+          code: `import time, functools\n\ndef retry(times=3, delay=0.5):\n    def wrap(fn):\n        @functools.wraps(fn)\n        def inner(*args, **kw):\n            for i in range(times):\n                try: return fn(*args, **kw)\n                except Exception:\n                    if i == times - 1: raise\n                    time.sleep(delay * (2 ** i))\n        return inner\n    return wrap`
+        },
+        sh: {
+          lang: 'SH',
+          meta: '머지된 로컬 브랜치 일괄 정리',
+          code: `#!/usr/bin/env bash\ngit fetch --prune && \\\ngit branch --merged main | \\\n  grep -vE '^\\*|main|develop' | \\\n  xargs -n 1 git branch -d`
+        }
+      };
+
+      const snippetTabs = document.querySelectorAll('.snippet-tab');
+      const snippetCodeBlock = document.getElementById('snippet-code-block').querySelector('code');
+      const snippetLangBadge = document.getElementById('snippet-lang-badge');
+      const snippetMeta = document.getElementById('snippet-meta');
+      const copyBtn = document.getElementById('copy-snippet-btn');
+      const copyLabel = document.getElementById('copy-snippet-label');
+
+      snippetTabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+          const key = tab.getAttribute('data-snippet');
+          const data = snippets[key];
+          if (!data) return;
+          snippetTabs.forEach((t) => {
+            const active = t === tab;
+            t.setAttribute('aria-selected', String(active));
+            if (active) {
+              t.classList.add('bg-light-surface-container-lowest', 'text-light-on-surface');
+              t.classList.remove('text-light-on-surface-variant');
+            } else {
+              t.classList.remove('bg-light-surface-container-lowest', 'text-light-on-surface');
+              t.classList.add('text-light-on-surface-variant');
+            }
+          });
+          snippetCodeBlock.textContent = data.code;
+          snippetLangBadge.textContent = data.lang;
+          snippetMeta.textContent = data.meta;
+        });
+      });
+
+      copyBtn.addEventListener('click', () => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(snippetCodeBlock.textContent).catch(() => {});
+        }
+        copyLabel.textContent = '복사됨';
+        setTimeout(() => { copyLabel.textContent = '스니펫 복사'; }, 1500);
+      });
+
+      // 4. Quick Idea Capture with localStorage
+      const DEFAULT_IDEAS = [
+        { title: '마크다운 노트 자동 태깅 CLI', time: '10:15', desc: '로컬 폴더의 .md 파일을 읽어 키워드별 프론트매터를 자동 정리하는 경량 스크립트', tags: ['#CLI', '#자동화'] },
+        { title: '웹 디자인 컬러 대비 실시간 체커', time: '어제', desc: 'HEX 두 개를 붙여넣으면 WCAG AA/AAA 통과 여부와 대체 톤을 제안하는 미니 웹툴', tags: ['#웹툴', '#접근성'] },
+        { title: '포모도로 + Git 커밋 로그 연동', time: '11.24', desc: '집중 세션 종료 시 해당 시간대 커밋 내역을 하루 회고에 자동 첨부', tags: ['#생산성'] }
+      ];
+      let ideas = [];
+      try {
+        ideas = JSON.parse(localStorage.getItem('sage_ideas_v1') || 'null') || DEFAULT_IDEAS;
+      } catch {
+        ideas = DEFAULT_IDEAS;
+      }
+
+      const ideaForm = document.getElementById('idea-capture-form');
+      const ideaInput = document.getElementById('idea-input');
+      const ideaList = document.getElementById('idea-list');
+      const ideaCounter = document.getElementById('idea-counter');
+      const focusIdeaBtn = document.getElementById('focus-idea-btn');
+
+      function saveAndRenderIdeas() {
+        localStorage.setItem('sage_ideas_v1', JSON.stringify(ideas));
+        ideaList.innerHTML = '';
+        ideas.forEach((idea) => {
+          const li = document.createElement('li');
+          li.className = 'searchable-item p-gutter-md rounded bg-light-surface-container-low border border-light-outline-variant flex flex-col gap-gutter-xs';
+          const tagsHtml = (idea.tags || ['#새메모']).map(tag =>
+            `<span class="font-label text-label-sm text-light-on-secondary-container bg-light-secondary-container px-gutter-sm py-0.5 rounded-full">${tag}</span>`
+          ).join('');
+          li.innerHTML = `
+            <div class="flex items-start justify-between gap-gutter-sm">
+              <h3 class="idea-title font-title text-title-md text-light-on-surface"></h3>
+              <span class="font-code text-code-sm text-light-on-surface-variant tabular-nums shrink-0">${idea.time || '방금'}</span>
+            </div>
+            ${idea.desc ? `<p class="font-body text-body-sm text-light-on-surface-variant">${idea.desc}</p>` : ''}
+            <div class="flex flex-wrap items-center gap-gutter-xs pt-gutter-xs">${tagsHtml}</div>
+          `;
+          li.querySelector('.idea-title').textContent = idea.title;
+          ideaList.appendChild(li);
+        });
+        ideaCounter.textContent = `${ideas.length}건`;
+      }
+
+      saveAndRenderIdeas();
+
+      focusIdeaBtn.addEventListener('click', () => {
+        if (activeThemeId !== 'sage-home') selectTheme('sage-home');
+        setTimeout(() => ideaInput.focus(), 50);
+      });
+
+      ideaForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = ideaInput.value.trim();
+        if (!text) return;
+        ideas.unshift({ title: text, time: '방금', desc: '', tags: ['#새메모'] });
+        ideaInput.value = '';
+        saveAndRenderIdeas();
+      });
+
+      // 5. Global Search & Cmd+K Shortcut
+      const globalSearch = document.getElementById('global-search');
+      document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          globalSearch.focus();
+        }
+      });
+
+      globalSearch.addEventListener('input', () => {
+        const q = globalSearch.value.trim().toLowerCase();
+        if (q && activeThemeId !== 'sage-home') {
+          selectTheme('sage-home');
+        }
+        document.querySelectorAll('.searchable-item').forEach((item) => {
+          const text = item.textContent.toLowerCase();
+          item.style.display = !q || text.includes(q) ? '' : 'none';
+        });
       });
     }
 
@@ -1163,12 +1803,12 @@
       if (currentItem.type === 'iframe') {
         actionsSlot.innerHTML = `
           <a href="${currentItem.url}" target="_blank" rel="noopener"
-            class="px-3 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow flex items-center gap-1.5 transition">
+            class="px-3 py-1.5 bg-[#0F5238] hover:bg-[#2D6A4F] text-white text-xs font-bold rounded shadow flex items-center gap-1.5 transition">
             <span>↗ 독립 전체화면(새 탭)으로 열기</span>
           </a>
         `;
         body.innerHTML = `
-          <div class="flex-1 bg-white rounded-xl border border-[#cbd5e1] shadow-sm overflow-hidden flex flex-col min-h-[760px] fade-in">
+          <div class="flex-1 bg-white rounded-xl border border-[#BFC9C1] shadow-sm overflow-hidden flex flex-col min-h-[760px] fade-in">
             <iframe src="${currentItem.url}" class="w-full flex-1 border-0 min-h-[760px]"></iframe>
           </div>
         `;
@@ -1196,21 +1836,21 @@
       // E. Built-in Finance Dashboard
       if (currentItem.type === 'builtin-finance-dash') {
         actionsSlot.innerHTML = `
-          <button onclick="openView('reconcile-ui');" class="px-3.5 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
+          <button onclick="openView('reconcile-ui');" class="px-3.5 py-1.5 bg-[#0F5238] hover:bg-[#2D6A4F] text-white text-xs font-bold rounded shadow cursor-pointer">
             📑 병원부 미결 원장 대사 바로가기 →
           </button>
         `;
         body.innerHTML = `
           <div class="space-y-6 fade-in">
             <!-- Hero Welcome -->
-            <div class="bg-gradient-to-r from-[#00236f] via-[#1e3a8a] to-[#2563eb] rounded-xl text-white p-6 shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="bg-gradient-to-r from-[#0F5238] via-[#2D6A4F] to-[#2563eb] rounded-xl text-white p-6 shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-white/15 text-[#dae2fd]">Clinical Ledger Precision v2.6</span>
+                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-white/15 text-[#A8E7C5]">Clinical Ledger Precision v2.6</span>
                 <h1 class="text-xl sm:text-2xl font-bold font-headline mt-2">병원부 미결 정산 총괄 대시보드</h1>
-                <p class="text-xs text-[#dae2fd] mt-1">기준월 2026년 11월 | 주요 수탁 병원 예정금액 대비 실집행 원장 대사 및 미결 현황</p>
+                <p class="text-xs text-[#A8E7C5] mt-1">기준월 2026년 11월 | 주요 수탁 병원 예정금액 대비 실집행 원장 대사 및 미결 현황</p>
               </div>
               <div class="flex gap-2">
-                <button onclick="openView('reconcile-ui');" class="px-4 py-2 bg-white text-[#00236f] text-xs font-bold rounded-md shadow hover:bg-[#eaedff] transition cursor-pointer">
+                <button onclick="openView('reconcile-ui');" class="px-4 py-2 bg-white text-[#0F5238] text-xs font-bold rounded-md shadow hover:bg-[#CFE9D8] transition cursor-pointer">
                   원장 대사 엔진 실행
                 </button>
               </div>
@@ -1218,41 +1858,41 @@
 
             <!-- KPI Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div class="bg-white p-5 rounded-lg border border-[#cbd5e1] border-l-4 border-l-[#00236f] shadow-sm">
-                <div class="text-xs text-[#757682] font-semibold">하반기 총 정산 예정금</div>
-                <div class="text-xl font-bold num-font text-[#00236f] mt-1.5">₩ 1,482,900,000</div>
+              <div class="bg-white p-5 rounded-lg border border-[#BFC9C1] border-l-4 border-l-[#0F5238] shadow-sm">
+                <div class="text-xs text-[#707973] font-semibold">하반기 총 정산 예정금</div>
+                <div class="text-xl font-bold num-font text-[#0F5238] mt-1.5">₩ 1,482,900,000</div>
                 <div class="text-[11px] text-[#059669] font-semibold mt-1">↑ 전월 대비 8.4% 증가</div>
               </div>
-              <div class="bg-white p-5 rounded-lg border border-[#cbd5e1] border-l-4 border-l-[#059669] shadow-sm">
-                <div class="text-xs text-[#757682] font-semibold">집행 확정액 (완결)</div>
+              <div class="bg-white p-5 rounded-lg border border-[#BFC9C1] border-l-4 border-l-[#059669] shadow-sm">
+                <div class="text-xs text-[#707973] font-semibold">집행 확정액 (완결)</div>
                 <div class="text-xl font-bold num-font text-[#059669] mt-1.5">₩ 1,439,700,000</div>
-                <div class="text-[11px] text-[#757682] mt-1">정산 완결률 97.1% (324건)</div>
+                <div class="text-[11px] text-[#707973] mt-1">정산 완결률 97.1% (324건)</div>
               </div>
-              <div class="bg-white p-5 rounded-lg border border-[#cbd5e1] border-l-4 border-l-[#dc2626] shadow-sm">
-                <div class="text-xs text-[#757682] font-semibold">미결 잔액 (대사 대기)</div>
+              <div class="bg-white p-5 rounded-lg border border-[#BFC9C1] border-l-4 border-l-[#dc2626] shadow-sm">
+                <div class="text-xs text-[#707973] font-semibold">미결 잔액 (대사 대기)</div>
                 <div class="text-xl font-bold num-font text-[#dc2626] mt-1.5">₩ 43,200,000</div>
                 <div class="text-[11px] text-[#dc2626] font-semibold mt-1">2개 주요 병원 소명 필요</div>
               </div>
-              <div class="bg-white p-5 rounded-lg border border-[#cbd5e1] border-l-4 border-l-[#2563eb] shadow-sm">
-                <div class="text-xs text-[#757682] font-semibold">사내 지식 블로그 / 공지</div>
-                <div class="text-xl font-bold num-font text-[#1e3a8a] mt-1.5">${blogPosts.length} 건</div>
+              <div class="bg-white p-5 rounded-lg border border-[#BFC9C1] border-l-4 border-l-[#2563eb] shadow-sm">
+                <div class="text-xs text-[#707973] font-semibold">사내 지식 블로그 / 공지</div>
+                <div class="text-xl font-bold num-font text-[#2D6A4F] mt-1.5">${blogPosts.length} 건</div>
                 <div class="text-[11px] text-[#2563eb] font-semibold mt-1 cursor-pointer hover:underline" onclick="selectTheme('knowledge');">공지사항 바로가기 →</div>
               </div>
             </div>
 
             <!-- High Density Ledger Table -->
-            <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-sm overflow-hidden">
-              <div class="p-4 bg-[#f2f3ff] border-b border-[#cbd5e1] flex flex-wrap items-center justify-between gap-2">
+            <div class="bg-white rounded-xl border border-[#BFC9C1] shadow-sm overflow-hidden">
+              <div class="p-4 bg-[#F1F4F1] border-b border-[#BFC9C1] flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <h2 class="text-sm font-bold font-headline text-[#00236f]">주요 병원별 11월 정산 대사 요약 원장</h2>
-                  <p class="text-[11px] text-[#757682]">Stitch Clinical Ledger Precision 고밀도 수치 정렬 적용</p>
+                  <h2 class="text-sm font-bold font-headline text-[#0F5238]">주요 병원별 11월 정산 대사 요약 원장</h2>
+                  <p class="text-[11px] text-[#707973]">Stitch Clinical Ledger Precision 고밀도 수치 정렬 적용</p>
                 </div>
-                <button onclick="openView('reconcile-ui');" class="text-xs font-bold text-[#1e3a8a] hover:underline">전체 원장 대사 열기 →</button>
+                <button onclick="openView('reconcile-ui');" class="text-xs font-bold text-[#2D6A4F] hover:underline">전체 원장 대사 열기 →</button>
               </div>
               <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr class="bg-slate-50 border-b border-[#cbd5e1] text-[#1e3a8a] font-bold uppercase text-[11px]">
+                    <tr class="bg-slate-50 border-b border-[#BFC9C1] text-[#2D6A4F] font-bold uppercase text-[11px]">
                       <th class="py-2.5 px-4">기관코드</th>
                       <th class="py-2.5 px-4">병원명</th>
                       <th class="py-2.5 px-4 text-right">예정금액</th>
@@ -1262,42 +1902,42 @@
                       <th class="py-2.5 px-4 text-center">원장작업</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-[#e2e8f0]">
-                    <tr class="hover:bg-[#faf8ff] h-9">
-                      <td class="px-4 num-font font-bold text-[#1e3a8a]">H01</td>
+                  <tbody class="divide-y divide-[#BFC9C1]">
+                    <tr class="hover:bg-[#F7FAF7] h-9">
+                      <td class="px-4 num-font font-bold text-[#2D6A4F]">H01</td>
                       <td class="px-4 font-bold">서울대학교병원</td>
                       <td class="px-4 text-right num-font">₩ 320,000,000</td>
-                      <td class="px-4 text-right num-font font-bold text-[#00236f]">₩ 320,000,000</td>
+                      <td class="px-4 text-right num-font font-bold text-[#0F5238]">₩ 320,000,000</td>
                       <td class="px-4 text-right num-font font-bold text-[#059669]">₩ 0</td>
                       <td class="px-4 text-center"><span class="px-2 py-0.5 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] text-[10px] font-bold">완결</span></td>
-                      <td class="px-4 text-center"><button onclick="openView('reconcile-ui');" class="text-[#1e3a8a] font-bold hover:underline">상세</button></td>
+                      <td class="px-4 text-center"><button onclick="openView('reconcile-ui');" class="text-[#2D6A4F] font-bold hover:underline">상세</button></td>
                     </tr>
-                    <tr class="hover:bg-[#faf8ff] h-9">
-                      <td class="px-4 num-font font-bold text-[#1e3a8a]">H02</td>
+                    <tr class="hover:bg-[#F7FAF7] h-9">
+                      <td class="px-4 num-font font-bold text-[#2D6A4F]">H02</td>
                       <td class="px-4 font-bold">세브란스병원</td>
                       <td class="px-4 text-right num-font">₩ 285,000,000</td>
-                      <td class="px-4 text-right num-font font-bold text-[#00236f]">₩ 260,000,000</td>
+                      <td class="px-4 text-right num-font font-bold text-[#0F5238]">₩ 260,000,000</td>
                       <td class="px-4 text-right num-font font-bold text-[#dc2626]">₩ 25,000,000</td>
                       <td class="px-4 text-center"><span class="px-2 py-0.5 rounded bg-[#fef2f2] text-[#dc2626] border border-[#fecaca] text-[10px] font-bold">미결잔액</span></td>
-                      <td class="px-4 text-center"><button onclick="openView('reconcile-ui');" class="text-[#1e3a8a] font-bold hover:underline">대사처리</button></td>
+                      <td class="px-4 text-center"><button onclick="openView('reconcile-ui');" class="text-[#2D6A4F] font-bold hover:underline">대사처리</button></td>
                     </tr>
-                    <tr class="hover:bg-[#faf8ff] h-9">
-                      <td class="px-4 num-font font-bold text-[#1e3a8a]">H03</td>
+                    <tr class="hover:bg-[#F7FAF7] h-9">
+                      <td class="px-4 num-font font-bold text-[#2D6A4F]">H03</td>
                       <td class="px-4 font-bold">서울아산병원</td>
                       <td class="px-4 text-right num-font">₩ 410,000,000</td>
-                      <td class="px-4 text-right num-font font-bold text-[#00236f]">₩ 410,000,000</td>
+                      <td class="px-4 text-right num-font font-bold text-[#0F5238]">₩ 410,000,000</td>
                       <td class="px-4 text-right num-font font-bold text-[#059669]">₩ 0</td>
                       <td class="px-4 text-center"><span class="px-2 py-0.5 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] text-[10px] font-bold">완결</span></td>
-                      <td class="px-4 text-center"><button onclick="openView('reconcile-ui');" class="text-[#1e3a8a] font-bold hover:underline">상세</button></td>
+                      <td class="px-4 text-center"><button onclick="openView('reconcile-ui');" class="text-[#2D6A4F] font-bold hover:underline">상세</button></td>
                     </tr>
-                    <tr class="hover:bg-[#faf8ff] h-9">
-                      <td class="px-4 num-font font-bold text-[#1e3a8a]">H04</td>
+                    <tr class="hover:bg-[#F7FAF7] h-9">
+                      <td class="px-4 num-font font-bold text-[#2D6A4F]">H04</td>
                       <td class="px-4 font-bold">삼성서울병원</td>
                       <td class="px-4 text-right num-font">₩ 345,000,000</td>
-                      <td class="px-4 text-right num-font font-bold text-[#00236f]">₩ 326,800,000</td>
+                      <td class="px-4 text-right num-font font-bold text-[#0F5238]">₩ 326,800,000</td>
                       <td class="px-4 text-right num-font font-bold text-[#d97706]">₩ 18,200,000</td>
                       <td class="px-4 text-center"><span class="px-2 py-0.5 rounded bg-[#fffbeb] text-[#d97706] border border-[#fde68a] text-[10px] font-bold">수정됨</span></td>
-                      <td class="px-4 text-center"><button onclick="openView('variance-audit');" class="text-[#1e3a8a] font-bold hover:underline">차액소명</button></td>
+                      <td class="px-4 text-center"><button onclick="openView('variance-audit');" class="text-[#2D6A4F] font-bold hover:underline">차액소명</button></td>
                     </tr>
                   </tbody>
                 </table>
@@ -1312,30 +1952,30 @@
       if (currentItem.type === 'builtin-variance') {
         body.innerHTML = `
           <div class="space-y-5 fade-in">
-            <div class="bg-white rounded-xl border border-[#cbd5e1] p-5 shadow-sm flex justify-between items-center">
+            <div class="bg-white rounded-xl border border-[#BFC9C1] p-5 shadow-sm flex justify-between items-center">
               <div>
                 <span class="text-[11px] font-bold text-[#d97706]">DISCREPANCY & VARIANCE AUDIT</span>
-                <h1 class="text-lg font-bold font-headline text-[#00236f]">월별 미결 차액 소명 관리</h1>
-                <p class="text-xs text-[#444651] mt-0.5">약정 할인율, 반품 검수 지연으로 발생한 병원별 미결 차액 추적</p>
+                <h1 class="text-lg font-bold font-headline text-[#0F5238]">월별 미결 차액 소명 관리</h1>
+                <p class="text-xs text-[#404943] mt-0.5">약정 할인율, 반품 검수 지연으로 발생한 병원별 미결 차액 추적</p>
               </div>
-              <button onclick="openView('reconcile-ui');" class="px-3 py-1.5 bg-[#00236f] text-white text-xs font-bold rounded">원장 대사로 이동</button>
+              <button onclick="openView('reconcile-ui');" class="px-3 py-1.5 bg-[#0F5238] text-white text-xs font-bold rounded">원장 대사로 이동</button>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="bg-white p-5 rounded-xl border border-[#fecaca] bg-[#fef2f2]/40 space-y-2">
                 <div class="flex justify-between items-center">
-                  <span class="font-bold text-sm text-[#00236f]">세브란스병원 (H02)</span>
+                  <span class="font-bold text-sm text-[#0F5238]">세브란스병원 (H02)</span>
                   <span class="px-2 py-0.5 rounded bg-[#fef2f2] text-[#dc2626] text-[10px] font-bold border border-[#fecaca]">소명 진행 중</span>
                 </div>
                 <div class="text-xl font-bold num-font text-[#dc2626]">₩ 25,000,000 차액</div>
-                <p class="text-xs text-[#444651]">사유: 10월 납품분 단가 변경 소급 적용 승인 대기 중 (담당자: 이창환)</p>
+                <p class="text-xs text-[#404943]">사유: 10월 납품분 단가 변경 소급 적용 승인 대기 중 (담당자: 이창환)</p>
               </div>
               <div class="bg-white p-5 rounded-xl border border-[#fde68a] bg-[#fffbeb]/40 space-y-2">
                 <div class="flex justify-between items-center">
-                  <span class="font-bold text-sm text-[#00236f]">삼성서울병원 (H04)</span>
+                  <span class="font-bold text-sm text-[#0F5238]">삼성서울병원 (H04)</span>
                   <span class="px-2 py-0.5 rounded bg-[#fffbeb] text-[#d97706] text-[10px] font-bold border border-[#fde68a]">검토 완료</span>
                 </div>
                 <div class="text-xl font-bold num-font text-[#d97706]">₩ 18,200,000 차액</div>
-                <p class="text-xs text-[#444651]">사유: 분기 약정 할인율 3.2% 사후 정산 차감분 반영 예정</p>
+                <p class="text-xs text-[#404943]">사유: 분기 약정 할인율 3.2% 사후 정산 차감분 반영 예정</p>
               </div>
             </div>
           </div>
@@ -1347,23 +1987,23 @@
       if (currentItem.type === 'builtin-tools-dash') {
         body.innerHTML = `
           <div class="space-y-5 fade-in">
-            <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="bg-white rounded-xl border border-[#BFC9C1] p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <span class="text-[11px] font-bold text-[#059669]">FINANCIAL SIMULATION SUITE</span>
-                <h1 class="text-xl font-bold font-headline text-[#00236f]">금융 시뮬레이션 및 자산 운용 도구</h1>
-                <p class="text-xs text-[#444651] mt-1">적금 만기 수령액(단리/복리), 비과세 한도 계산 및 여유 자금 운용 시뮬레이터</p>
+                <h1 class="text-xl font-bold font-headline text-[#0F5238]">금융 시뮬레이션 및 자산 운용 도구</h1>
+                <p class="text-xs text-[#404943] mt-1">적금 만기 수령액(단리/복리), 비과세 한도 계산 및 여유 자금 운용 시뮬레이터</p>
               </div>
-              <button onclick="openView('savings-sim');" class="px-4 py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
+              <button onclick="openView('savings-sim');" class="px-4 py-2 bg-[#0F5238] hover:bg-[#2D6A4F] text-white text-xs font-bold rounded shadow cursor-pointer">
                 🧮 적금 시뮬레이터 바로 열기 →
               </button>
             </div>
-            <div class="bg-white p-6 rounded-xl border border-[#cbd5e1] space-y-3">
-              <h3 class="font-bold text-sm text-[#00236f]">적금/수익 정밀 시뮬레이터 (savings-simulator.html)</h3>
-              <p class="text-xs text-[#444651] leading-relaxed">
+            <div class="bg-white p-6 rounded-xl border border-[#BFC9C1] space-y-3">
+              <h3 class="font-bold text-sm text-[#0F5238]">적금/수익 정밀 시뮬레이터 (savings-simulator.html)</h3>
+              <p class="text-xs text-[#404943] leading-relaxed">
                 월 적립금, 거치 기간, 금리 방식(단리/월복리) 및 세금 우대 조건(일반과세 15.4%, 세금우대 9.5%, 비과세 0%)을 조합하여 세후 실수령액과 월별 이자 적립 추이를 차트로 즉시 확인합니다.
               </p>
               <div class="pt-2">
-                <button onclick="openView('savings-sim');" class="px-4 py-2 bg-[#f2f3ff] hover:bg-[#1e3a8a] hover:text-white text-[#1e3a8a] text-xs font-bold rounded transition">
+                <button onclick="openView('savings-sim');" class="px-4 py-2 bg-[#F1F4F1] hover:bg-[#2D6A4F] hover:text-white text-[#2D6A4F] text-xs font-bold rounded transition">
                   시뮬레이터 실행하기
                 </button>
               </div>
@@ -1382,26 +2022,26 @@
       // I. Generic Auto-generated Template
       body.innerHTML = `
         <div class="space-y-5 fade-in">
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm flex justify-between items-center">
+          <div class="bg-white rounded-xl border border-[#BFC9C1] p-6 shadow-sm flex justify-between items-center">
             <div>
-              <span class="text-[11px] font-bold text-[#1e3a8a]">CUSTOM WORKSPACE</span>
-              <h1 class="text-xl font-bold font-headline text-[#00236f] mt-0.5">${currentItem.title}</h1>
-              <p class="text-xs text-[#444651] mt-1">내부관리 메뉴 매니저를 통해 그룹화된 업무 대시보드 화면입니다.</p>
+              <span class="text-[11px] font-bold text-[#2D6A4F]">CUSTOM WORKSPACE</span>
+              <h1 class="text-xl font-bold font-headline text-[#0F5238] mt-0.5">${currentItem.title}</h1>
+              <p class="text-xs text-[#404943] mt-1">내부관리 메뉴 매니저를 통해 그룹화된 업무 대시보드 화면입니다.</p>
             </div>
             <span class="px-3 py-1 rounded bg-[#eff6ff] text-[#2563eb] text-xs font-bold border border-[#bfdbfe]">활성 메뉴</span>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-white p-5 rounded-lg border border-[#cbd5e1]">
-              <div class="text-xs text-[#757682]">데이터 처리 건수</div>
-              <div class="text-2xl font-bold num-font text-[#00236f] mt-1">1,240 건</div>
+            <div class="bg-white p-5 rounded-lg border border-[#BFC9C1]">
+              <div class="text-xs text-[#707973]">데이터 처리 건수</div>
+              <div class="text-2xl font-bold num-font text-[#0F5238] mt-1">1,240 건</div>
             </div>
-            <div class="bg-white p-5 rounded-lg border border-[#cbd5e1]">
-              <div class="text-xs text-[#757682]">동기화 상태</div>
+            <div class="bg-white p-5 rounded-lg border border-[#BFC9C1]">
+              <div class="text-xs text-[#707973]">동기화 상태</div>
               <div class="text-2xl font-bold num-font text-[#059669] mt-1">100% 정상</div>
             </div>
-            <div class="bg-white p-5 rounded-lg border border-[#cbd5e1]">
-              <div class="text-xs text-[#757682]">접근 권한 등급</div>
-              <div class="text-2xl font-bold num-font text-[#1e3a8a] mt-1">${currentUser.role.toUpperCase()}</div>
+            <div class="bg-white p-5 rounded-lg border border-[#BFC9C1]">
+              <div class="text-xs text-[#707973]">접근 권한 등급</div>
+              <div class="text-2xl font-bold num-font text-[#2D6A4F] mt-1">${currentUser.role.toUpperCase()}</div>
             </div>
           </div>
         </div>
@@ -1415,11 +2055,11 @@
       container.innerHTML = `
         <div class="space-y-6 fade-in">
           <!-- Header -->
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div class="bg-white rounded-xl border border-[#BFC9C1] p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <span class="text-[11px] font-bold text-[#dc2626] uppercase tracking-wider">INTERNAL ADMIN • ACCOUNT & PASSWORD CONTROL</span>
-              <h1 class="text-xl font-bold font-headline text-[#00236f] mt-0.5">업무 이메일 및 비밀번호 계정 관리</h1>
-              <p class="text-xs text-[#444651] mt-1">포털 접속 권한을 가진 임직원 이메일 계정 발급, 비밀번호 재설정, 권한(Admin/Manager/Staff) 및 계정 잠금을 통합 관리합니다.</p>
+              <h1 class="text-xl font-bold font-headline text-[#0F5238] mt-0.5">업무 이메일 및 비밀번호 계정 관리</h1>
+              <p class="text-xs text-[#404943] mt-1">포털 접속 권한을 가진 임직원 이메일 계정 발급, 비밀번호 재설정, 권한(Admin/Manager/Staff) 및 계정 잠금을 통합 관리합니다.</p>
             </div>
             <span class="px-3 py-1 rounded bg-[#fef2f2] text-[#dc2626] border border-[#fecaca] text-xs font-bold shrink-0">
               🔒 내부관리자 전용
@@ -1427,33 +2067,33 @@
           </div>
 
           <!-- Create New Account Form -->
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm">
-            <h2 class="text-sm font-bold font-headline text-[#00236f] mb-4 pb-2 border-b border-[#e2e8f0]">
+          <div class="bg-white rounded-xl border border-[#BFC9C1] p-6 shadow-sm">
+            <h2 class="text-sm font-bold font-headline text-[#0F5238] mb-4 pb-2 border-b border-[#BFC9C1]">
               ➕ 신규 업무 이메일 계정 발급
             </h2>
             <form onsubmit="event.preventDefault(); handleAdminCreateUser();" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
               <div class="lg:col-span-1">
-                <label class="block text-xs font-bold text-[#131b2e] mb-1">성명 *</label>
-                <input type="text" id="au-name" required placeholder="예: 박재무 과장" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+                <label class="block text-xs font-bold text-[#181C1B] mb-1">성명 *</label>
+                <input type="text" id="au-name" required placeholder="예: 박재무 과장" class="w-full px-3 py-2 text-xs bg-[#F7FAF7] border border-[#BFC9C1] rounded">
               </div>
               <div class="lg:col-span-2">
-                <label class="block text-xs font-bold text-[#131b2e] mb-1">업무용 이메일 (로그인 ID) *</label>
-                <input type="email" id="au-email" required placeholder="park@hospital.com" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded num-font">
+                <label class="block text-xs font-bold text-[#181C1B] mb-1">업무용 이메일 (로그인 ID) *</label>
+                <input type="email" id="au-email" required placeholder="park@hospital.com" class="w-full px-3 py-2 text-xs bg-[#F7FAF7] border border-[#BFC9C1] rounded num-font">
               </div>
               <div class="lg:col-span-1">
-                <label class="block text-xs font-bold text-[#131b2e] mb-1">초기 비밀번호 *</label>
-                <input type="text" id="au-password" required value="welcome123" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded num-font">
+                <label class="block text-xs font-bold text-[#181C1B] mb-1">초기 비밀번호 *</label>
+                <input type="text" id="au-password" required value="welcome123" class="w-full px-3 py-2 text-xs bg-[#F7FAF7] border border-[#BFC9C1] rounded num-font">
               </div>
               <div class="lg:col-span-1">
-                <label class="block text-xs font-bold text-[#131b2e] mb-1">소속 부서 & 권한</label>
-                <select id="au-role" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+                <label class="block text-xs font-bold text-[#181C1B] mb-1">소속 부서 & 권한</label>
+                <select id="au-role" class="w-full px-3 py-2 text-xs bg-[#F7FAF7] border border-[#BFC9C1] rounded">
                   <option value="finance_manager">정산총괄 (Manager)</option>
                   <option value="staff">일반임직원 (Staff)</option>
                   <option value="admin">내부관리자 (Admin)</option>
                 </select>
               </div>
               <div class="lg:col-span-1">
-                <button type="submit" class="w-full py-2 px-3 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
+                <button type="submit" class="w-full py-2 px-3 bg-[#0F5238] hover:bg-[#2D6A4F] text-white text-xs font-bold rounded shadow cursor-pointer">
                   + 계정 즉시 발급
                 </button>
               </div>
@@ -1461,15 +2101,15 @@
           </div>
 
           <!-- User Account List Table -->
-          <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-sm overflow-hidden">
-            <div class="p-4 bg-[#f2f3ff] border-b border-[#cbd5e1] flex items-center justify-between">
-              <span class="font-bold text-xs text-[#00236f]">등록된 전체 업무 계정 목록 (${portalUsers.length}명)</span>
+          <div class="bg-white rounded-xl border border-[#BFC9C1] shadow-sm overflow-hidden">
+            <div class="p-4 bg-[#F1F4F1] border-b border-[#BFC9C1] flex items-center justify-between">
+              <span class="font-bold text-xs text-[#0F5238]">등록된 전체 업무 계정 목록 (${portalUsers.length}명)</span>
               <span class="text-[11px] text-[#059669] font-semibold">✓ Supabase Auth & 로컬 하이브리드 동기화</span>
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr class="bg-slate-50 border-b border-[#cbd5e1] text-[#1e3a8a] font-bold">
+                  <tr class="bg-slate-50 border-b border-[#BFC9C1] text-[#2D6A4F] font-bold">
                     <th class="py-2.5 px-4">성명 / 부서</th>
                     <th class="py-2.5 px-4">업무 이메일 (ID)</th>
                     <th class="py-2.5 px-4">설정된 비밀번호</th>
@@ -1478,22 +2118,22 @@
                     <th class="py-2.5 px-4 text-center">비밀번호 재설정 / 제어</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-[#e2e8f0]">
+                <tbody class="divide-y divide-[#BFC9C1]">
                   ${portalUsers.map((u, idx) => `
-                    <tr class="hover:bg-[#faf8ff]">
+                    <tr class="hover:bg-[#F7FAF7]">
                       <td class="py-3 px-4">
-                        <div class="font-bold text-[#131b2e]">${u.name}</div>
-                        <div class="text-[11px] text-[#757682]">${u.department}</div>
+                        <div class="font-bold text-[#181C1B]">${u.name}</div>
+                        <div class="text-[11px] text-[#707973]">${u.department}</div>
                       </td>
-                      <td class="py-3 px-4 num-font font-semibold text-[#00236f]">${u.email}</td>
+                      <td class="py-3 px-4 num-font font-semibold text-[#0F5238]">${u.email}</td>
                       <td class="py-3 px-4">
                         <div class="flex items-center gap-1.5">
-                          <code class="px-2 py-0.5 rounded bg-slate-100 text-[#131b2e] num-font text-[11px]">${u.password}</code>
+                          <code class="px-2 py-0.5 rounded bg-slate-100 text-[#181C1B] num-font text-[11px]">${u.password}</code>
                         </div>
                       </td>
                       <td class="py-3 px-4 text-center">
                         <select onchange="handleAdminChangeUserRole(${idx}, this.value);"
-                          class="px-2 py-1 rounded border border-[#cbd5e1] text-[11px] font-bold bg-white">
+                          class="px-2 py-1 rounded border border-[#BFC9C1] text-[11px] font-bold bg-white">
                           <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>내부관리자 (Admin)</option>
                           <option value="finance_manager" ${u.role === 'finance_manager' ? 'selected' : ''}>정산총괄 (Manager)</option>
                           <option value="staff" ${u.role === 'staff' ? 'selected' : ''}>일반임직원 (Staff)</option>
@@ -1514,7 +2154,7 @@
                           비밀번호 변경
                         </button>
                         <button onclick="handleAdminToggleStatus(${idx});"
-                          class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-[#444651] font-semibold text-[11px]">
+                          class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-[#404943] font-semibold text-[11px]">
                           ${u.status === 'active' ? '잠금' : '잠금해제'}
                         </button>
                         ${u.email !== 'admin@hospital.com' ? `
@@ -1650,27 +2290,27 @@
       const nonAdminGroups = menuGroups;
       container.innerHTML = `
         <div class="space-y-6 fade-in">
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div class="bg-white rounded-xl border border-[#BFC9C1] p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <span class="text-[11px] font-bold text-[#059669] uppercase tracking-wider">INTERNAL ADMIN • MENU & THEME GROUP BUILDER</span>
-              <h1 class="text-xl font-bold font-headline text-[#00236f] mt-0.5">포털 메뉴 및 테마 그룹 관리</h1>
-              <p class="text-xs text-[#444651] mt-1">상단 업무 테마 및 좌측 하위메뉴를 신규 추가하거나 불필요한 메뉴를 삭제합니다.</p>
+              <h1 class="text-xl font-bold font-headline text-[#0F5238] mt-0.5">포털 메뉴 및 테마 그룹 관리</h1>
+              <p class="text-xs text-[#404943] mt-1">상단 업무 테마 및 좌측 하위메뉴를 신규 추가하거나 불필요한 메뉴를 삭제합니다.</p>
             </div>
-            <button onclick="resetDefaultMenus();" class="px-3 py-1.5 border border-[#cbd5e1] bg-white hover:bg-red-50 text-[#dc2626] text-xs font-bold rounded">
+            <button onclick="resetDefaultMenus();" class="px-3 py-1.5 border border-[#BFC9C1] bg-white hover:bg-red-50 text-[#dc2626] text-xs font-bold rounded">
               초기 기본 메뉴로 복원
             </button>
           </div>
 
           <!-- Add Menu Form -->
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm">
-            <h2 class="text-sm font-bold font-headline text-[#00236f] mb-4 pb-2 border-b border-[#e2e8f0]">
+          <div class="bg-white rounded-xl border border-[#BFC9C1] p-6 shadow-sm">
+            <h2 class="text-sm font-bold font-headline text-[#0F5238] mb-4 pb-2 border-b border-[#BFC9C1]">
               ➕ 신규 하위메뉴 또는 업무 테마 추가
             </h2>
             <form onsubmit="event.preventDefault(); handleAdminAddMenu();" class="space-y-4">
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label class="block text-xs font-bold text-[#131b2e] mb-1">소속될 대상 테마 그룹</label>
-                  <select id="mm-theme-select" onchange="toggleNewThemeInputs();" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+                  <label class="block text-xs font-bold text-[#181C1B] mb-1">소속될 대상 테마 그룹</label>
+                  <select id="mm-theme-select" onchange="toggleNewThemeInputs();" class="w-full px-3 py-2 text-xs bg-[#F7FAF7] border border-[#BFC9C1] rounded">
                     ${nonAdminGroups.map(g => `<option value="${g.themeId}">${g.themeTitle}</option>`).join('')}
                     <option value="__new__">+ 새로운 상단 업무 테마 만들기</option>
                   </select>
@@ -1680,31 +2320,31 @@
                   <input type="text" id="mm-new-theme-title" placeholder="예: 인사/총무 관리" class="w-full px-3 py-2 text-xs bg-white border border-[#2563eb] rounded">
                 </div>
                 <div>
-                  <label class="block text-xs font-bold text-[#131b2e] mb-1">신규 하위메뉴 제목 *</label>
-                  <input type="text" id="mm-menu-title" required placeholder="예: 분기별 약품 재고 실사" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+                  <label class="block text-xs font-bold text-[#181C1B] mb-1">신규 하위메뉴 제목 *</label>
+                  <input type="text" id="mm-menu-title" required placeholder="예: 분기별 약품 재고 실사" class="w-full px-3 py-2 text-xs bg-[#F7FAF7] border border-[#BFC9C1] rounded">
                 </div>
               </div>
 
               <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 <div>
-                  <label class="block text-xs font-bold text-[#131b2e] mb-1">화면 연결 방식</label>
-                  <select id="mm-menu-type" onchange="toggleMenuUrlInput();" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+                  <label class="block text-xs font-bold text-[#181C1B] mb-1">화면 연결 방식</label>
+                  <select id="mm-menu-type" onchange="toggleMenuUrlInput();" class="w-full px-3 py-2 text-xs bg-[#F7FAF7] border border-[#BFC9C1] rounded">
                     <option value="iframe">HTML 파일 / 외부 URL 연결</option>
                     <option value="template">표준 대시보드 자동 생성</option>
                   </select>
                 </div>
                 <div id="mm-url-box" class="sm:col-span-2">
-                  <label class="block text-xs font-bold text-[#131b2e] mb-1">연결할 HTML 파일명 또는 URL *</label>
-                  <input type="text" id="mm-menu-url" value="template-page.html" placeholder="예: template-page.html" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded num-font">
+                  <label class="block text-xs font-bold text-[#181C1B] mb-1">연결할 HTML 파일명 또는 URL *</label>
+                  <input type="text" id="mm-menu-url" value="template-page.html" placeholder="예: template-page.html" class="w-full px-3 py-2 text-xs bg-[#F7FAF7] border border-[#BFC9C1] rounded num-font">
                 </div>
                 <div>
-                  <label class="block text-xs font-bold text-[#131b2e] mb-1">배지 텍스트</label>
-                  <input type="text" id="mm-menu-badge" value="신규" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
+                  <label class="block text-xs font-bold text-[#181C1B] mb-1">배지 텍스트</label>
+                  <input type="text" id="mm-menu-badge" value="신규" class="w-full px-3 py-2 text-xs bg-[#F7FAF7] border border-[#BFC9C1] rounded">
                 </div>
               </div>
 
               <div class="flex justify-end pt-2">
-                <button type="submit" class="px-5 py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
+                <button type="submit" class="px-5 py-2 bg-[#0F5238] hover:bg-[#2D6A4F] text-white text-xs font-bold rounded shadow cursor-pointer">
                   + 포털 메뉴 트리에 즉시 반영
                 </button>
               </div>
@@ -1712,22 +2352,22 @@
           </div>
 
           <!-- Current Menu Structure Tree -->
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm">
-            <h2 class="text-sm font-bold font-headline text-[#00236f] mb-4">현재 포털 테마 및 하위메뉴 구성 현황</h2>
+          <div class="bg-white rounded-xl border border-[#BFC9C1] p-6 shadow-sm">
+            <h2 class="text-sm font-bold font-headline text-[#0F5238] mb-4">현재 포털 테마 및 하위메뉴 구성 현황</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               ${menuGroups.map(g => `
-                <div class="p-4 rounded-lg border border-[#e2e8f0] bg-[#faf8ff]">
+                <div class="p-4 rounded-lg border border-[#BFC9C1] bg-[#F7FAF7]">
                   <div class="flex items-center justify-between mb-2">
-                    <span class="font-bold text-xs text-[#00236f]">${g.themeTitle}</span>
-                    <span class="text-[10px] px-2 py-0.5 rounded bg-white border border-[#cbd5e1] text-[#444651]">대시보드: ${g.dashboard.title}</span>
+                    <span class="font-bold text-xs text-[#0F5238]">${g.themeTitle}</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded bg-white border border-[#BFC9C1] text-[#404943]">대시보드: ${g.dashboard.title}</span>
                   </div>
-                  <div class="space-y-1.5 pl-3 border-l-2 border-[#cbd5e1]">
+                  <div class="space-y-1.5 pl-3 border-l-2 border-[#BFC9C1]">
                     ${g.subMenus.map(s => `
-                      <div class="flex items-center justify-between text-xs bg-white px-2.5 py-1.5 rounded border border-[#e2e8f0]">
-                        <span>• ${s.title} <code class="text-[10px] text-[#757682]">${s.url ? '(' + s.url + ')' : '(내장화면)'}</code></span>
+                      <div class="flex items-center justify-between text-xs bg-white px-2.5 py-1.5 rounded border border-[#BFC9C1]">
+                        <span>• ${s.title} <code class="text-[10px] text-[#707973]">${s.url ? '(' + s.url + ')' : '(내장화면)'}</code></span>
                         ${g.themeId !== 'internal-admin' ? `
                           <button onclick="deleteSubMenu('${g.themeId}', '${s.id}');" class="text-[11px] text-[#dc2626] hover:underline font-semibold">삭제</button>
-                        ` : '<span class="text-[10px] text-[#757682]">시스템 고정</span>'}
+                        ` : '<span class="text-[10px] text-[#707973]">시스템 고정</span>'}
                       </div>
                     `).join('')}
                   </div>
@@ -1835,42 +2475,42 @@
 
       container.innerHTML = `
         <div class="space-y-6 fade-in">
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div class="bg-white rounded-xl border border-[#BFC9C1] p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <span class="text-[11px] font-bold text-[#2563eb] uppercase tracking-wider">INTERNAL ADMIN • SUPABASE CLOUD CONNECTION</span>
-              <h1 class="text-xl font-bold font-headline text-[#00236f] mt-0.5">Supabase 클라우드 DB 연동 관리</h1>
-              <p class="text-xs text-[#444651] mt-1">제공해주신 Supabase Project URL 및 Publishable Public Key가 기본 탑재되어 있습니다.</p>
+              <h1 class="text-xl font-bold font-headline text-[#0F5238] mt-0.5">Supabase 클라우드 DB 연동 관리</h1>
+              <p class="text-xs text-[#404943] mt-1">제공해주신 Supabase Project URL 및 Publishable Public Key가 기본 탑재되어 있습니다.</p>
             </div>
             <span class="px-3 py-1 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] text-xs font-bold">
               ● Supabase 연결 활성화됨
             </span>
           </div>
 
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm space-y-4">
-            <h2 class="text-sm font-bold font-headline text-[#00236f] pb-2 border-b border-[#e2e8f0]">연동된 Supabase 프로젝트 자격증명</h2>
+          <div class="bg-white rounded-xl border border-[#BFC9C1] p-6 shadow-sm space-y-4">
+            <h2 class="text-sm font-bold font-headline text-[#0F5238] pb-2 border-b border-[#BFC9C1]">연동된 Supabase 프로젝트 자격증명</h2>
             <form onsubmit="event.preventDefault(); saveAdminSupabaseConfig();" class="space-y-4">
               <div>
-                <label class="block text-xs font-bold text-[#131b2e] mb-1">Supabase Project URL</label>
-                <input type="url" id="admin-sb-url" value="${currentUrl}" required class="w-full px-3.5 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded num-font">
+                <label class="block text-xs font-bold text-[#181C1B] mb-1">Supabase Project URL</label>
+                <input type="url" id="admin-sb-url" value="${currentUrl}" required class="w-full px-3.5 py-2 text-xs bg-[#F7FAF7] border border-[#BFC9C1] rounded num-font">
               </div>
               <div>
-                <label class="block text-xs font-bold text-[#131b2e] mb-1">Supabase Anon Public Key</label>
-                <input type="text" id="admin-sb-key" value="${currentKey}" required class="w-full px-3.5 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded num-font">
+                <label class="block text-xs font-bold text-[#181C1B] mb-1">Supabase Anon Public Key</label>
+                <input type="text" id="admin-sb-key" value="${currentKey}" required class="w-full px-3.5 py-2 text-xs bg-[#F7FAF7] border border-[#BFC9C1] rounded num-font">
               </div>
               <div class="flex justify-end gap-2">
-                <button type="submit" class="px-5 py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
+                <button type="submit" class="px-5 py-2 bg-[#0F5238] hover:bg-[#2D6A4F] text-white text-xs font-bold rounded shadow cursor-pointer">
                   연동 설정 업데이트
                 </button>
               </div>
             </form>
           </div>
 
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm space-y-3">
-            <h2 class="text-sm font-bold font-headline text-[#00236f]">Supabase SQL Editor 초기 테이블 생성 스크립트</h2>
-            <p class="text-xs text-[#444651]">
+          <div class="bg-white rounded-xl border border-[#BFC9C1] p-6 shadow-sm space-y-3">
+            <h2 class="text-sm font-bold font-headline text-[#0F5238]">Supabase SQL Editor 초기 테이블 생성 스크립트</h2>
+            <p class="text-xs text-[#404943]">
               Supabase 대시보드의 <strong>SQL Editor</strong>에 아래 쿼리를 실행해 두시면, 포털 계정(<code>portal_users</code>)과 블로그 게시글(<code>blog_posts</code>)이 클라우드 DB에 영구 보관됩니다.
             </p>
-            <pre class="p-4 rounded-lg bg-[#0f172a] text-[#dae2fd] text-[11px] num-font overflow-x-auto leading-relaxed">create table if not exists public.portal_users (
+            <pre class="p-4 rounded-lg bg-[#0f172a] text-[#A8E7C5] text-[11px] num-font overflow-x-auto leading-relaxed">create table if not exists public.portal_users (
   id uuid default gen_random_uuid() primary key,
   email text unique not null,
   password_hash text not null,
@@ -1975,10 +2615,10 @@ create policy "Allow all portal_users" on public.portal_users for all using (tru
     function renderBlogHub(container, actionsSlot) {
       actionsSlot.innerHTML = `
         <div class="flex items-center gap-2">
-          <button onclick="refreshBlogFromCloud();" class="px-3 py-1.5 bg-white hover:bg-[#f1f5f9] text-[#00236f] border border-[#cbd5e1] text-xs font-bold rounded shadow-sm cursor-pointer">
+          <button onclick="refreshBlogFromCloud();" class="px-3 py-1.5 bg-white hover:bg-[#f1f5f9] text-[#0F5238] border border-[#BFC9C1] text-xs font-bold rounded shadow-sm cursor-pointer">
             🔄 DB 동기화
           </button>
-          <button onclick="openBlogWriteModal();" class="px-3.5 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
+          <button onclick="openBlogWriteModal();" class="px-3.5 py-1.5 bg-[#0F5238] hover:bg-[#2D6A4F] text-white text-xs font-bold rounded shadow cursor-pointer">
             ✍️ 새 글 작성하기
           </button>
         </div>
@@ -1991,17 +2631,17 @@ create policy "Allow all portal_users" on public.portal_users for all using (tru
 
       container.innerHTML = `
         <div class="space-y-5 fade-in">
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-5 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div class="bg-white rounded-xl border border-[#BFC9C1] p-5 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
-              <span class="text-[11px] font-bold text-[#1e3a8a]">KNOWLEDGE & BLOG ARCHIVE</span>
-              <h1 class="text-xl font-bold font-headline text-[#00236f]">업무 지식 블로그 & 사내 공지사항</h1>
-              <p class="text-xs text-[#444651] mt-0.5">정산 마감 공지, 원장 대사 매뉴얼 및 업무 노하우를 기록하고 공유합니다.</p>
+              <span class="text-[11px] font-bold text-[#2D6A4F]">KNOWLEDGE & BLOG ARCHIVE</span>
+              <h1 class="text-xl font-bold font-headline text-[#0F5238]">업무 지식 블로그 & 사내 공지사항</h1>
+              <p class="text-xs text-[#404943] mt-0.5">정산 마감 공지, 원장 대사 매뉴얼 및 업무 노하우를 기록하고 공유합니다.</p>
             </div>
             <div class="flex gap-1.5 flex-wrap">
               ${categories.map(cat => `
                 <button onclick="blogFilterCategory='${cat}'; renderViewport(activeViewId);"
                   class="px-3 py-1 rounded-md text-xs font-bold transition cursor-pointer ${
-                    blogFilterCategory === cat ? 'bg-[#1e3a8a] text-white' : 'bg-[#f2f3ff] text-[#444651] hover:bg-[#eaedff]'
+                    blogFilterCategory === cat ? 'bg-[#2D6A4F] text-white' : 'bg-[#F1F4F1] text-[#404943] hover:bg-[#CFE9D8]'
                   }">${cat}</button>
               `).join('')}
             </div>
@@ -2010,8 +2650,8 @@ create policy "Allow all portal_users" on public.portal_users for all using (tru
           <div class="space-y-3">
             ${filtered.map(post => `
               <div onclick="openBlogDetailModal('${post.id}');"
-                class="bg-white rounded-xl border border-[#cbd5e1] p-5 shadow-sm hover:border-[#1e3a8a] transition cursor-pointer">
-                <div class="flex items-center justify-between text-xs text-[#757682] mb-1.5">
+                class="bg-white rounded-xl border border-[#BFC9C1] p-5 shadow-sm hover:border-[#2D6A4F] transition cursor-pointer">
+                <div class="flex items-center justify-between text-xs text-[#707973] mb-1.5">
                   <div class="flex items-center gap-2">
                     <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]">${post.category}</span>
                     <span>${post.date}</span>
@@ -2019,10 +2659,10 @@ create policy "Allow all portal_users" on public.portal_users for all using (tru
                   </div>
                   <span class="num-font">조회 ${post.views}</span>
                 </div>
-                <h2 class="text-base font-bold font-headline text-[#00236f] hover:underline">${post.title}</h2>
-                <p class="text-xs text-[#444651] mt-1.5 line-clamp-2">${post.summary}</p>
+                <h2 class="text-base font-bold font-headline text-[#0F5238] hover:underline">${post.title}</h2>
+                <p class="text-xs text-[#404943] mt-1.5 line-clamp-2">${post.summary}</p>
                 <div class="flex items-center gap-1.5 mt-3 pt-2.5 border-t border-[#f1f5f9]">
-                  ${(post.tags || []).map(t => `<span class="text-[10px] px-2 py-0.5 rounded-full bg-[#f8fafc] border border-[#e2e8f0] text-[#475569]">#${t}</span>`).join('')}
+                  ${(post.tags || []).map(t => `<span class="text-[10px] px-2 py-0.5 rounded-full bg-[#f8fafc] border border-[#BFC9C1] text-[#475569]">#${t}</span>`).join('')}
                 </div>
               </div>
             `).join('')}
