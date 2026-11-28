@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>토당클럽 태미모 4분기 클럽데이 | 찬조자 감사 광고지 (A4 2쪽)</title>
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    :root {
+      --ink: #0f172a;
+      --ink-soft: #334155;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --surface: #f8fafc;
+      --accent: #0f172a;
+      --accent-soft: #f1f5f9;
+      --cash-bg: #fef9ec;
+      --cash-border: #fde68a;
+      --cash-text: #92400e;
+      --cash-badge: #d97706;
+      --item-bg: #f0f9ff;
+      --item-border: #bae6fd;
+      --item-text: #075985;
+      --item-badge: #0284c7;
+      --gold: #b45309;
+    }
+
+    [data-theme="emerald"] {
+      --ink: #0f2922;
+      --ink-soft: #2d4a40;
+      --muted: #5b756b;
+      --line: #d9e5e0;
+      --surface: #f4f8f6;
+      --accent: #064e3b;
+      --accent-soft: #ecfdf5;
+      --cash-bg: #fefce8;
+      --cash-border: #fde047;
+      --cash-text: #854d0e;
+      --cash-badge: #ca8a04;
+      --item-bg: #ecfdf5;
+      --item-border: #a7f3d0;
+      --item-text: #065f46;
+      --item-badge: #059669;
+      --gold: #047857;
+    }
+
+    [data-theme="mono"] {
+      --ink: #111827;
+      --ink-soft: #374151;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --surface: #f9fafb;
+      --accent: #111827;
+      --accent-soft: #f3f4f6;
+      --cash-bg: #f3f4f6;
+      --cash-border: #d1d5db;
+      --cash-text: #111827;
+      --cash-badge: #111827;
+      --item-bg: #ffffff;
+      --item-border: #d1d5db;
+      --item-text: #1f2937;
+      --item-badge: #4b5563;
+      --gold: #111827;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background: #e2e8f0;
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px 48px;
+      gap: 20px;
+    }
+
+    /* ── Screen Control Bar ── */
+    .toolbar {
+      width: 100%;
+      max-width: 297mm;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 14px 18px;
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toolbar-badge {
+      font-size: 11px;
+      font-weight: 600;
+      background: #f1f5f9;
+      color: #475569;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .toolbar-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #1e293b;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 7px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+
+    .btn.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+
+    .btn-primary {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+      padding: 8px 16px;
+    }
+
+    .btn-primary:hover {
+      background: #1e293b;
+      border-color: #1e293b;
+    }
+
+    .select-group {
+      display: inline-flex;
+      background: #f1f5f9;
+      padding: 3px;
+      border-radius: 9px;
+      gap: 2px;
+    }
+
+    .select-group .btn {
+      border: none;
+      background: transparent;
+      padding: 5px 10px;
+      font-size: 12px;
+      border-radius: 6px;
+      color: #475569;
+    }
+
+    .select-group .btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    /* ── Editor Panel ── */
+    .editor-panel {
+      width: 100%;
+      max-width: 297mm;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 18px 20px;
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .editor-panel.open {
+      display: flex;
+    }
+
+    .editor-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .field label {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #475569;
+    }
+
+    .field input {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 13px;
+      color: #0f172a;
+      outline: none;
+    }
+
+    .field input:focus {
+      border-color: #0f172a;
+    }
+
+    .sponsor-editor-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .sponsor-editor-box {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sponsor-editor-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .sponsor-row-input {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr auto;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .sponsor-row-input input {
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 12.5px;
+      background: #ffffff;
+    }
+
+    .btn-icon {
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      color: #ef4444;
+      border-radius: 6px;
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-icon:hover {
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+
+    /* ── A4 Landscape Sheet (297mm x 210mm) ── */
+    .sheet-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      overflow-x: auto;
+    }
+
+    .a4-sheet {
+      width: 297mm;
+      height: 210mm;
+      background: #ffffff;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.14);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .a4-sheet.show-cut::after {
+      content: "";
+      position: absolute;
+      top: 6mm;
+      bottom: 6mm;
+      left: 50%;
+      border-left: 1px dashed #cbd5e1;
+      pointer-events: none;
+    }
+
+    .cut-mark {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 2mm;
+      font-size: 8.5px;
+      color: #94a3b8;
+      letter-spacing: 0.08em;
+      background: #ffffff;
+      padding: 0 4px;
+      pointer-events: none;
+    }
+
+    .a4-sheet:not(.show-cut) .cut-mark {
+      display: none;
+    }
+
+    /* ── Individual A5 Page (148.5mm x 210mm) ── */
+    .a5-page {
+      width: 148.5mm;
+      height: 210mm;
+      padding: 11mm 11mm 9.5mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      background: #ffffff;
+    }
+
+    /* Top Accent Bar */
+    .a5-page::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 11mm;
+      right: 11mm;
+      height: 3.5px;
+      background: var(--accent);
+      border-radius: 0 0 3px 3px;
+    }
+
+    /* ── Flyer Header ── */
+    .flyer-header {
+      padding-top: 3mm;
+      padding-bottom: 4.5mm;
+      border-bottom: 1.5px solid var(--ink);
+      display: flex;
+      flex-direction: column;
+      gap: 2.2mm;
+    }
+
+    .header-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .kicker {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .page-tag {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      padding: 1.5px 7px;
+      border-radius: 999px;
+    }
+
+    .flyer-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      color: var(--ink);
+    }
+
+    .flyer-subtitle-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .flyer-subtitle {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-soft);
+    }
+
+    .flyer-meta {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    /* ── Sponsor Sections ── */
+    .flyer-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4.5mm;
+      padding: 4.5mm 0 3mm;
+      overflow: hidden;
+    }
+
+    .sponsor-section {
+      display: flex;
+      flex-direction: column;
+      gap: 2.2mm;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 1.5mm;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 2px;
+    }
+
+    .section-dot.cash {
+      background: var(--cash-badge);
+    }
+
+    .section-dot.item {
+      background: var(--item-badge);
+    }
+
+    .section-title {
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+    }
+
+    .section-en {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .section-count {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    /* ── Sponsor List Rows ── */
+    .sponsor-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.6mm;
+    }
+
+    .sponsor-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 2.2mm 3mm;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: #ffffff;
+    }
+
+    .sponsor-item.cash {
+      background: var(--cash-bg);
+      border-color: var(--cash-border);
+    }
+
+    .sponsor-item.item {
+      background: var(--item-bg);
+      border-color: var(--item-border);
+    }
+
+    .sponsor-name-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .sponsor-name {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    .sponsor-honorific {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .sponsor-value {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      font-variant-numeric: tabular-nums;
+      padding: 1mm 2.6mm;
+      border-radius: 5px;
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    .sponsor-item.cash .sponsor-value {
+      background: #ffffff;
+      color: var(--cash-text);
+      border: 1px solid var(--cash-border);
+    }
+
+    .sponsor-item.item .sponsor-value {
+      background: #ffffff;
+      color: var(--item-text);
+      border: 1px solid var(--item-border);
+    }
+
+    /* Compact 2-column grid when many items */
+    .sponsor-list.compact {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.6mm;
+    }
+
+    .sponsor-list.compact .sponsor-item {
+      padding: 1.8mm 2.4mm;
+    }
+
+    .sponsor-list.compact .sponsor-name {
+      font-size: 11.5px;
+    }
+
+    .sponsor-list.compact .sponsor-value {
+      font-size: 10.5px;
+      padding: 0.7mm 2mm;
+    }
+
+    /* ── Flyer Footer ── */
+    .flyer-footer {
+      border-top: 1px solid var(--line);
+      padding-top: 3mm;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .footer-message {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--ink-soft);
+      line-height: 1.4;
+    }
+
+    .footer-sign {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    /* ── Print Rules (Exact A4 Landscape, Zero Chrome) ── */
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 0;
+      }
+
+      body {
+        background: #ffffff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block !important;
+      }
+
+      .toolbar,
+      .editor-panel {
+        display: none !important;
+      }
+
+      .sheet-wrapper {
+        overflow: visible !important;
+      }
+
+      .a4-sheet {
+        box-shadow: none !important;
+        width: 297mm !important;
+        height: 210mm !important;
+        page-break-after: avoid;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .sponsor-editor-cols {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body data-theme="navy">
+  <!-- Screen Toolbar (Hidden when printing) -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="toolbar-title">
+        <span>토당클럽 태미모 4분기 클럽데이 · 찬조자 광고지</span>
+        <span class="toolbar-badge">A4 가로 2쪽 (A5 × 2)</span>
+      </div>
+    </div>
+
+    <div class="toolbar-controls">
+      <div class="select-group" role="group" aria-label="레이아웃 모드">
+        <button class="btn active" id="modeDuplicate" onclick="setMode('duplicate')">동일 2매 (재단용)</button>
+        <button class="btn" id="modeSplit" onclick="setMode('split')">1·2쪽 분할</button>
+      </div>
+
+      <div class="select-group" role="group" aria-label="컬러 테마">
+        <button class="btn active" data-theme-btn="navy" onclick="setTheme('navy')">네이비·골드</button>
+        <button class="btn" data-theme-btn="emerald" onclick="setTheme('emerald')">에메랄드</button>
+        <button class="btn" data-theme-btn="mono" onclick="setTheme('mono')">모노크롬</button>
+      </div>
+
+      <button class="btn active" id="btnCutLine" onclick="toggleCutLine()">재단선</button>
+      <button class="btn" id="btnToggleEditor" onclick="toggleEditor()">내용 편집</button>
+      <button class="btn btn-primary" onclick="window.print()">인쇄 / PDF 저장</button>
+    </div>
+  </div>
+
+  <!-- Live Editor Panel (Hidden when printing) -->
+  <div class="editor-panel" id="editorPanel">
+    <div class="editor-grid">
+      <div class="field">
+        <label for="inKicker">상단 영문 라벨</label>
+        <input id="inKicker" type="text" oninput="updateMeta()" />
+      </div>
+      <div class="field">
+        <label for="inTitle">행사 제목</label>
+        <input id="inTitle" type="text" oninput="updateMeta()" />
+      </div>
+      <div class="field">
+        <label for="inSubtitle">부제목</label>
+        <input id="inSubtitle" type="text" oninput="updateMeta()" />
+      </div>
+      <div class="field">
+        <label for="inMeta">일시 / 장소</label>
+        <input id="inMeta" type="text" oninput="updateMeta()" />
+      </div>
+      <div class="field">
+        <label for="inFooterMsg">하단 감사 문구</label>
+        <input id="inFooterMsg" type="text" oninput="updateMeta()" />
+      </div>
+      <div class="field">
+        <label for="inFooterSign">하단 서명</label>
+        <input id="inFooterSign" type="text" oninput="updateMeta()" />
+      </div>
+    </div>
+
+    <div class="sponsor-editor-cols">
+      <div class="sponsor-editor-box">
+        <div class="sponsor-editor-head">
+          <span>현금 찬조자 (이름 / 금액)</span>
+          <button class="btn" onclick="addSponsor('cash')">+ 추가</button>
+        </div>
+        <div id="cashEditorList"></div>
+      </div>
+
+      <div class="sponsor-editor-box">
+        <div class="sponsor-editor-head">
+          <span>물품 찬조자 (이름 / 물품)</span>
+          <button class="btn" onclick="addSponsor('item')">+ 추가</button>
+        </div>
+        <div id="itemEditorList"></div>
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <span style="font-size:12px; color:#64748b;">
+        인쇄 팁: 인쇄 창에서 <strong>방향: 가로</strong>, <strong>여백: 없음</strong>, <strong>배경 그래픽: 체크</strong>를 선택하면 A4 한 장에 정확히 두 쪽으로 출력됩니다.
+      </span>
+      <button class="btn" onclick="resetDefaults()">기본 예시로 초기화</button>
+    </div>
+  </div>
+
+  <!-- Printable A4 Landscape Sheet -->
+  <div class="sheet-wrapper">
+    <div class="a4-sheet show-cut" id="a4Sheet">
+      <div class="cut-mark">✂ CUT / FOLD</div>
+      <section class="a5-page" id="leftPage"></section>
+      <section class="a5-page" id="rightPage"></section>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'todang_taemimo_4q_flyer_v1';
+
+    const DEFAULT_STATE = {
+      mode: 'duplicate', // 'duplicate' | 'split'
+      theme: 'navy',     // 'navy' | 'emerald' | 'mono'
+      showCut: true,
+      meta: {
+        kicker: '2026 4Q CLUB DAY · SPECIAL THANKS',
+        title: '토당클럽 태미모 4분기 클럽데이',
+        subtitle: '찬조자 감사 안내',
+        info: '2026. 11. 28 (토) · 토당클럽',
+        footerMsg: '보내주신 따뜻한 성원과 찬조에 깊이 감사드립니다.',
+        footerSign: '토당클럽 태미모 일동'
+      },
+      cashSponsors: [
+        { name: '김태현', value: '100,000원' },
+        { name: '박지훈', value: '100,000원' },
+        { name: '이수진', value: '50,000원' },
+        { name: '정민수', value: '50,000원' },
+        { name: '최영호', value: '50,000원' }
+      ],
+      itemSponsors: [
+        { name: '강현우', value: '고급 스포츠 타월 30매' },
+        { name: '윤서연', value: '생수 500ml × 3박스' },
+        { name: '한동훈', value: '이온음료 2박스' },
+        { name: '오세영', value: '시합구 1박스' },
+        { name: '임재범', value: '다과 및 간식 세트' }
+      ]
+    };
+
+    let state = loadState();
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return structuredClone(DEFAULT_STATE);
+        const parsed = JSON.parse(raw);
+        return { ...structuredClone(DEFAULT_STATE), ...parsed };
+      } catch {
+        return structuredClone(DEFAULT_STATE);
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch {}
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function renderSponsorRows(list, type, compactThreshold = 7) {
+      const isCompact = list.length >= compactThreshold;
+      const itemsHtml = list.map((s) => `
+        <div class="sponsor-item ${type}">
+          <div class="sponsor-name-wrap">
+            <span class="sponsor-name">${escapeHtml(s.name)}</span>
+            <span class="sponsor-honorific">님</span>
+          </div>
+          <div class="sponsor-value">${escapeHtml(s.value)}</div>
+        </div>
+      `).join('');
+
+      return `<div class="sponsor-list ${isCompact ? 'compact' : ''}">${itemsHtml}</div>`;
+    }
+
+    function renderSection(type, list, compactThreshold) {
+      if (!list.length) return '';
+      const isCash = type === 'cash';
+      return `
+        <div class="sponsor-section">
+          <div class="section-head">
+            <div class="section-title-wrap">
+              <span class="section-dot ${type}"></span>
+              <span class="section-title">${isCash ? '현금 찬조' : '물품 찬조'}</span>
+              <span class="section-en">${isCash ? 'CASH' : 'GOODS'}</span>
+            </div>
+            <span class="section-count">총 ${list.length}분</span>
+          </div>
+          ${renderSponsorRows(list, type, compactThreshold)}
+        </div>
+      `;
+    }
+
+    function buildPageHtml({ pageTag, showCash, showItem, compactThreshold }) {
+      const { meta, cashSponsors, itemSponsors } = state;
+      return `
+        <header class="flyer-header">
+          <div class="header-top-row">
+            <span class="kicker">${escapeHtml(meta.kicker)}</span>
+            ${pageTag ? `<span class="page-tag">${escapeHtml(pageTag)}</span>` : ''}
+          </div>
+          <h1 class="flyer-title">${escapeHtml(meta.title)}</h1>
+          <div class="flyer-subtitle-row">
+            <span class="flyer-subtitle">${escapeHtml(meta.subtitle)}</span>
+            <span class="flyer-meta">${escapeHtml(meta.info)}</span>
+          </div>
+        </header>
+
+        <main class="flyer-body">
+          ${showCash ? renderSection('cash', cashSponsors, compactThreshold) : ''}
+          ${showItem ? renderSection('item', itemSponsors, compactThreshold) : ''}
+        </main>
+
+        <footer class="flyer-footer">
+          <p class="footer-message">${escapeHtml(meta.footerMsg)}</p>
+          <span class="footer-sign">${escapeHtml(meta.footerSign)}</span>
+        </footer>
+      `;
+    }
+
+    function renderSheet() {
+      const left = document.getElementById('leftPage');
+      const right = document.getElementById('rightPage');
+
+      if (state.mode === 'duplicate') {
+        const html = buildPageHtml({
+          pageTag: '',
+          showCash: true,
+          showItem: true,
+          compactThreshold: 6
+        });
+        left.innerHTML = html;
+        right.innerHTML = html;
+      } else {
+        left.innerHTML = buildPageHtml({
+          pageTag: '1 / 2 · 현금 찬조',
+          showCash: true,
+          showItem: false,
+          compactThreshold: 11
+        });
+        right.innerHTML = buildPageHtml({
+          pageTag: '2 / 2 · 물품 찬조',
+          showCash: false,
+          showItem: true,
+          compactThreshold: 11
+        });
+      }
+    }
+
+    function renderEditor() {
+      document.getElementById('inKicker').value = state.meta.kicker;
+      document.getElementById('inTitle').value = state.meta.title;
+      document.getElementById('inSubtitle').value = state.meta.subtitle;
+      document.getElementById('inMeta').value = state.meta.info;
+      document.getElementById('inFooterMsg').value = state.meta.footerMsg;
+      document.getElementById('inFooterSign').value = state.meta.footerSign;
+
+      renderSponsorEditorList('cash', 'cashEditorList', '이름', '금액 (예: 100,000원)');
+      renderSponsorEditorList('item', 'itemEditorList', '이름', '물품 (예: 타월 30매)');
+    }
+
+    function renderSponsorEditorList(type, containerId, namePh, valPh) {
+      const list = type === 'cash' ? state.cashSponsors : state.itemSponsors;
+      const el = document.getElementById(containerId);
+      el.innerHTML = list.map((s, idx) => `
+        <div class="sponsor-row-input">
+          <input type="text" value="${escapeHtml(s.name)}" placeholder="${namePh}" oninput="updateSponsor('${type}', ${idx}, 'name', this.value)" />
+          <input type="text" value="${escapeHtml(s.value)}" placeholder="${valPh}" oninput="updateSponsor('${type}', ${idx}, 'value', this.value)" />
+          <button class="btn-icon" title="삭제" onclick="removeSponsor('${type}', ${idx})">×</button>
+        </div>
+      `).join('');
+    }
+
+    function updateMeta() {
+      state.meta.kicker = document.getElementById('inKicker').value;
+      state.meta.title = document.getElementById('inTitle').value;
+      state.meta.subtitle = document.getElementById('inSubtitle').value;
+      state.meta.info = document.getElementById('inMeta').value;
+      state.meta.footerMsg = document.getElementById('inFooterMsg').value;
+      state.meta.footerSign = document.getElementById('inFooterSign').value;
+      saveState();
+      renderSheet();
+    }
+
+    function updateSponsor(type, idx, field, val) {
+      const list = type === 'cash' ? state.cashSponsors : state.itemSponsors;
+      if (list[idx]) {
+        list[idx][field] = val;
+        saveState();
+        renderSheet();
+      }
+    }
+
+    function addSponsor(type) {
+      const list = type === 'cash' ? state.cashSponsors : state.itemSponsors;
+      list.push(type === 'cash' ? { name: '홍길동', value: '50,000원' } : { name: '홍길동', value: '찬조 물품' });
+      saveState();
+      renderEditor();
+      renderSheet();
+    }
+
+    function removeSponsor(type, idx) {
+      const list = type === 'cash' ? state.cashSponsors : state.itemSponsors;
+      list.splice(idx, 1);
+      saveState();
+      renderEditor();
+      renderSheet();
+    }
+
+    function setMode(mode) {
+      state.mode = mode;
+      document.getElementById('modeDuplicate').classList.toggle('active', mode === 'duplicate');
+      document.getElementById('modeSplit').classList.toggle('active', mode === 'split');
+      saveState();
+      renderSheet();
+    }
+
+    function setTheme(theme) {
+      state.theme = theme;
+      document.body.setAttribute('data-theme', theme);
+      document.querySelectorAll('[data-theme-btn]').forEach((btn) => {
+        btn.classList.toggle('active', btn.getAttribute('data-theme-btn') === theme);
+      });
+      saveState();
+    }
+
+    function toggleCutLine() {
+      state.showCut = !state.showCut;
+      document.getElementById('a4Sheet').classList.toggle('show-cut', state.showCut);
+      document.getElementById('btnCutLine').classList.toggle('active', state.showCut);
+      saveState();
+    }
+
+    function toggleEditor() {
+      const panel = document.getElementById('editorPanel');
+      const isOpen = panel.classList.toggle('open');
+      document.getElementById('btnToggleEditor').classList.toggle('active', isOpen);
+    }
+
+    function resetDefaults() {
+      state = structuredClone(DEFAULT_STATE);
+      saveState();
+      applyInitialUI();
+    }
+
+    function applyInitialUI() {
+      setTheme(state.theme);
+      setMode(state.mode);
+      document.getElementById('a4Sheet').classList.toggle('show-cut', state.showCut);
+      document.getElementById('btnCutLine').classList.toggle('active', state.showCut);
+      renderEditor();
+      renderSheet();
+    }
+
+    applyInitialUI();
+  </script>
+</body>
+</html>
