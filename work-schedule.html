@@ -489,28 +489,36 @@ function doGet(e) {
     }
     if (action === 'list') {
       var now = new Date();
-      var year = parseInt(params.year, 10) || now.getFullYear();
-      var month = parseInt(params.month, 10) || (now.getMonth() + 1);
-      var startDate = new Date(year, month - 1, 1, 0, 0, 0);
-      var endDate = new Date(year, month, 0, 23, 59, 59);
-      var cal = CalendarApp.getDefaultCalendar();
-      var events = cal.getEvents(startDate, endDate);
-      var items = events.map(function (ev) {
-        var st = ev.getStartTime();
-        var isAllDay = ev.isAllDayEvent();
-        var yyyy = st.getFullYear();
-        var mm = ('0' + (st.getMonth() + 1)).slice(-2);
-        var dd = ('0' + st.getDate()).slice(-2);
-        var hh = ('0' + st.getHours()).slice(-2);
-        var mi = ('0' + st.getMinutes()).slice(-2);
-        return {
-          id: ev.getId(),
-          title: ev.getTitle() || '(제목 없음)',
-          dateStr: yyyy + '-' + mm + '-' + dd,
-          timeStr: isAllDay ? '종일' : (hh + ':' + mi),
-          description: ev.getDescription() || ''
-        };
-      });
+      var year = parseInt(params.year, 10) || parseInt(Utilities.formatDate(now, 'Asia/Seoul', 'yyyy'), 10);
+      var month = parseInt(params.month, 10) || parseInt(Utilities.formatDate(now, 'Asia/Seoul', 'MM'), 10);
+      var monthPrefix = year + '-' + ('0' + month).slice(-2);
+      var startDate = new Date(year, month - 1, 0, 0, 0, 0);
+      var endDate = new Date(year, month, 2, 23, 59, 59);
+      var cals = CalendarApp.getAllOwnedCalendars();
+      if (!cals || cals.length === 0) cals = [CalendarApp.getDefaultCalendar()];
+      var seen = {};
+      var items = [];
+      for (var c = 0; c < cals.length; c++) {
+        var events = cals[c].getEvents(startDate, endDate);
+        for (var i = 0; i < events.length; i++) {
+          var ev = events[i];
+          var evId = ev.getId();
+          if (seen[evId]) continue;
+          seen[evId] = true;
+          var st = ev.getStartTime();
+          var isAllDay = ev.isAllDayEvent();
+          var dateStr = Utilities.formatDate(st, 'Asia/Seoul', 'yyyy-MM-dd');
+          if (dateStr.indexOf(monthPrefix) !== 0) continue;
+          var timeStr = isAllDay ? '종일' : Utilities.formatDate(st, 'Asia/Seoul', 'HH:mm');
+          items.push({
+            id: evId,
+            title: ev.getTitle() || '(제목 없음)',
+            dateStr: dateStr,
+            timeStr: timeStr,
+            description: ev.getDescription() || ''
+          });
+        }
+      }
       return jsonResponse({ ok: true, items: items });
     }
     return jsonResponse({ ok: false, error: 'Unknown action: ' + action });
@@ -532,9 +540,7 @@ function doPost(e) {
       var memo = body.memo || '';
       var title = '[' + type + '] ' + memo;
       var desc = 'Sage Studio 개인일정 캘린더 (' + type + ')';
-      var parts = dateStr.split('-');
-      var tParts = timeStr.split(':');
-      var startDt = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), parseInt(tParts[0], 10), parseInt(tParts[1], 10), 0);
+      var startDt = new Date(dateStr + 'T' + timeStr + ':00+09:00');
       var endDt = new Date(startDt.getTime() + 60 * 60 * 1000);
       if (action === 'update' && body.gcalId) {
         var existing = cal.getEventById(body.gcalId);
@@ -665,10 +671,14 @@ function doPost(e) {
 
     async function fetchGoogleCalendarMonthEvents(showError = false) {
       if (!isGcalConnected()) return;
+      const label = document.getElementById('gcal-btn-label');
+      if (label) label.textContent = 'Google 동기화 중...';
+
       const url = new URL(gcalBridgeUrl);
       url.searchParams.set('action', 'list');
       url.searchParams.set('year', String(viewYear));
       url.searchParams.set('month', String(viewMonth));
+      url.searchParams.set('t', String(Date.now()));
 
       try {
         const resp = await fetch(url.toString());
@@ -677,9 +687,11 @@ function doPost(e) {
         if (!data || !data.ok) throw new Error(data?.error || 'Bridge error');
 
         const nextByDate = {};
+        let totalFetched = 0;
         (data.items || []).forEach(ev => {
           const dateStr = ev.dateStr;
           if (!dateStr) return;
+          totalFetched++;
           const rawSummary = ev.title || '(제목 없음)';
           let parsedType = 'Google';
           let parsedMemo = rawSummary;
@@ -701,13 +713,15 @@ function doPost(e) {
 
         gcalEventsByDate = nextByDate;
         localStorage.setItem(GCAL_EVENTS_KEY, JSON.stringify(gcalEventsByDate));
+        if (label) label.textContent = `Google 연결됨 (${totalFetched}건) · 동기화`;
         renderCalendar();
         if (!document.getElementById('schedule-modal').classList.contains('hidden')) {
           renderModalDayList();
         }
       } catch (err) {
         console.warn('Google Calendar bridge fetch error:', err);
-        if (showError) alert('Google 캘린더 동기화 실패: 웹앱 URL과 배포 권한(모든 사용자)을 확인해 주세요.');
+        if (label) label.textContent = 'Google 동기화 재시도';
+        if (showError) alert('Google 캘린더 동기화 실패: ' + (err?.message || '웹앱 URL과 배포 권한(모든 사용자)을 확인해 주세요.'));
       }
     }
 

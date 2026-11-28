@@ -1353,6 +1353,7 @@
         homeContainer.classList.remove('hidden');
         themeWorkspace.classList.add('hidden');
         if (typeof window.renderSageSchedules === 'function') window.renderSageSchedules();
+        if (typeof window.syncGcalBridgeForHome === 'function') window.syncGcalBridgeForHome();
         renderSageToolsHub();
         renderGNB();
         return;
@@ -1666,11 +1667,54 @@
         }
       }
 
+      window.syncGcalBridgeForHome = async function () {
+        const bridgeUrl = (localStorage.getItem('clp_gcal_bridge_url') || '').trim();
+        if (!bridgeUrl || !bridgeUrl.startsWith('https://')) return;
+        const now = new Date();
+        try {
+          const url = new URL(bridgeUrl);
+          url.searchParams.set('action', 'list');
+          url.searchParams.set('year', String(now.getFullYear()));
+          url.searchParams.set('month', String(now.getMonth() + 1));
+          url.searchParams.set('t', String(Date.now()));
+          const resp = await fetch(url.toString());
+          if (!resp.ok) return;
+          const data = await resp.json();
+          if (!data || !data.ok) return;
+          const nextByDate = {};
+          (data.items || []).forEach(ev => {
+            if (!ev.dateStr) return;
+            const rawSummary = ev.title || '(제목 없음)';
+            let parsedType = 'Google';
+            let parsedMemo = rawSummary;
+            const typeMatch = rawSummary.match(/^\[(정산\/대사|외근\/미팅|보고\/회의|결재\/행정|개인일정|기타)\]\s*(.+)$/);
+            if (typeMatch) {
+              parsedType = typeMatch[1];
+              parsedMemo = typeMatch[2];
+            }
+            if (!nextByDate[ev.dateStr]) nextByDate[ev.dateStr] = [];
+            nextByDate[ev.dateStr].push({
+              id: 'gcal:' + ev.id,
+              gcalId: ev.id,
+              type: parsedType,
+              time: ev.timeStr || '09:00',
+              memo: parsedMemo,
+              source: 'gcal'
+            });
+          });
+          localStorage.setItem('clp_gcal_events_v1', JSON.stringify(nextByDate));
+          renderSageSchedules();
+        } catch (e) {
+          console.warn('Home Google Calendar bridge sync fallback:', e);
+        }
+      };
+
       renderSageSchedules();
       syncTodayWorkSchedulesFromSupabase();
+      window.syncGcalBridgeForHome();
 
       window.addEventListener('storage', (e) => {
-        if (e.key === WORK_SCHEDULE_KEY || e.key === DONE_MAP_KEY) {
+        if (e.key === WORK_SCHEDULE_KEY || e.key === DONE_MAP_KEY || e.key === 'clp_gcal_events_v1') {
           renderSageSchedules();
         }
       });
