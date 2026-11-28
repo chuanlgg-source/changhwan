@@ -6,7 +6,6 @@
   <title>개인일정 캘린더</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Noto+Sans+KR:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -75,10 +74,10 @@
           class="hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white hover:bg-[#FFDAD6] border border-[#BFC9C1] text-[11px] font-bold text-[#BA1A1A] cursor-pointer transition">
           <span>연결 해제</span>
         </button>
-        <button type="button" onclick="openGcalConfigModal()" title="Google OAuth Client ID 입력·수정·초기화"
+        <button type="button" onclick="openGcalConfigModal()" title="Google Apps Script 웹앱 URL 설정"
           class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white hover:bg-[#F1F4F1] border border-[#BFC9C1] text-[11px] font-bold text-[#404943] cursor-pointer transition">
-          <span class="material-symbols-outlined text-[13px]" aria-hidden="true">key</span>
-          <span>Client ID 설정</span>
+          <span class="material-symbols-outlined text-[13px]" aria-hidden="true">link</span>
+          <span>연동 설정</span>
         </button>
       </div>
       <h1 class="text-2xl font-bold font-headline text-[#181C1B] tracking-tight">
@@ -253,34 +252,44 @@
     </div>
   </div>
 
-  <!-- Google Calendar OAuth 2.0 Config Modal -->
+  <!-- Google Calendar Apps Script Bridge Config Modal -->
   <div id="gcal-config-modal" onclick="if(event.target===this) closeGcalConfigModal();" class="hidden fixed inset-0 z-50 bg-[#181C1B]/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-[#BFC9C1] shadow-xl w-full max-w-md overflow-hidden">
+    <div class="bg-white rounded-xl border border-[#BFC9C1] shadow-xl w-full max-w-lg overflow-hidden">
       <div class="px-5 py-4 bg-[#0F5238] text-white flex items-center justify-between">
         <div>
-          <div class="text-[11px] text-[#A8E7C5] font-semibold">GOOGLE CALENDAR OAUTH 2.0</div>
-          <h3 class="text-base font-bold font-headline">Google 캘린더 연동 설정</h3>
+          <div class="text-[11px] text-[#A8E7C5] font-semibold">GOOGLE APPS SCRIPT BRIDGE</div>
+          <h3 class="text-base font-bold font-headline">Google 캘린더 연동 설정 (OAuth 차단 없음)</h3>
         </div>
         <button type="button" onclick="closeGcalConfigModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-sm font-bold cursor-pointer transition">✕</button>
       </div>
-      <form onsubmit="event.preventDefault(); saveGcalClientId(true);" class="p-5 space-y-4">
-        <div class="p-3 rounded-lg bg-[#F1F4F1] border border-[#BFC9C1] text-[11px] text-[#404943] leading-relaxed space-y-1">
-          <p class="font-bold text-[#0F5238]">최초 1회 Google Cloud Console 설정 안내</p>
-          <p>1. Google Cloud Console → <strong>Google Calendar API</strong> 사용 설정</p>
-          <p>2. 사용자 인증 정보 → <strong>OAuth 2.0 클라이언트 ID (웹 애플리케이션)</strong> 생성</p>
-          <p>3. 승인된 자바스크립트 원본에 <code class="px-1 py-0.5 bg-white border border-[#BFC9C1] rounded num-font text-[#181C1B]">https://chuanlgg-source.github.io</code> 등록</p>
+      <form onsubmit="event.preventDefault(); saveGcalBridgeUrl(true);" class="p-5 space-y-4 max-h-[82vh] overflow-y-auto">
+        <div class="p-3.5 rounded-lg bg-[#F1F4F1] border border-[#BFC9C1] text-[11px] text-[#404943] leading-relaxed space-y-1.5">
+          <p class="font-bold text-[#0F5238]">최초 1회 Google Apps Script 웹앱 배포 안내 (403 오류·재로그인 없음)</p>
+          <p>1. <a href="https://script.google.com" target="_blank" rel="noopener" class="text-[#0F5238] font-bold underline">script.google.com</a> 접속 → <strong>새 프로젝트</strong> 클릭</p>
+          <p>2. 아래 <strong>스크립트 코드 복사</strong>를 눌러 기존 코드를 지우고 붙여넣기 → 저장(<code class="px-1 bg-white border border-[#BFC9C1] rounded num-font">Ctrl+S</code>)</p>
+          <p>3. 우측 상단 <strong>배포 → 새 배포 → 유형: 웹 앱</strong> 선택</p>
+          <p class="pl-3">· 다음 사용자 권한으로 실행: <strong>나</strong> / 액세스 권한: <strong>모든 사용자</strong> → <strong>배포</strong> (최초 1회 권한 허용)</p>
+          <p>4. 생성된 <strong>웹 앱 URL</strong>(<code class="px-1 bg-white border border-[#BFC9C1] rounded num-font">https://script.google.com/macros/s/.../exec</code>)을 아래에 붙여넣기</p>
         </div>
+
+        <div class="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-[#F7FAF7] border border-[#BFC9C1]">
+          <span class="text-xs font-semibold text-[#404943]">Apps Script 브릿지 코드 (<span class="num-font">google-calendar-bridge.gs</span>)</span>
+          <button type="button" id="btn-copy-gs" onclick="copyBridgeScript()" class="px-3 py-1.5 rounded-lg bg-[#CFE9D8] hover:bg-[#BDE0C9] border border-[#BFC9C1] text-[11px] font-bold text-[#1F352A] cursor-pointer transition shrink-0">
+            스크립트 코드 복사
+          </button>
+        </div>
+
         <div>
           <div class="flex items-center justify-between mb-1">
-            <label class="block text-xs font-bold text-[#181C1B]">Google OAuth Client ID *</label>
-            <button type="button" onclick="resetGcalClientId()" class="text-[11px] font-bold text-[#BA1A1A] hover:underline cursor-pointer">키 초기화(삭제)</button>
+            <label class="block text-xs font-bold text-[#181C1B]">Google Apps Script 웹앱 URL *</label>
+            <button type="button" onclick="resetGcalBridgeUrl()" class="text-[11px] font-bold text-[#BA1A1A] hover:underline cursor-pointer">URL 초기화</button>
           </div>
-          <input type="text" id="input-gcal-client-id" required placeholder="예: 1234567890-abcdefg.apps.googleusercontent.com"
+          <input type="url" id="input-gcal-bridge-url" required placeholder="https://script.google.com/macros/s/AKfycb.../exec"
             class="w-full px-3 py-2 text-xs bg-[#F1F4F1] border border-[#BFC9C1] rounded-lg num-font focus:outline-none focus:border-[#0F5238] focus:ring-1 focus:ring-[#0F5238] focus:bg-white">
         </div>
         <div class="flex items-center justify-end gap-2 pt-2 border-t border-[#BFC9C1]">
           <button type="button" onclick="closeGcalConfigModal()" class="px-3.5 py-2 bg-white hover:bg-[#F1F4F1] border border-[#BFC9C1] text-[#404943] text-xs font-bold rounded-lg cursor-pointer">취소</button>
-          <button type="button" onclick="saveGcalClientId(false)" class="px-3.5 py-2 bg-[#F1F4F1] hover:bg-[#ECEFEC] border border-[#BFC9C1] text-[#0F5238] text-xs font-bold rounded-lg cursor-pointer">저장만</button>
+          <button type="button" onclick="saveGcalBridgeUrl(false)" class="px-3.5 py-2 bg-[#F1F4F1] hover:bg-[#ECEFEC] border border-[#BFC9C1] text-[#0F5238] text-xs font-bold rounded-lg cursor-pointer">저장만</button>
           <button type="submit" class="px-4 py-2 bg-[#0F5238] hover:bg-[#2D6A4F] text-white text-xs font-bold rounded-lg cursor-pointer transition">저장 후 연결</button>
         </div>
       </form>
@@ -289,20 +298,16 @@
 
   <script>
     const STORAGE_KEY = 'clp_work_schedules_v1';
-    const GCAL_CLIENT_ID_KEY = 'clp_gcal_client_id';
-    const GCAL_TOKEN_KEY = 'clp_gcal_token';
+    const GCAL_BRIDGE_URL_KEY = 'clp_gcal_bridge_url';
     const GCAL_EVENTS_KEY = 'clp_gcal_events_v1';
     const GCAL_LINK_MAP_KEY = 'clp_gcal_link_map_v1';
-    const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
     const DEFAULT_SUPABASE_URL = 'https://cbarfruyknhfjvvhcmgu.supabase.co';
     const DEFAULT_SUPABASE_KEY = 'sb_publishable_k-LLkVT3ducZNfkzF0tGvw_36TMYhhZ';
     let supabaseClient = null;
     let schedules = {}; // { "YYYY-MM-DD": [ { id, type, time, memo } ] }
     let gcalEventsByDate = {}; // { "YYYY-MM-DD": [ { id, gcalId, type, time, memo, source: 'gcal' } ] }
     let gcalLinkMap = {}; // { [localId]: gcalEventId }
-    let gcalAccessToken = '';
-    let gcalTokenExpiresAt = 0;
-    let gcalTokenClient = null;
+    let gcalBridgeUrl = '';
     let viewYear = new Date().getFullYear();
     let viewMonth = new Date().getMonth() + 1; // 1~12
     let selectedDateStr = '';
@@ -469,7 +474,105 @@
       document.getElementById('stat-today').innerText = getTodayStr();
     }
 
+    const BRIDGE_GS_CODE = `function jsonResponse(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  try {
+    var params = (e && e.parameter) ? e.parameter : {};
+    var action = params.action || 'list';
+    if (action === 'ping') {
+      return jsonResponse({ ok: true, message: 'Sage Studio Google Calendar Bridge Active' });
+    }
+    if (action === 'list') {
+      var now = new Date();
+      var year = parseInt(params.year, 10) || now.getFullYear();
+      var month = parseInt(params.month, 10) || (now.getMonth() + 1);
+      var startDate = new Date(year, month - 1, 1, 0, 0, 0);
+      var endDate = new Date(year, month, 0, 23, 59, 59);
+      var cal = CalendarApp.getDefaultCalendar();
+      var events = cal.getEvents(startDate, endDate);
+      var items = events.map(function (ev) {
+        var st = ev.getStartTime();
+        var isAllDay = ev.isAllDayEvent();
+        var yyyy = st.getFullYear();
+        var mm = ('0' + (st.getMonth() + 1)).slice(-2);
+        var dd = ('0' + st.getDate()).slice(-2);
+        var hh = ('0' + st.getHours()).slice(-2);
+        var mi = ('0' + st.getMinutes()).slice(-2);
+        return {
+          id: ev.getId(),
+          title: ev.getTitle() || '(제목 없음)',
+          dateStr: yyyy + '-' + mm + '-' + dd,
+          timeStr: isAllDay ? '종일' : (hh + ':' + mi),
+          description: ev.getDescription() || ''
+        };
+      });
+      return jsonResponse({ ok: true, items: items });
+    }
+    return jsonResponse({ ok: false, error: 'Unknown action: ' + action });
+  } catch (err) {
+    return jsonResponse({ ok: false, error: String(err) });
+  }
+}
+
+function doPost(e) {
+  try {
+    var raw = (e && e.postData && e.postData.contents) ? e.postData.contents : '{}';
+    var body = JSON.parse(raw);
+    var action = body.action || '';
+    var cal = CalendarApp.getDefaultCalendar();
+    if (action === 'create' || action === 'update') {
+      var dateStr = body.dateStr;
+      var timeStr = /^\\d{2}:\\d{2}$/.test(body.time || '') ? body.time : '09:00';
+      var type = body.type || '개인일정';
+      var memo = body.memo || '';
+      var title = '[' + type + '] ' + memo;
+      var desc = 'Sage Studio 개인일정 캘린더 (' + type + ')';
+      var parts = dateStr.split('-');
+      var tParts = timeStr.split(':');
+      var startDt = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), parseInt(tParts[0], 10), parseInt(tParts[1], 10), 0);
+      var endDt = new Date(startDt.getTime() + 60 * 60 * 1000);
+      if (action === 'update' && body.gcalId) {
+        var existing = cal.getEventById(body.gcalId);
+        if (existing) {
+          existing.setTitle(title);
+          existing.setTime(startDt, endDt);
+          existing.setDescription(desc);
+          return jsonResponse({ ok: true, id: existing.getId() });
+        }
+      }
+      var created = cal.createEvent(title, startDt, endDt, { description: desc });
+      return jsonResponse({ ok: true, id: created.getId() });
+    }
+    if (action === 'delete' && body.gcalId) {
+      var ev = cal.getEventById(body.gcalId);
+      if (ev) ev.deleteEvent();
+      return jsonResponse({ ok: true });
+    }
+    return jsonResponse({ ok: false, error: 'Unknown action: ' + action });
+  } catch (err) {
+    return jsonResponse({ ok: false, error: String(err) });
+  }
+}`;
+
+    function copyBridgeScript() {
+      const btn = document.getElementById('btn-copy-gs');
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(BRIDGE_GS_CODE).then(() => {
+          if (btn) {
+            btn.textContent = '복사됨 ✓';
+            setTimeout(() => { btn.textContent = '스크립트 코드 복사'; }, 1800);
+          }
+        }).catch(() => alert('클립보드 복사에 실패했습니다. scripts/google-calendar-bridge.gs 파일을 참고해 주세요.'));
+      }
+    }
+
     function loadGcalLocalState() {
+      gcalBridgeUrl = (localStorage.getItem(GCAL_BRIDGE_URL_KEY) || '').trim();
       try {
         gcalEventsByDate = JSON.parse(localStorage.getItem(GCAL_EVENTS_KEY) || '{}') || {};
       } catch {
@@ -480,17 +583,10 @@
       } catch {
         gcalLinkMap = {};
       }
-      try {
-        const tok = JSON.parse(sessionStorage.getItem(GCAL_TOKEN_KEY) || 'null');
-        if (tok && tok.token && tok.exp > Date.now() + 30000) {
-          gcalAccessToken = tok.token;
-          gcalTokenExpiresAt = tok.exp;
-        }
-      } catch {}
     }
 
     function isGcalConnected() {
-      return Boolean(gcalAccessToken && gcalTokenExpiresAt > Date.now() + 10000);
+      return Boolean(gcalBridgeUrl && gcalBridgeUrl.startsWith('https://'));
     }
 
     function updateGcalUI() {
@@ -511,9 +607,9 @@
     }
 
     function openGcalConfigModal() {
-      const input = document.getElementById('input-gcal-client-id');
+      const input = document.getElementById('input-gcal-bridge-url');
       if (input) {
-        input.value = localStorage.getItem(GCAL_CLIENT_ID_KEY) || '';
+        input.value = localStorage.getItem(GCAL_BRIDGE_URL_KEY) || '';
         setTimeout(() => input.focus(), 50);
       }
       document.getElementById('gcal-config-modal').classList.remove('hidden');
@@ -523,74 +619,43 @@
       document.getElementById('gcal-config-modal').classList.add('hidden');
     }
 
-    function resetGcalClientId() {
-      localStorage.removeItem(GCAL_CLIENT_ID_KEY);
-      sessionStorage.removeItem(GCAL_TOKEN_KEY);
-      gcalAccessToken = '';
-      gcalTokenExpiresAt = 0;
-      gcalTokenClient = null;
+    function resetGcalBridgeUrl() {
+      localStorage.removeItem(GCAL_BRIDGE_URL_KEY);
+      localStorage.removeItem(GCAL_EVENTS_KEY);
+      gcalBridgeUrl = '';
+      gcalEventsByDate = {};
       updateGcalUI();
-      const input = document.getElementById('input-gcal-client-id');
+      renderCalendar();
+      const input = document.getElementById('input-gcal-bridge-url');
       if (input) {
         input.value = '';
         input.focus();
       }
     }
 
-    function saveGcalClientId(connectNow = true) {
-      const clientId = (document.getElementById('input-gcal-client-id').value || '').trim();
-      if (!clientId) return;
-      localStorage.setItem(GCAL_CLIENT_ID_KEY, clientId);
-      gcalTokenClient = null;
+    function saveGcalBridgeUrl(connectNow = true) {
+      const url = (document.getElementById('input-gcal-bridge-url').value || '').trim();
+      if (!url) return;
+      gcalBridgeUrl = url;
+      localStorage.setItem(GCAL_BRIDGE_URL_KEY, url);
       closeGcalConfigModal();
-      if (connectNow) connectGoogleCalendar(true);
+      updateGcalUI();
+      if (connectNow) fetchGoogleCalendarMonthEvents(true);
     }
 
     function handleGcalButtonClick() {
       if (isGcalConnected()) {
         fetchGoogleCalendarMonthEvents(true);
       } else {
-        connectGoogleCalendar(false);
-      }
-    }
-
-    function connectGoogleCalendar(forceConsent = false) {
-      const clientId = (localStorage.getItem(GCAL_CLIENT_ID_KEY) || '').trim();
-      if (!clientId) {
         openGcalConfigModal();
-        return;
       }
-      if (!window.google || !google.accounts || !google.accounts.oauth2) {
-        alert('Google 인증 스크립트를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
-        return;
-      }
-      gcalTokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: clientId,
-        scope: GCAL_SCOPE,
-        callback: (resp) => {
-          if (resp && resp.access_token) {
-            gcalAccessToken = resp.access_token;
-            gcalTokenExpiresAt = Date.now() + (Number(resp.expires_in || 3600) * 1000);
-            sessionStorage.setItem(GCAL_TOKEN_KEY, JSON.stringify({ token: gcalAccessToken, exp: gcalTokenExpiresAt }));
-            updateGcalUI();
-            fetchGoogleCalendarMonthEvents(true);
-          } else if (resp && resp.error) {
-            alert('Google 캘린더 인증 실패: ' + resp.error);
-          }
-        }
-      });
-      gcalTokenClient.requestAccessToken({ prompt: forceConsent ? 'consent' : '' });
     }
 
     function disconnectGoogleCalendar() {
-      if (gcalAccessToken && window.google && google.accounts && google.accounts.oauth2) {
-        try { google.accounts.oauth2.revoke(gcalAccessToken); } catch {}
-      }
-      gcalAccessToken = '';
-      gcalTokenExpiresAt = 0;
-      gcalEventsByDate = {};
-      sessionStorage.removeItem(GCAL_TOKEN_KEY);
+      localStorage.removeItem(GCAL_BRIDGE_URL_KEY);
       localStorage.removeItem(GCAL_EVENTS_KEY);
+      gcalBridgeUrl = '';
+      gcalEventsByDate = {};
       updateGcalUI();
       renderCalendar();
       if (!document.getElementById('schedule-modal').classList.contains('hidden')) {
@@ -600,45 +665,22 @@
 
     async function fetchGoogleCalendarMonthEvents(showError = false) {
       if (!isGcalConnected()) return;
-      const startDate = new Date(viewYear, viewMonth - 1, 1, 0, 0, 0);
-      const endDate = new Date(viewYear, viewMonth, 0, 23, 59, 59);
-      const url = new URL('https://www.googleapis.com/calendar/v3/calendars/primary/events');
-      url.searchParams.set('singleEvents', 'true');
-      url.searchParams.set('orderBy', 'startTime');
-      url.searchParams.set('maxResults', '250');
-      url.searchParams.set('timeMin', startDate.toISOString());
-      url.searchParams.set('timeMax', endDate.toISOString());
+      const url = new URL(gcalBridgeUrl);
+      url.searchParams.set('action', 'list');
+      url.searchParams.set('year', String(viewYear));
+      url.searchParams.set('month', String(viewMonth));
 
       try {
-        const resp = await fetch(url.toString(), {
-          headers: { Authorization: `Bearer ${gcalAccessToken}` }
-        });
-        if (resp.status === 401) {
-          gcalAccessToken = '';
-          gcalTokenExpiresAt = 0;
-          sessionStorage.removeItem(GCAL_TOKEN_KEY);
-          updateGcalUI();
-          if (showError) alert('Google 세션이 만료되었습니다. 다시 연결해 주세요.');
-          return;
-        }
+        const resp = await fetch(url.toString());
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
+        if (!data || !data.ok) throw new Error(data?.error || 'Bridge error');
+
         const nextByDate = {};
         (data.items || []).forEach(ev => {
-          if (ev.status === 'cancelled') return;
-          let dateStr = '';
-          let timeStr = '09:00';
-          if (ev.start?.dateTime) {
-            const dt = new Date(ev.start.dateTime);
-            dateStr = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-            timeStr = `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
-          } else if (ev.start?.date) {
-            dateStr = ev.start.date;
-            timeStr = '종일';
-          }
+          const dateStr = ev.dateStr;
           if (!dateStr) return;
-
-          const rawSummary = ev.summary || '(제목 없음)';
+          const rawSummary = ev.title || '(제목 없음)';
           let parsedType = 'Google';
           let parsedMemo = rawSummary;
           const typeMatch = rawSummary.match(/^\[(정산\/대사|외근\/미팅|보고\/회의|결재\/행정|개인일정|기타)\]\s*(.+)$/);
@@ -646,13 +688,12 @@
             parsedType = typeMatch[1];
             parsedMemo = typeMatch[2];
           }
-
           if (!nextByDate[dateStr]) nextByDate[dateStr] = [];
           nextByDate[dateStr].push({
             id: 'gcal:' + ev.id,
             gcalId: ev.id,
             type: parsedType,
-            time: timeStr,
+            time: ev.timeStr || '09:00',
             memo: parsedMemo,
             source: 'gcal'
           });
@@ -665,50 +706,42 @@
           renderModalDayList();
         }
       } catch (err) {
-        console.warn('Google Calendar fetch error:', err);
-        if (showError) alert('Google 캘린더 일정을 불러오지 못했습니다.');
+        console.warn('Google Calendar bridge fetch error:', err);
+        if (showError) alert('Google 캘린더 동기화 실패: 웹앱 URL과 배포 권한(모든 사용자)을 확인해 주세요.');
       }
     }
 
     async function upsertGoogleCalendarEvent(existingGcalId, dateStr, type, time, memo) {
       if (!isGcalConnected()) return null;
-      const startTime = /^\d{2}:\d{2}$/.test(time) ? time : '09:00';
-      const startDt = new Date(`${dateStr}T${startTime}:00+09:00`);
-      const endDt = new Date(startDt.getTime() + 60 * 60 * 1000);
-      const body = {
-        summary: `[${type}] ${memo}`,
-        description: `Sage Studio 개인일정 캘린더 (${type})`,
-        start: { dateTime: startDt.toISOString(), timeZone: 'Asia/Seoul' },
-        end: { dateTime: endDt.toISOString(), timeZone: 'Asia/Seoul' }
-      };
-
-      const endpoint = existingGcalId
-        ? `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(existingGcalId)}`
-        : 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
-      const method = existingGcalId ? 'PATCH' : 'POST';
-
-      const resp = await fetch(endpoint, {
-        method,
-        headers: {
-          Authorization: `Bearer ${gcalAccessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
+      const resp = await fetch(gcalBridgeUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: existingGcalId ? 'update' : 'create',
+          gcalId: existingGcalId || '',
+          dateStr,
+          type,
+          time,
+          memo
+        })
       });
-      if (!resp.ok) throw new Error('Google Calendar API ' + resp.status);
+      if (!resp.ok) throw new Error('Bridge HTTP ' + resp.status);
       const data = await resp.json();
+      if (!data || !data.ok) throw new Error(data?.error || 'Bridge save error');
       return data.id || existingGcalId;
     }
 
     async function deleteGoogleCalendarEvent(gcalId) {
       if (!isGcalConnected() || !gcalId) return;
-      const resp = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(gcalId)}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${gcalAccessToken}` }
+      const resp = await fetch(gcalBridgeUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'delete',
+          gcalId
+        })
       });
-      if (!resp.ok && resp.status !== 404 && resp.status !== 410) {
-        throw new Error('Google Calendar DELETE ' + resp.status);
-      }
+      if (!resp.ok) throw new Error('Bridge HTTP ' + resp.status);
     }
 
     function getCombinedDayItems(dateStr) {
