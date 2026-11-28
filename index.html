@@ -229,7 +229,7 @@
             <span class="sr-only">통합 검색</span>
             <div class="relative flex items-center">
               <span class="material-symbols-outlined text-[18px] text-light-outline absolute left-3 pointer-events-none" aria-hidden="true">search</span>
-              <input id="global-search" type="search" placeholder="툴, 스니펫, 아이디어 검색..." class="w-full rounded bg-light-surface-container-low border border-light-outline-variant pl-10 pr-12 py-1.5 font-body text-body-sm text-light-on-surface placeholder:text-light-outline focus:bg-light-surface-container-lowest focus:border-light-primary focus:ring-1 focus:ring-light-primary transition-colors duration-state-change">
+              <input id="global-search" type="search" placeholder="툴, 스케줄, 아이디어 검색..." class="w-full rounded bg-light-surface-container-low border border-light-outline-variant pl-10 pr-12 py-1.5 font-body text-body-sm text-light-on-surface placeholder:text-light-outline focus:bg-light-surface-container-lowest focus:border-light-primary focus:ring-1 focus:ring-light-primary transition-colors duration-state-change">
               <kbd class="absolute right-2.5 px-1.5 py-0.5 rounded-sm bg-light-surface-container-lowest border border-light-outline-variant font-code text-code-sm text-light-on-surface-variant">⌘K</kbd>
             </div>
           </label>
@@ -285,10 +285,6 @@
           <button role="tab" data-sector="tools" aria-selected="false" class="sector-tab inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-light-surface-container-lowest text-light-on-surface-variant border border-light-outline-variant hover:bg-light-surface-container-low font-label text-label-md transition-colors duration-state-change cursor-pointer">
             <span class="material-symbols-outlined text-[15px]" aria-hidden="true">apps</span>
             <span>업무툴</span>
-          </button>
-          <button role="tab" data-sector="coding" aria-selected="false" class="sector-tab inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-light-surface-container-lowest text-light-on-surface-variant border border-light-outline-variant hover:bg-light-surface-container-low font-label text-label-md transition-colors duration-state-change cursor-pointer">
-            <span class="material-symbols-outlined text-[15px]" aria-hidden="true">code</span>
-            <span>개인코딩</span>
           </button>
           <button role="tab" data-sector="ideas" aria-selected="false" class="sector-tab inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-light-surface-container-lowest text-light-on-surface-variant border border-light-outline-variant hover:bg-light-surface-container-low font-label text-label-md transition-colors duration-state-change cursor-pointer">
             <span class="material-symbols-outlined text-[15px]" aria-hidden="true">lightbulb</span>
@@ -349,48 +345,8 @@
           </article>
         </section>
 
-        <!-- COLUMN 3: 개인코딩 스니펫 & 아이디어 기록 -->
+        <!-- COLUMN 3: 아이디어 기록 -->
         <div class="lg:col-span-4 flex flex-col gap-gutter-lg">
-          <section data-sector-panel="coding">
-            <article class="searchable-item bg-light-surface-container-lowest border border-light-outline-variant rounded p-gutter-lg flex flex-col gap-gutter-md">
-              <header class="flex items-start justify-between gap-gutter-sm">
-                <div class="flex items-center gap-gutter-sm">
-                  <span class="material-symbols-outlined text-[20px] text-light-tertiary" aria-hidden="true">code</span>
-                  <div>
-                    <h2 class="font-headline text-headline-sm text-light-on-surface">개인코딩 스니펫</h2>
-                    <p class="font-body text-body-sm text-light-on-surface-variant">자주 쓰는 코드 조각 및 실험실</p>
-                  </div>
-                </div>
-                <span id="snippet-lang-badge" class="font-code text-code-sm text-light-on-tertiary-container bg-light-tertiary-container px-gutter-sm py-gutter-xs rounded-sm">TS</span>
-              </header>
-
-              <div role="tablist" aria-label="코드 스니펫 선택" class="flex items-center gap-gutter-xs p-gutter-xs rounded bg-light-surface-container border border-light-outline-variant overflow-x-auto">
-                <button role="tab" data-snippet="ts" aria-selected="true" class="snippet-tab px-gutter-sm py-gutter-xs rounded-sm bg-light-surface-container-lowest text-light-on-surface font-code text-code-sm transition-colors duration-state-change cursor-pointer">useLocalSync.ts</button>
-                <button role="tab" data-snippet="py" aria-selected="false" class="snippet-tab px-gutter-sm py-gutter-xs rounded-sm text-light-on-surface-variant hover:text-light-on-surface font-code text-code-sm transition-colors duration-state-change cursor-pointer">fetch_retry.py</button>
-                <button role="tab" data-snippet="sh" aria-selected="false" class="snippet-tab px-gutter-sm py-gutter-xs rounded-sm text-light-on-surface-variant hover:text-light-on-surface font-code text-code-sm transition-colors duration-state-change cursor-pointer">git_clean.sh</button>
-              </div>
-
-              <div class="bg-light-surface-container-low border border-light-outline-variant rounded p-gutter-md overflow-x-auto">
-                <pre id="snippet-code-block" class="font-code text-code-sm text-light-on-surface leading-relaxed whitespace-pre"><code>export function useLocalSync&lt;T&gt;(key: string, init: T) {
-  const [val, setVal] = useState&lt;T&gt;(() =&gt; {
-    const saved = localStorage.getItem(key);
-    return saved ? JSON.parse(saved) : init;
-  });
-  useEffect(() =&gt; localStorage.setItem(key, JSON.stringify(val)), [key, val]);
-  return [val, setVal] as const;
-}</code></pre>
-              </div>
-
-              <footer class="flex items-center justify-between gap-gutter-sm">
-                <span id="snippet-meta" class="font-body text-body-sm text-light-on-surface-variant">React 상태 동기화 훅</span>
-                <button id="copy-snippet-btn" type="button" class="inline-flex items-center gap-gutter-xs px-gutter-md py-gutter-xs rounded bg-light-surface-container-low text-light-on-surface border border-light-outline-variant hover:bg-light-surface-container transition-colors duration-state-change cursor-pointer">
-                  <span class="material-symbols-outlined text-[16px]" aria-hidden="true">content_copy</span>
-                  <span id="copy-snippet-label" class="font-label text-label-md">스니펫 복사</span>
-                </button>
-              </footer>
-            </article>
-          </section>
-
           <section data-sector-panel="ideas">
             <article class="bg-light-surface-container-lowest border border-light-outline-variant rounded p-gutter-lg flex flex-col gap-gutter-md">
               <header class="flex items-center justify-between gap-gutter-sm">
@@ -634,7 +590,7 @@
     const DEFAULT_MENU_GROUPS = [
       {
         themeId: 'finance',
-        themeTitle: '🗂️ 개인업무',
+        themeTitle: '개인업무',
         themeDesc: '월간 개인업무 일정 달력 기록 및 병원부 정산 원장 관리',
         adminOnly: false,
         dashboard: {
@@ -693,7 +649,7 @@
       },
       {
         themeId: 'tools',
-        themeTitle: '📊 금융/자산',
+        themeTitle: '금융/자산',
         themeDesc: '금일 주식시장·환율 동향, 주요 종목 지수, 5대 뉴스 및 수익 시뮬레이션',
         adminOnly: false,
         dashboard: {
@@ -716,7 +672,7 @@
       },
       {
         themeId: 'knowledge',
-        themeTitle: '📖 블로그',
+        themeTitle: '블로그',
         themeDesc: '사내 공지사항 및 업무 지식 블로그',
         adminOnly: false,
         dashboard: {
@@ -728,7 +684,7 @@
       },
       {
         themeId: 'curiosity',
-        themeTitle: '💡 호기심',
+        themeTitle: '호기심',
         themeDesc: '개인 프로젝트 및 클럽 행사 유틸리티 모음',
         adminOnly: false,
         dashboard: {
@@ -751,7 +707,7 @@
       },
       {
         themeId: 'internal-admin',
-        themeTitle: '⚙️ 내부관리',
+        themeTitle: '내부관리',
         themeDesc: '업무 이메일/비밀번호 계정 관리, 메뉴 그룹화 및 Supabase 연동 관리 (내부관리자 전용)',
         adminOnly: true, // 오직 admin 계정으로 로그인했을 때만 노출
         dashboard: {
@@ -1330,6 +1286,21 @@
       return menuGroups.filter(g => !g.adminOnly || currentUser.role === 'admin');
     }
 
+    function getThemeIcon(themeId) {
+      const icons = {
+        'finance': 'folder_open',
+        'tools': 'trending_up',
+        'knowledge': 'menu_book',
+        'curiosity': 'lightbulb',
+        'internal-admin': 'admin_panel_settings'
+      };
+      return icons[themeId] || 'folder';
+    }
+
+    function stripLeadingEmoji(str) {
+      return String(str || '').replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\s]+/gu, '').trim();
+    }
+
     function renderGNB() {
       const nav = document.getElementById('gnb-theme-tabs');
       nav.innerHTML = '';
@@ -1351,7 +1322,8 @@
       const visibleGroups = getVisibleMenuGroups();
       visibleGroups.forEach(group => {
         const tId = group.themeId || group.id;
-        const tTitle = group.themeTitle || group.title || '업무 메뉴';
+        const tTitle = stripLeadingEmoji(group.themeTitle || group.title || '업무 메뉴');
+        const tIcon = getThemeIcon(tId);
         const isActive = tId === activeThemeId;
         const isInternalAdmin = tId === 'internal-admin';
         const btn = document.createElement('button');
@@ -1365,7 +1337,8 @@
             ? 'bg-light-surface-container-lowest text-light-tertiary border border-light-outline-variant hover:bg-light-tertiary-container/40'
             : 'bg-light-surface-container-lowest text-light-on-surface-variant border border-light-outline-variant hover:bg-light-surface-container-low hover:text-light-on-surface'
         }`;
-        btn.innerText = tTitle;
+        btn.innerHTML = `<span class="material-symbols-outlined text-[16px]" aria-hidden="true">${tIcon}</span><span></span>`;
+        btn.querySelector('span:last-child').innerText = tTitle;
         btn.onclick = () => selectTheme(tId);
         nav.appendChild(btn);
       });
@@ -1409,7 +1382,7 @@
     function renderLNB() {
       const visibleGroups = getVisibleMenuGroups();
       const group = visibleGroups.find(g => (g.themeId || g.id) === activeThemeId) || visibleGroups[0];
-      document.getElementById('lnb-theme-title').innerText = group.themeTitle || group.title || '업무 메뉴';
+      document.getElementById('lnb-theme-title').innerText = stripLeadingEmoji(group.themeTitle || group.title || '업무 메뉴');
       document.getElementById('lnb-theme-desc').innerText = group.themeDesc || group.description || '';
       document.getElementById('lnb-menu-count').innerText = `${(group.subMenus || []).length + 1}개 메뉴`;
 
@@ -1418,10 +1391,11 @@
       const isDashActive = activeViewId === group.dashboard.id;
       dashSlot.innerHTML = `
         <button onclick="openView('${group.dashboard.id}');"
-          class="w-full text-left px-3 py-2 rounded text-xs font-bold flex items-center justify-between transition-colors duration-state-change cursor-pointer ${
+          class="w-full text-left px-3 py-2 rounded text-xs font-bold flex items-center gap-2 transition-colors duration-state-change cursor-pointer ${
             isDashActive ? 'bg-light-primary text-light-on-primary' : 'text-light-on-surface hover:bg-light-surface-container-low'
           }">
-          <span class="truncate">📊 ${group.dashboard.title}</span>
+          <span class="material-symbols-outlined text-[15px]" aria-hidden="true">${getThemeIcon(group.themeId || group.id)}</span>
+          <span class="truncate">${group.dashboard.title}</span>
         </button>
       `;
 
@@ -1641,63 +1615,7 @@
         saveAndRenderSchedules();
       });
 
-      // 3. Code Snippet Switcher & Copy
-      const snippets = {
-        ts: {
-          lang: 'TS',
-          meta: 'React 상태 동기화 훅',
-          code: `export function useLocalSync<T>(key: string, init: T) {\n  const [val, setVal] = useState<T>(() => {\n    const saved = localStorage.getItem(key);\n    return saved ? JSON.parse(saved) : init;\n  });\n  useEffect(() => localStorage.setItem(key, JSON.stringify(val)), [key, val]);\n  return [val, setVal] as const;\n}`
-        },
-        py: {
-          lang: 'PY',
-          meta: '지수 백오프 재시도 데코레이터',
-          code: `import time, functools\n\ndef retry(times=3, delay=0.5):\n    def wrap(fn):\n        @functools.wraps(fn)\n        def inner(*args, **kw):\n            for i in range(times):\n                try: return fn(*args, **kw)\n                except Exception:\n                    if i == times - 1: raise\n                    time.sleep(delay * (2 ** i))\n        return inner\n    return wrap`
-        },
-        sh: {
-          lang: 'SH',
-          meta: '머지된 로컬 브랜치 일괄 정리',
-          code: `#!/usr/bin/env bash\ngit fetch --prune && \\\ngit branch --merged main | \\\n  grep -vE '^\\*|main|develop' | \\\n  xargs -n 1 git branch -d`
-        }
-      };
-
-      const snippetTabs = document.querySelectorAll('.snippet-tab');
-      const snippetCodeBlock = document.getElementById('snippet-code-block').querySelector('code');
-      const snippetLangBadge = document.getElementById('snippet-lang-badge');
-      const snippetMeta = document.getElementById('snippet-meta');
-      const copyBtn = document.getElementById('copy-snippet-btn');
-      const copyLabel = document.getElementById('copy-snippet-label');
-
-      snippetTabs.forEach((tab) => {
-        tab.addEventListener('click', () => {
-          const key = tab.getAttribute('data-snippet');
-          const data = snippets[key];
-          if (!data) return;
-          snippetTabs.forEach((t) => {
-            const active = t === tab;
-            t.setAttribute('aria-selected', String(active));
-            if (active) {
-              t.classList.add('bg-light-surface-container-lowest', 'text-light-on-surface');
-              t.classList.remove('text-light-on-surface-variant');
-            } else {
-              t.classList.remove('bg-light-surface-container-lowest', 'text-light-on-surface');
-              t.classList.add('text-light-on-surface-variant');
-            }
-          });
-          snippetCodeBlock.textContent = data.code;
-          snippetLangBadge.textContent = data.lang;
-          snippetMeta.textContent = data.meta;
-        });
-      });
-
-      copyBtn.addEventListener('click', () => {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(snippetCodeBlock.textContent).catch(() => {});
-        }
-        copyLabel.textContent = '복사됨';
-        setTimeout(() => { copyLabel.textContent = '스니펫 복사'; }, 1500);
-      });
-
-      // 4. Quick Idea Capture with localStorage
+      // 3. Quick Idea Capture with localStorage
       const DEFAULT_IDEAS = [
         { title: '마크다운 노트 자동 태깅 CLI', time: '10:15', desc: '로컬 폴더의 .md 파일을 읽어 키워드별 프론트매터를 자동 정리하는 경량 스크립트', tags: ['#CLI', '#자동화'] },
         { title: '웹 디자인 컬러 대비 실시간 체커', time: '어제', desc: 'HEX 두 개를 붙여넣으면 WCAG AA/AAA 통과 여부와 대체 톤을 제안하는 미니 웹툴', tags: ['#웹툴', '#접근성'] },
