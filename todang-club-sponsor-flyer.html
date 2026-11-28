@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>토당클럽 태미모 4분기 클럽데이 | 찬조자 감사 광고지 (A4 2쪽)</title>
+  <title>토당클럽(테미모) 4분기 클럽데이 | 찬조자 광고지 (A4 2쪽)</title>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <!-- SheetJS for Excel (.xlsx, .xls, .csv) Upload -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <style>
     :root {
       --ink: #0f172a;
@@ -13,16 +15,15 @@
       --line: #e2e8f0;
       --surface: #f8fafc;
       --accent: #0f172a;
-      --accent-soft: #f1f5f9;
-      --cash-bg: #fef9ec;
-      --cash-border: #fde68a;
+      --gold: #b45309;
+      --cash-bg: #fffbeb;
+      --cash-border: #fcd34d;
       --cash-text: #92400e;
       --cash-badge: #d97706;
       --item-bg: #f0f9ff;
-      --item-border: #bae6fd;
+      --item-border: #7dd3fc;
       --item-text: #075985;
       --item-badge: #0284c7;
-      --gold: #b45309;
     }
 
     [data-theme="emerald"] {
@@ -32,16 +33,15 @@
       --line: #d9e5e0;
       --surface: #f4f8f6;
       --accent: #064e3b;
-      --accent-soft: #ecfdf5;
+      --gold: #047857;
       --cash-bg: #fefce8;
       --cash-border: #fde047;
       --cash-text: #854d0e;
       --cash-badge: #ca8a04;
       --item-bg: #ecfdf5;
-      --item-border: #a7f3d0;
+      --item-border: #6ee7b7;
       --item-text: #065f46;
       --item-badge: #059669;
-      --gold: #047857;
     }
 
     [data-theme="mono"] {
@@ -51,7 +51,7 @@
       --line: #e5e7eb;
       --surface: #f9fafb;
       --accent: #111827;
-      --accent-soft: #f3f4f6;
+      --gold: #111827;
       --cash-bg: #f3f4f6;
       --cash-border: #d1d5db;
       --cash-text: #111827;
@@ -60,7 +60,6 @@
       --item-border: #d1d5db;
       --item-text: #1f2937;
       --item-badge: #4b5563;
-      --gold: #111827;
     }
 
     * {
@@ -79,7 +78,7 @@
       flex-direction: column;
       align-items: center;
       padding: 20px 16px 48px;
-      gap: 20px;
+      gap: 18px;
     }
 
     /* ── Screen Control Bar ── */
@@ -101,13 +100,30 @@
     .toolbar-left {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
+    }
+
+    .back-link {
+      text-decoration: none;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #475569;
+      background: #f1f5f9;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.15s ease;
+    }
+
+    .back-link:hover {
+      background: #e2e8f0;
+      color: #0f172a;
     }
 
     .toolbar-title {
       font-size: 14px;
-      font-weight: 700;
+      font-weight: 800;
       color: #0f172a;
       display: flex;
       align-items: center;
@@ -170,6 +186,17 @@
       border-color: #1e293b;
     }
 
+    .btn-upload {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+    }
+
+    .btn-upload:hover {
+      background: #dbeafe;
+      border-color: #93c5fd;
+    }
+
     .select-group {
       display: inline-flex;
       background: #f1f5f9;
@@ -193,6 +220,26 @@
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     }
 
+    /* ── Status Toast ── */
+    .status-banner {
+      width: 100%;
+      max-width: 297mm;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #065f46;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .status-banner.show {
+      display: flex;
+    }
+
     /* ── Editor Panel ── */
     .editor-panel {
       width: 100%;
@@ -213,7 +260,7 @@
 
     .editor-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 12px;
     }
 
@@ -242,12 +289,6 @@
       border-color: #0f172a;
     }
 
-    .sponsor-editor-cols {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-
     .sponsor-editor-box {
       border: 1px solid #e2e8f0;
       border-radius: 10px;
@@ -265,21 +306,25 @@
       font-size: 13px;
       font-weight: 700;
       color: #0f172a;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .sponsor-row-input {
       display: grid;
-      grid-template-columns: 1fr 1.2fr auto;
+      grid-template-columns: 110px 1fr 1.4fr auto;
       gap: 6px;
       align-items: center;
     }
 
+    .sponsor-row-input select,
     .sponsor-row-input input {
       border: 1px solid #cbd5e1;
       border-radius: 6px;
       padding: 6px 8px;
       font-size: 12.5px;
       background: #ffffff;
+      color: #0f172a;
     }
 
     .btn-icon {
@@ -301,11 +346,13 @@
       border-color: #fecaca;
     }
 
-    /* ── A4 Landscape Sheet (297mm x 210mm) ── */
-    .sheet-wrapper {
+    /* ── A4 Landscape Sheets Container ── */
+    .sheets-container {
       width: 100%;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
       overflow-x: auto;
     }
 
@@ -348,11 +395,11 @@
       display: none;
     }
 
-    /* ── Individual A5 Page (148.5mm x 210mm) ── */
+    /* ── Individual A5 Page (148.5mm x 210mm): 1 Sponsor per Page ── */
     .a5-page {
       width: 148.5mm;
       height: 210mm;
-      padding: 11mm 11mm 9.5mm;
+      padding: 13mm 12mm 11mm;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -360,14 +407,13 @@
       background: #ffffff;
     }
 
-    /* Top Accent Bar */
     .a5-page::before {
       content: "";
       position: absolute;
       top: 0;
-      left: 11mm;
-      right: 11mm;
-      height: 3.5px;
+      left: 12mm;
+      right: 12mm;
+      height: 4px;
       background: var(--accent);
       border-radius: 0 0 3px 3px;
     }
@@ -375,7 +421,7 @@
     /* ── Flyer Header ── */
     .flyer-header {
       padding-top: 3mm;
-      padding-bottom: 4.5mm;
+      padding-bottom: 5mm;
       border-bottom: 1.5px solid var(--ink);
       display: flex;
       flex-direction: column;
@@ -390,7 +436,7 @@
     }
 
     .kicker {
-      font-size: 9px;
+      font-size: 9.5px;
       font-weight: 700;
       letter-spacing: 0.14em;
       text-transform: uppercase;
@@ -398,13 +444,14 @@
     }
 
     .page-tag {
-      font-size: 9px;
+      font-size: 9.5px;
       font-weight: 700;
       color: var(--muted);
       background: var(--surface);
       border: 1px solid var(--line);
-      padding: 1.5px 7px;
+      padding: 2px 8px;
       border-radius: 999px;
+      font-variant-numeric: tabular-nums;
     }
 
     .flyer-title {
@@ -430,172 +477,181 @@
     }
 
     .flyer-meta {
-      font-size: 10px;
+      font-size: 10.5px;
       font-weight: 500;
       color: var(--muted);
     }
 
-    /* ── Sponsor Sections ── */
-    .flyer-body {
+    /* ── Single Sponsor Focal Area (Top: Name, Bottom: Cash or Item) ── */
+    .sponsor-stage {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 4.5mm;
-      padding: 4.5mm 0 3mm;
-      overflow: hidden;
+      justify-content: center;
+      align-items: stretch;
+      gap: 8mm;
+      padding: 6mm 0;
     }
 
-    .sponsor-section {
+    /* Upper Block: Sponsor Name */
+    .stage-name-block {
       display: flex;
       flex-direction: column;
-      gap: 2.2mm;
-    }
-
-    .section-head {
-      display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding-bottom: 1.5mm;
-      border-bottom: 1px solid var(--line);
+      text-align: center;
+      gap: 3mm;
+      padding: 6mm 4mm 2mm;
     }
 
-    .section-title-wrap {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .section-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 2px;
-    }
-
-    .section-dot.cash {
-      background: var(--cash-badge);
-    }
-
-    .section-dot.item {
-      background: var(--item-badge);
-    }
-
-    .section-title {
-      font-size: 11.5px;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-      color: var(--ink);
-    }
-
-    .section-en {
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      color: var(--muted);
+    .stage-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
+      color: var(--muted);
     }
 
-    .section-count {
-      font-size: 9.5px;
+    .stage-name-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .stage-name {
+      font-size: 44px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      color: var(--ink);
+      word-break: keep-all;
+    }
+
+    .stage-name.long-name {
+      font-size: 34px;
+    }
+
+    .stage-honorific {
+      font-size: 18px;
       font-weight: 700;
       color: var(--muted);
     }
 
-    /* ── Sponsor List Rows ── */
-    .sponsor-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1.6mm;
-    }
-
-    .sponsor-item {
+    /* Divider */
+    .stage-divider {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 2.2mm 3mm;
-      border-radius: 6px;
-      border: 1px solid var(--line);
-      background: #ffffff;
+      gap: 10px;
+      padding: 0 6mm;
     }
 
-    .sponsor-item.cash {
+    .stage-divider::before,
+    .stage-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+
+    .type-badge {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      padding: 4px 12px;
+      border-radius: 999px;
+      color: #ffffff;
+    }
+
+    .type-badge.cash {
+      background: var(--cash-badge);
+    }
+
+    .type-badge.item {
+      background: var(--item-badge);
+    }
+
+    /* Lower Block: Cash Amount or Item Name */
+    .stage-detail-block {
+      border-radius: 14px;
+      padding: 8mm 6mm;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 2.5mm;
+      border: 1.5px solid var(--line);
+    }
+
+    .stage-detail-block.cash {
       background: var(--cash-bg);
       border-color: var(--cash-border);
     }
 
-    .sponsor-item.item {
+    .stage-detail-block.item {
       background: var(--item-bg);
       border-color: var(--item-border);
     }
 
-    .sponsor-name-wrap {
-      display: flex;
-      align-items: baseline;
-      gap: 4px;
-      min-width: 0;
-    }
-
-    .sponsor-name {
-      font-size: 13px;
-      font-weight: 800;
-      color: var(--ink);
-      letter-spacing: -0.02em;
-      white-space: nowrap;
-    }
-
-    .sponsor-honorific {
+    .detail-caption {
       font-size: 10.5px;
-      font-weight: 600;
-      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
     }
 
-    .sponsor-value {
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-      font-variant-numeric: tabular-nums;
-      padding: 1mm 2.6mm;
-      border-radius: 5px;
-      white-space: nowrap;
-      text-align: right;
-    }
-
-    .sponsor-item.cash .sponsor-value {
-      background: #ffffff;
+    .stage-detail-block.cash .detail-caption {
       color: var(--cash-text);
-      border: 1px solid var(--cash-border);
     }
 
-    .sponsor-item.item .sponsor-value {
-      background: #ffffff;
+    .stage-detail-block.item .detail-caption {
       color: var(--item-text);
-      border: 1px solid var(--item-border);
     }
 
-    /* Compact 2-column grid when many items */
-    .sponsor-list.compact {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.6mm;
+    .detail-value {
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.25;
+      font-variant-numeric: tabular-nums;
+      word-break: keep-all;
     }
 
-    .sponsor-list.compact .sponsor-item {
-      padding: 1.8mm 2.4mm;
+    .detail-value.long-value {
+      font-size: 22px;
     }
 
-    .sponsor-list.compact .sponsor-name {
-      font-size: 11.5px;
+    .stage-detail-block.cash .detail-value {
+      color: var(--cash-text);
     }
 
-    .sponsor-list.compact .sponsor-value {
-      font-size: 10.5px;
-      padding: 0.7mm 2mm;
+    .stage-detail-block.item .detail-value {
+      color: var(--item-text);
+    }
+
+    /* Empty Half-Page Placeholder */
+    .a5-page.empty-page {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .empty-box {
+      border: 1.5px dashed var(--line);
+      border-radius: 14px;
+      padding: 18mm 10mm;
+      width: 100%;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
 
     /* ── Flyer Footer ── */
     .flyer-footer {
       border-top: 1px solid var(--line);
-      padding-top: 3mm;
+      padding-top: 3.5mm;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -603,20 +659,20 @@
     }
 
     .footer-message {
-      font-size: 10px;
+      font-size: 10.5px;
       font-weight: 500;
       color: var(--ink-soft);
       line-height: 1.4;
     }
 
     .footer-sign {
-      font-size: 10.5px;
+      font-size: 11px;
       font-weight: 800;
       color: var(--ink);
       white-space: nowrap;
     }
 
-    /* ── Print Rules (Exact A4 Landscape, Zero Chrome) ── */
+    /* ── Print Rules (Exact A4 Landscape, Multi-Sheet) ── */
     @media print {
       @page {
         size: A4 landscape;
@@ -631,25 +687,34 @@
       }
 
       .toolbar,
-      .editor-panel {
+      .editor-panel,
+      .status-banner {
         display: none !important;
       }
 
-      .sheet-wrapper {
+      .sheets-container {
+        gap: 0 !important;
         overflow: visible !important;
+        display: block !important;
       }
 
       .a4-sheet {
         box-shadow: none !important;
         width: 297mm !important;
         height: 210mm !important;
-        page-break-after: avoid;
+        page-break-after: always;
+        break-after: page;
+      }
+
+      .a4-sheet:last-child {
+        page-break-after: auto;
+        break-after: auto;
       }
     }
 
     @media (max-width: 768px) {
-      .sponsor-editor-cols {
-        grid-template-columns: 1fr;
+      .sponsor-row-input {
+        grid-template-columns: 90px 1fr 1fr auto;
       }
     }
   </style>
@@ -658,17 +723,17 @@
   <!-- Screen Toolbar (Hidden when printing) -->
   <div class="toolbar">
     <div class="toolbar-left">
+      <a href="index.html" class="back-link">← 포탈</a>
       <div class="toolbar-title">
-        <span>토당클럽 태미모 4분기 클럽데이 · 찬조자 광고지</span>
-        <span class="toolbar-badge">A4 가로 2쪽 (A5 × 2)</span>
+        <span>토당클럽(테미모) 4분기 클럽데이 · 찬조자 광고지</span>
+        <span class="toolbar-badge" id="sheetCountBadge">A4 2매 · 1쪽 1인</span>
       </div>
     </div>
 
     <div class="toolbar-controls">
-      <div class="select-group" role="group" aria-label="레이아웃 모드">
-        <button class="btn active" id="modeDuplicate" onclick="setMode('duplicate')">동일 2매 (재단용)</button>
-        <button class="btn" id="modeSplit" onclick="setMode('split')">1·2쪽 분할</button>
-      </div>
+      <input type="file" id="excelInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleExcelUpload(event)" />
+      <button class="btn btn-upload" onclick="document.getElementById('excelInput').click()">엑셀/CSV 업로드</button>
+      <button class="btn" onclick="downloadTemplate()">양식 다운로드</button>
 
       <div class="select-group" role="group" aria-label="컬러 테마">
         <button class="btn active" data-theme-btn="navy" onclick="setTheme('navy')">네이비·골드</button>
@@ -677,9 +742,15 @@
       </div>
 
       <button class="btn active" id="btnCutLine" onclick="toggleCutLine()">재단선</button>
-      <button class="btn" id="btnToggleEditor" onclick="toggleEditor()">내용 편집</button>
+      <button class="btn" id="btnToggleEditor" onclick="toggleEditor()">명단 편집</button>
       <button class="btn btn-primary" onclick="window.print()">인쇄 / PDF 저장</button>
     </div>
+  </div>
+
+  <!-- Upload / Action Status Banner -->
+  <div class="status-banner" id="statusBanner">
+    <span id="statusText"></span>
+    <button class="btn" style="padding:3px 8px; font-size:11px;" onclick="hideStatus()">닫기</button>
   </div>
 
   <!-- Live Editor Panel (Hidden when printing) -->
@@ -711,69 +782,47 @@
       </div>
     </div>
 
-    <div class="sponsor-editor-cols">
-      <div class="sponsor-editor-box">
-        <div class="sponsor-editor-head">
-          <span>현금 찬조자 (이름 / 금액)</span>
-          <button class="btn" onclick="addSponsor('cash')">+ 추가</button>
+    <div class="sponsor-editor-box">
+      <div class="sponsor-editor-head">
+        <span>찬조자 명단 (1쪽마다 1명씩 배치 · 상단 이름 / 하단 현금·물품)</span>
+        <div style="display:flex; gap:6px;">
+          <button class="btn" onclick="addSponsor('cash')">+ 현금 추가</button>
+          <button class="btn" onclick="addSponsor('item')">+ 물품 추가</button>
         </div>
-        <div id="cashEditorList"></div>
       </div>
-
-      <div class="sponsor-editor-box">
-        <div class="sponsor-editor-head">
-          <span>물품 찬조자 (이름 / 물품)</span>
-          <button class="btn" onclick="addSponsor('item')">+ 추가</button>
-        </div>
-        <div id="itemEditorList"></div>
-      </div>
+      <div id="sponsorEditorList" style="display:flex; flex-direction:column; gap:6px;"></div>
     </div>
 
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <span style="font-size:12px; color:#64748b;">
-        인쇄 팁: 인쇄 창에서 <strong>방향: 가로</strong>, <strong>여백: 없음</strong>, <strong>배경 그래픽: 체크</strong>를 선택하면 A4 한 장에 정확히 두 쪽으로 출력됩니다.
+        엑셀 업로드 형식: <strong>구분(현금/물품) · 이름 · 내역(금액 또는 물품명)</strong> 3열 또는 <strong>이름 · 내역</strong> 2열 모두 자동 인식됩니다. 인쇄 시 <strong>방향: 가로 · 여백: 없음 · 배경 그래픽: 켜기</strong>를 선택하세요.
       </span>
       <button class="btn" onclick="resetDefaults()">기본 예시로 초기화</button>
     </div>
   </div>
 
-  <!-- Printable A4 Landscape Sheet -->
-  <div class="sheet-wrapper">
-    <div class="a4-sheet show-cut" id="a4Sheet">
-      <div class="cut-mark">✂ CUT / FOLD</div>
-      <section class="a5-page" id="leftPage"></section>
-      <section class="a5-page" id="rightPage"></section>
-    </div>
-  </div>
+  <!-- Printable A4 Landscape Sheets -->
+  <div class="sheets-container" id="sheetsContainer"></div>
 
   <script>
-    const STORAGE_KEY = 'todang_taemimo_4q_flyer_v1';
+    const STORAGE_KEY = 'todang_temimo_4q_flyer_v2';
 
     const DEFAULT_STATE = {
-      mode: 'duplicate', // 'duplicate' | 'split'
-      theme: 'navy',     // 'navy' | 'emerald' | 'mono'
+      theme: 'navy',
       showCut: true,
       meta: {
         kicker: '2026 4Q CLUB DAY · SPECIAL THANKS',
-        title: '토당클럽 태미모 4분기 클럽데이',
-        subtitle: '찬조자 감사 안내',
+        title: '토당클럽(테미모) 4분기 클럽데이',
+        subtitle: '찬조자 감사 광고',
         info: '2026. 11. 28 (토) · 토당클럽',
         footerMsg: '보내주신 따뜻한 성원과 찬조에 깊이 감사드립니다.',
-        footerSign: '토당클럽 태미모 일동'
+        footerSign: '토당클럽(테미모) 일동'
       },
-      cashSponsors: [
-        { name: '김태현', value: '100,000원' },
-        { name: '박지훈', value: '100,000원' },
-        { name: '이수진', value: '50,000원' },
-        { name: '정민수', value: '50,000원' },
-        { name: '최영호', value: '50,000원' }
-      ],
-      itemSponsors: [
-        { name: '강현우', value: '고급 스포츠 타월 30매' },
-        { name: '윤서연', value: '생수 500ml × 3박스' },
-        { name: '한동훈', value: '이온음료 2박스' },
-        { name: '오세영', value: '시합구 1박스' },
-        { name: '임재범', value: '다과 및 간식 세트' }
+      sponsors: [
+        { type: 'cash', name: '김태현', value: '100,000원' },
+        { type: 'item', name: '강현우', value: '고급 스포츠 타월 30매' },
+        { type: 'cash', name: '박지훈', value: '100,000원' },
+        { type: 'item', name: '윤서연', value: '생수 500ml × 3박스' }
       ]
     };
 
@@ -804,93 +853,114 @@
         .replace(/"/g, '&quot;');
     }
 
-    function renderSponsorRows(list, type, compactThreshold = 7) {
-      const isCompact = list.length >= compactThreshold;
-      const itemsHtml = list.map((s) => `
-        <div class="sponsor-item ${type}">
-          <div class="sponsor-name-wrap">
-            <span class="sponsor-name">${escapeHtml(s.name)}</span>
-            <span class="sponsor-honorific">님</span>
-          </div>
-          <div class="sponsor-value">${escapeHtml(s.value)}</div>
-        </div>
-      `).join('');
-
-      return `<div class="sponsor-list ${isCompact ? 'compact' : ''}">${itemsHtml}</div>`;
+    function showStatus(msg) {
+      const banner = document.getElementById('statusBanner');
+      document.getElementById('statusText').textContent = msg;
+      banner.classList.add('show');
     }
 
-    function renderSection(type, list, compactThreshold) {
-      if (!list.length) return '';
-      const isCash = type === 'cash';
-      return `
-        <div class="sponsor-section">
-          <div class="section-head">
-            <div class="section-title-wrap">
-              <span class="section-dot ${type}"></span>
-              <span class="section-title">${isCash ? '현금 찬조' : '물품 찬조'}</span>
-              <span class="section-en">${isCash ? 'CASH' : 'GOODS'}</span>
+    function hideStatus() {
+      document.getElementById('statusBanner').classList.remove('show');
+    }
+
+    function buildSingleSponsorPage(sponsor, index, total) {
+      const { meta } = state;
+      if (!sponsor) {
+        return `
+          <section class="a5-page empty-page">
+            <div class="empty-box">
+              <strong style="font-size:14px; color:var(--ink);">${escapeHtml(meta.title)}</strong>
+              <span style="font-size:12px;">${escapeHtml(meta.footerMsg)}</span>
             </div>
-            <span class="section-count">총 ${list.length}분</span>
-          </div>
-          ${renderSponsorRows(list, type, compactThreshold)}
-        </div>
-      `;
-    }
-
-    function buildPageHtml({ pageTag, showCash, showItem, compactThreshold }) {
-      const { meta, cashSponsors, itemSponsors } = state;
-      return `
-        <header class="flyer-header">
-          <div class="header-top-row">
-            <span class="kicker">${escapeHtml(meta.kicker)}</span>
-            ${pageTag ? `<span class="page-tag">${escapeHtml(pageTag)}</span>` : ''}
-          </div>
-          <h1 class="flyer-title">${escapeHtml(meta.title)}</h1>
-          <div class="flyer-subtitle-row">
-            <span class="flyer-subtitle">${escapeHtml(meta.subtitle)}</span>
-            <span class="flyer-meta">${escapeHtml(meta.info)}</span>
-          </div>
-        </header>
-
-        <main class="flyer-body">
-          ${showCash ? renderSection('cash', cashSponsors, compactThreshold) : ''}
-          ${showItem ? renderSection('item', itemSponsors, compactThreshold) : ''}
-        </main>
-
-        <footer class="flyer-footer">
-          <p class="footer-message">${escapeHtml(meta.footerMsg)}</p>
-          <span class="footer-sign">${escapeHtml(meta.footerSign)}</span>
-        </footer>
-      `;
-    }
-
-    function renderSheet() {
-      const left = document.getElementById('leftPage');
-      const right = document.getElementById('rightPage');
-
-      if (state.mode === 'duplicate') {
-        const html = buildPageHtml({
-          pageTag: '',
-          showCash: true,
-          showItem: true,
-          compactThreshold: 6
-        });
-        left.innerHTML = html;
-        right.innerHTML = html;
-      } else {
-        left.innerHTML = buildPageHtml({
-          pageTag: '1 / 2 · 현금 찬조',
-          showCash: true,
-          showItem: false,
-          compactThreshold: 11
-        });
-        right.innerHTML = buildPageHtml({
-          pageTag: '2 / 2 · 물품 찬조',
-          showCash: false,
-          showItem: true,
-          compactThreshold: 11
-        });
+          </section>
+        `;
       }
+
+      const isCash = sponsor.type === 'cash';
+      const nameStr = String(sponsor.name || '').trim();
+      const valStr = String(sponsor.value || '').trim();
+      const isLongName = nameStr.length > 5;
+      const isLongVal = valStr.length > 12;
+
+      return `
+        <section class="a5-page">
+          <header class="flyer-header">
+            <div class="header-top-row">
+              <span class="kicker">${escapeHtml(meta.kicker)}</span>
+              <span class="page-tag">${index + 1} / ${total}</span>
+            </div>
+            <h1 class="flyer-title">${escapeHtml(meta.title)}</h1>
+            <div class="flyer-subtitle-row">
+              <span class="flyer-subtitle">${escapeHtml(meta.subtitle)}</span>
+              <span class="flyer-meta">${escapeHtml(meta.info)}</span>
+            </div>
+          </header>
+
+          <main class="sponsor-stage">
+            <!-- 상단: 찬조자 이름 -->
+            <div class="stage-name-block">
+              <span class="stage-label">SPECIAL SPONSOR</span>
+              <div class="stage-name-row">
+                <span class="stage-name ${isLongName ? 'long-name' : ''}">${escapeHtml(nameStr)}</span>
+                <span class="stage-honorific">님</span>
+              </div>
+            </div>
+
+            <!-- 중앙 구분선 및 현금/물품 배지 -->
+            <div class="stage-divider">
+              <span class="type-badge ${isCash ? 'cash' : 'item'}">
+                ${isCash ? '현금 찬조' : '물품 찬조'}
+              </span>
+            </div>
+
+            <!-- 하단: 현금 또는 물품명 -->
+            <div class="stage-detail-block ${isCash ? 'cash' : 'item'}">
+              <span class="detail-caption">${isCash ? '찬조 금액' : '찬조 물품'}</span>
+              <div class="detail-value ${isLongVal ? 'long-value' : ''}">${escapeHtml(valStr)}</div>
+            </div>
+          </main>
+
+          <footer class="flyer-footer">
+            <p class="footer-message">${escapeHtml(meta.footerMsg)}</p>
+            <span class="footer-sign">${escapeHtml(meta.footerSign)}</span>
+          </footer>
+        </section>
+      `;
+    }
+
+    function renderSheets() {
+      const container = document.getElementById('sheetsContainer');
+      const list = state.sponsors;
+      const total = list.length;
+      const sheetCount = Math.max(1, Math.ceil(total / 2));
+
+      document.getElementById('sheetCountBadge').textContent =
+        `A4 ${sheetCount}장 · 총 ${total}명 (1쪽 1인)`;
+
+      if (total === 0) {
+        container.innerHTML = `
+          <div class="a4-sheet ${state.showCut ? 'show-cut' : ''}">
+            <div class="cut-mark">✂ CUT / FOLD</div>
+            ${buildSingleSponsorPage(null, 0, 0)}
+            ${buildSingleSponsorPage(null, 0, 0)}
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      for (let i = 0; i < total; i += 2) {
+        const leftSponsor = list[i];
+        const rightSponsor = list[i + 1] || null;
+        html += `
+          <div class="a4-sheet ${state.showCut ? 'show-cut' : ''}">
+            <div class="cut-mark">✂ CUT / FOLD</div>
+            ${buildSingleSponsorPage(leftSponsor, i, total)}
+            ${buildSingleSponsorPage(rightSponsor, i + 1, total)}
+          </div>
+        `;
+      }
+      container.innerHTML = html;
     }
 
     function renderEditor() {
@@ -901,18 +971,16 @@
       document.getElementById('inFooterMsg').value = state.meta.footerMsg;
       document.getElementById('inFooterSign').value = state.meta.footerSign;
 
-      renderSponsorEditorList('cash', 'cashEditorList', '이름', '금액 (예: 100,000원)');
-      renderSponsorEditorList('item', 'itemEditorList', '이름', '물품 (예: 타월 30매)');
-    }
-
-    function renderSponsorEditorList(type, containerId, namePh, valPh) {
-      const list = type === 'cash' ? state.cashSponsors : state.itemSponsors;
-      const el = document.getElementById(containerId);
-      el.innerHTML = list.map((s, idx) => `
+      const el = document.getElementById('sponsorEditorList');
+      el.innerHTML = state.sponsors.map((s, idx) => `
         <div class="sponsor-row-input">
-          <input type="text" value="${escapeHtml(s.name)}" placeholder="${namePh}" oninput="updateSponsor('${type}', ${idx}, 'name', this.value)" />
-          <input type="text" value="${escapeHtml(s.value)}" placeholder="${valPh}" oninput="updateSponsor('${type}', ${idx}, 'value', this.value)" />
-          <button class="btn-icon" title="삭제" onclick="removeSponsor('${type}', ${idx})">×</button>
+          <select onchange="updateSponsor(${idx}, 'type', this.value)">
+            <option value="cash" ${s.type === 'cash' ? 'selected' : ''}>현금 찬조</option>
+            <option value="item" ${s.type === 'item' ? 'selected' : ''}>물품 찬조</option>
+          </select>
+          <input type="text" value="${escapeHtml(s.name)}" placeholder="찬조자 이름" oninput="updateSponsor(${idx}, 'name', this.value)" />
+          <input type="text" value="${escapeHtml(s.value)}" placeholder="금액 또는 물품명" oninput="updateSponsor(${idx}, 'value', this.value)" />
+          <button class="btn-icon" title="삭제" onclick="removeSponsor(${idx})">×</button>
         </div>
       `).join('');
     }
@@ -925,40 +993,151 @@
       state.meta.footerMsg = document.getElementById('inFooterMsg').value;
       state.meta.footerSign = document.getElementById('inFooterSign').value;
       saveState();
-      renderSheet();
+      renderSheets();
     }
 
-    function updateSponsor(type, idx, field, val) {
-      const list = type === 'cash' ? state.cashSponsors : state.itemSponsors;
-      if (list[idx]) {
-        list[idx][field] = val;
+    function updateSponsor(idx, field, val) {
+      if (state.sponsors[idx]) {
+        state.sponsors[idx][field] = val;
         saveState();
-        renderSheet();
+        renderSheets();
       }
     }
 
     function addSponsor(type) {
-      const list = type === 'cash' ? state.cashSponsors : state.itemSponsors;
-      list.push(type === 'cash' ? { name: '홍길동', value: '50,000원' } : { name: '홍길동', value: '찬조 물품' });
+      state.sponsors.push(
+        type === 'cash'
+          ? { type: 'cash', name: '홍길동', value: '50,000원' }
+          : { type: 'item', name: '홍길동', value: '찬조 물품' }
+      );
       saveState();
       renderEditor();
-      renderSheet();
+      renderSheets();
     }
 
-    function removeSponsor(type, idx) {
-      const list = type === 'cash' ? state.cashSponsors : state.itemSponsors;
-      list.splice(idx, 1);
+    function removeSponsor(idx) {
+      state.sponsors.splice(idx, 1);
       saveState();
       renderEditor();
-      renderSheet();
+      renderSheets();
     }
 
-    function setMode(mode) {
-      state.mode = mode;
-      document.getElementById('modeDuplicate').classList.toggle('active', mode === 'duplicate');
-      document.getElementById('modeSplit').classList.toggle('active', mode === 'split');
-      saveState();
-      renderSheet();
+    function detectType(rawType, rawValue) {
+      const t = String(rawType || '').trim().toLowerCase();
+      if (t.includes('현금') || t === 'cash') return 'cash';
+      if (t.includes('물품') || t === 'item' || t === 'goods') return 'item';
+      const v = String(rawValue || '').trim();
+      if (/^\d[\d,]*\s*(원|만원)?$/.test(v) || v.includes('만원') || v.endsWith('원')) {
+        return 'cash';
+      }
+      return 'item';
+    }
+
+    function formatValueIfNumericCash(type, val) {
+      const v = String(val || '').trim();
+      if (type === 'cash' && /^\d[\d,]*$/.test(v)) {
+        return Number(v.replace(/,/g, '')).toLocaleString('ko-KR') + '원';
+      }
+      return v;
+    }
+
+    function handleExcelUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (typeof XLSX === 'undefined') {
+        alert('엑셀 파서를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+          const nonEmptyRows = rows.filter((r) => r.some((cell) => String(cell).trim() !== ''));
+          if (nonEmptyRows.length === 0) {
+            alert('업로드된 파일에 데이터가 없습니다.');
+            return;
+          }
+
+          // Check if first row is a header
+          const header = nonEmptyRows[0].map((c) => String(c).trim());
+          let typeIdx = header.findIndex((h) => /구분|유형|종류|타입/.test(h));
+          let nameIdx = header.findIndex((h) => /이름|성명|찬조자|성함/.test(h));
+          let valIdx = header.findIndex((h) => /내역|금액|물품|찬조내역|품목|내용/.test(h));
+
+          let startRow = 0;
+          if (typeIdx !== -1 || nameIdx !== -1 || valIdx !== -1) {
+            startRow = 1;
+            if (nameIdx === -1) nameIdx = typeIdx === 0 ? 1 : 0;
+            if (valIdx === -1) valIdx = Math.max(nameIdx + 1, typeIdx + 1);
+          } else {
+            // No header detected: infer 3 columns (구분, 이름, 내역) or 2 columns (이름, 내역)
+            const colCount = nonEmptyRows[0].length;
+            if (colCount >= 3) {
+              typeIdx = 0;
+              nameIdx = 1;
+              valIdx = 2;
+            } else {
+              typeIdx = -1;
+              nameIdx = 0;
+              valIdx = 1;
+            }
+          }
+
+          const parsed = [];
+          for (let i = startRow; i < nonEmptyRows.length; i++) {
+            const row = nonEmptyRows[i];
+            const name = String(row[nameIdx] ?? '').trim();
+            const rawVal = String(row[valIdx] ?? '').trim();
+            const rawType = typeIdx !== -1 ? String(row[typeIdx] ?? '').trim() : '';
+
+            if (!name && !rawVal) continue;
+            const type = detectType(rawType, rawVal);
+            const value = formatValueIfNumericCash(type, rawVal);
+            parsed.push({ type, name: name || '찬조자', value: value || '-' });
+          }
+
+          if (parsed.length === 0) {
+            alert('인식된 찬조자 명단이 없습니다. 열 구성을 확인해 주세요.');
+            return;
+          }
+
+          state.sponsors = parsed;
+          saveState();
+          renderEditor();
+          renderSheets();
+          showStatus(`"${file.name}"에서 총 ${parsed.length}명의 찬조자 명단을 불러왔습니다. (A4 ${Math.ceil(parsed.length / 2)}장 생성)`);
+        } catch (err) {
+          alert('파일을 읽는 중 오류가 발생했습니다: ' + err.message);
+        } finally {
+          event.target.value = '';
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function downloadTemplate() {
+      const csvContent = '\uFEFF' + [
+        '구분,이름,내역',
+        '현금,김태현,100000',
+        '물품,강현우,고급 스포츠 타월 30매',
+        '현금,박지훈,50000',
+        '물품,윤서연,생수 500ml × 3박스'
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '토당클럽_테미모_찬조자_양식.csv';
+      a.click();
+      URL.revokeObjectURL(url);
     }
 
     function setTheme(theme) {
@@ -972,9 +1151,9 @@
 
     function toggleCutLine() {
       state.showCut = !state.showCut;
-      document.getElementById('a4Sheet').classList.toggle('show-cut', state.showCut);
       document.getElementById('btnCutLine').classList.toggle('active', state.showCut);
       saveState();
+      renderSheets();
     }
 
     function toggleEditor() {
@@ -987,15 +1166,14 @@
       state = structuredClone(DEFAULT_STATE);
       saveState();
       applyInitialUI();
+      showStatus('기본 예시 명단으로 초기화되었습니다.');
     }
 
     function applyInitialUI() {
       setTheme(state.theme);
-      setMode(state.mode);
-      document.getElementById('a4Sheet').classList.toggle('show-cut', state.showCut);
       document.getElementById('btnCutLine').classList.toggle('active', state.showCut);
       renderEditor();
-      renderSheet();
+      renderSheets();
     }
 
     applyInitialUI();

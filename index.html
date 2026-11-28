@@ -3,2116 +3,1339 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clinical Ledger Precision — 업무 통합 포털 시스템</title>
-  <!-- Google Fonts: Plus Jakarta Sans, Noto Sans KR, JetBrains Mono -->
+  <title>이창환 | Digital Business Card</title>
+  
+  <!-- Pretendard & Inter Web Fonts -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
-  <!-- Tailwind CSS & Supabase JS SDK -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- QRCode.js for generating QR codes on the fly -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
   <style>
     :root {
-      --surface: #faf8ff;
-      --surface-lowest: #ffffff;
-      --surface-low: #f2f3ff;
-      --surface-container: #eaedff;
-      --primary: #00236f;
-      --primary-container: #1e3a8a;
+      --primary: #4f46e5;
+      --primary-light: #818cf8;
+      --primary-glow: rgba(99, 102, 241, 0.35);
+      --accent: #06b6d4;
+      --bg-gradient: radial-gradient(circle at 20% 20%, #1e1e38 0%, #0f1021 60%, #080914 100%);
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --card-inner: rgba(18, 20, 36, 0.75);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --tag-bg: rgba(255, 255, 255, 0.07);
+      --shadow-color: rgba(0, 0, 0, 0.45);
+      --transition-speed: 0.3s;
     }
-    body {
-      background-color: #faf8ff;
-      color: #131b2e;
-      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 13px;
+
+    [data-theme="light"] {
+      --primary: #4338ca;
+      --primary-light: #6366f1;
+      --primary-glow: rgba(79, 70, 229, 0.2);
+      --accent: #0284c7;
+      --bg-gradient: radial-gradient(circle at 20% 20%, #e0e7ff 0%, #f1f5f9 60%, #f8fafc 100%);
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --card-border: rgba(226, 232, 240, 0.8);
+      --card-inner: rgba(255, 255, 255, 0.9);
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-dim: #94a3b8;
+      --tag-bg: rgba(0, 0, 0, 0.05);
+      --shadow-color: rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
+      font-family: 'Pretendard', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
       -webkit-font-smoothing: antialiased;
     }
-    .font-headline { font-family: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif; }
-    .num-font { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
-    .fade-in { animation: fadeIn 0.2s ease-out; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start; /* Changed from center to prevent top/bottom clipping on smaller screens */
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      padding: 70px 16px 40px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      perspective: 1200px;
+      transition: background 0.5s ease, color 0.3s ease;
+    }
+
+    /* Ambient dynamic glow background */
+    .ambient-sphere {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.5;
+      animation: floatAmbient 12s ease-in-out infinite alternate;
+    }
+    .ambient-1 {
+      width: 450px;
+      height: 450px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      top: 5%;
+      left: 15%;
+    }
+    .ambient-2 {
+      width: 400px;
+      height: 400px;
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      bottom: 5%;
+      right: 15%;
+      animation-delay: -6s;
+    }
+
+    @keyframes floatAmbient {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(60px, 40px) scale(1.15); }
+    }
+
+    /* Top Action Bar */
+    .top-nav {
+      position: fixed;
+      top: 14px;
+      display: flex;
+      gap: 8px;
+      z-index: 30;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 6px 14px;
+      border-radius: 40px;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 10px 30px var(--shadow-color);
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 20px;
+      transition: all 0.2s ease;
+    }
+    .nav-btn:hover {
+      color: var(--text-main);
+      background: var(--tag-bg);
+    }
+    .nav-btn svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    /* Nav Dropdown ("호기심" 탭 메뉴) */
+    .nav-dropdown {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+    .nav-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0;
+      min-width: 230px;
+      background: var(--card-inner);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 6px;
+      box-shadow: 0 16px 36px var(--shadow-color);
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 40;
+    }
+    .nav-dropdown.open .nav-dropdown-menu {
+      display: flex;
+    }
+    .nav-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--text-main);
+      font-size: 12.5px;
+      font-weight: 600;
+      transition: background 0.15s ease;
+    }
+    .nav-dropdown-item:hover {
+      background: var(--tag-bg);
+    }
+    .nav-dropdown-item svg {
+      width: 15px;
+      height: 15px;
+      color: var(--primary-light);
+      flex-shrink: 0;
+    }
+
+    /* Card Container with 3D Flip */
+    .card-scene {
+      width: 100%;
+      max-width: 420px;
+      min-height: 560px;
+      height: fit-content;
+      position: relative;
+      z-index: 10;
+      perspective: 1600px;
+      margin: 10px auto;
+    }
+
+    .business-card {
+      width: 100%;
+      min-height: 560px;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.75s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: default;
+    }
+
+    .business-card.is-flipped {
+      transform: rotateY(180deg);
+    }
+
+    /* Common Card Face */
+    .card-face {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      min-height: 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 24px;
+      background: var(--card-inner);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 20px 50px -10px var(--shadow-color),
+                  0 0 0 1px var(--card-border) inset;
+      padding: 24px 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow-y: auto; /* Allow scrolling inside card if viewport is very short */
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.2) transparent;
+    }
+
+    .card-face::-webkit-scrollbar {
+      width: 4px;
+    }
+    .card-face::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.2);
+      border-radius: 4px;
+    }
+
+    /* Holographic sheen highlight */
+    .card-face::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.12) 0%, transparent 65%);
+      pointer-events: none;
+      transform: rotate(35deg);
+      opacity: 0.7;
+    }
+
+    /* Back Face specific */
+    .card-back {
+      transform: rotateY(180deg);
+    }
+
+    /* Card Header */
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .avatar-wrapper {
+      position: relative;
+      width: 72px;
+      height: 72px;
+    }
+
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      border-radius: 20px;
+      object-fit: cover;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .status-badge {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #10b981;
+      border: 2.5px solid #14172b;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .flip-btn-trigger {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      background: var(--tag-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      border-radius: 100px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .flip-btn-trigger:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      transform: scale(1.04);
+    }
+    .flip-btn-trigger svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Identity Section */
+    .identity {
+      margin-top: 14px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .name-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .full-name {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 40%, var(--primary-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    [data-theme="light"] .full-name {
+      background: linear-gradient(135deg, #0f172a 40%, var(--primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .eng-name {
+      font-size: 13.5px;
+      color: var(--text-dim);
+      font-weight: 500;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .job-title {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--primary-light);
+      margin-top: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .bio-text {
+      margin-top: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+
+    /* Skills & Keywords */
+    .tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .tag {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 9px;
+      border-radius: 6px;
+      background: var(--tag-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+    }
+    .tag:hover {
+      border-color: var(--primary-light);
+      color: var(--text-main);
+      transform: translateY(-2px);
+    }
+
+    /* Contact Details on Front */
+    .contact-list {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: var(--tag-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      text-decoration: none;
+      font-size: 12.5px;
+      transition: all 0.2s ease;
+    }
+
+    .contact-item:hover {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: var(--primary-light);
+      transform: translateX(4px);
+    }
+
+    .contact-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--primary-light);
+      flex-shrink: 0;
+    }
+    .contact-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .contact-val {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    /* Primary Action Buttons (vCard & Share) */
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 16px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      text-decoration: none;
+    }
+
+    .btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #6366f1);
+      color: #ffffff;
+      box-shadow: 0 4px 16px var(--primary-glow);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #4338ca, #4f46e5);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px var(--primary-glow);
+    }
+
+    .btn-secondary {
+      background: var(--tag-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: translateY(-2px);
+    }
+
+    /* Back Face Layout */
+    .back-content {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+      justify-content: space-between;
+      position: relative;
+      z-index: 2;
+    }
+
+    .back-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .timeline-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding-left: 12px;
+      border-left: 2px solid var(--primary-light);
+    }
+
+    .timeline-date {
+      font-size: 10.5px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .timeline-role {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .timeline-desc {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    /* Social Icons Row */
+    .social-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .social-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--tag-bg);
+      border: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-main);
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .social-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      transform: translateY(-2px) scale(1.04);
+      border-color: var(--primary);
+    }
+    .social-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* QR Code Display area */
+    .qr-card-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 10px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+    }
+
+    .qr-box {
+      background: #ffffff;
+      padding: 6px;
+      border-radius: 8px;
+      display: inline-block;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    .qr-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* Compact Viewport Optimization (For small laptop screens or split browser windows) */
+    @media (max-height: 720px) {
+      body {
+        padding-top: 60px;
+      }
+      .card-scene, .business-card {
+        min-height: 500px;
+      }
+      .card-face {
+        padding: 18px 18px;
+      }
+      .avatar-wrapper {
+        width: 60px;
+        height: 60px;
+      }
+      .avatar-img {
+        font-size: 22px;
+      }
+      .full-name {
+        font-size: 22px;
+      }
+      .identity {
+        margin-top: 8px;
+      }
+      .bio-text {
+        font-size: 12px;
+        margin-top: 6px;
+      }
+      .contact-list {
+        margin-top: 10px;
+        gap: 6px;
+      }
+      .action-grid {
+        margin-top: 12px;
+      }
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #10b981;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 13.5px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.35);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 999;
+      pointer-events: none;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    .toast svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Edit Profile Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      padding: 16px;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: var(--card-inner);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+      transform: scale(0.95);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .close-modal-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: var(--tag-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus {
+      border-color: var(--primary-light);
+    }
+
+    .footer-credit {
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--text-dim);
+      text-align: center;
+      z-index: 10;
+    }
+
+    /* Print Style for physical business card printing */
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+      }
+      .top-nav, .ambient-sphere, .flip-btn-trigger, .action-grid, .footer-credit {
+        display: none !important;
+      }
+      .card-scene {
+        perspective: none;
+      }
+      .card-face {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        page-break-after: always;
+      }
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body>
 
-  <!-- ========================================================================= -->
-  <!-- 1. LOGIN SCREEN (클린 엔터프라이즈 로그인)                                  -->
-  <!-- ========================================================================= -->
-  <div id="screen-login" class="flex-1 flex flex-col justify-center items-center p-4 sm:p-6 bg-[#faf8ff] relative overflow-hidden">
-    <div class="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-3xl h-72 bg-gradient-to-b from-[#eaedff] to-transparent rounded-full blur-3xl pointer-events-none opacity-70"></div>
+  <!-- Ambient light orbs -->
+  <div class="ambient-sphere ambient-1"></div>
+  <div class="ambient-sphere ambient-2"></div>
 
-    <div class="w-full max-w-md relative z-10 fade-in">
-      <!-- Title Header -->
-      <div class="text-center mb-7">
-        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1e3a8a]/10 border border-[#1e3a8a]/20 text-[#1e3a8a] text-[11px] font-bold tracking-wider mb-2.5">
-          <span>CLINICAL LEDGER PRECISION</span>
-        </div>
-        <h1 class="text-2xl sm:text-3xl font-bold font-headline text-[#00236f] tracking-tight">
-          업무 통합 포털 시스템
-        </h1>
-        <p class="text-xs sm:text-sm text-[#444651] mt-1.5">
-          병원부 미결 원장 대사, 금융 시뮬레이터, 업무 지식 허브
-        </p>
-      </div>
-
-      <!-- Login Card -->
-      <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-lg p-6 sm:p-8">
-        <form onsubmit="event.preventDefault(); handleFormLogin();" class="space-y-4" autocomplete="off">
-          <div>
-            <label class="block text-xs font-bold text-[#131b2e] mb-1.5">업무용 이메일 (ID)</label>
-            <input type="email" id="input-email" value="" required autocomplete="off"
-              class="w-full px-3.5 py-2.5 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-[#131b2e] mb-1.5">비밀번호 (Password)</label>
-            <input type="password" id="input-password" value="" required autocomplete="new-password"
-              class="w-full px-3.5 py-2.5 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white">
-          </div>
-          <div class="flex items-center justify-between">
-            <label class="inline-flex items-center gap-2 text-xs text-[#444651] cursor-pointer select-none">
-              <input type="checkbox" id="remember-email" class="w-3.5 h-3.5 rounded border-[#cbd5e1] text-[#00236f] focus:ring-[#1e3a8a] cursor-pointer">
-              <span class="font-medium">아이디 저장</span>
-            </label>
-          </div>
-          <div id="login-error" class="hidden p-2.5 rounded bg-[#fef2f2] border border-[#fecaca] text-[#dc2626] text-xs font-semibold"></div>
-          <button type="submit" id="btn-login-submit" class="w-full py-2.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-md shadow transition cursor-pointer">
-            포털 시스템 로그인 →
-          </button>
-        </form>
-      </div>
-
-      <div class="text-center mt-5 text-xs text-[#757682]">
-        © 2026 Clinical Ledger Precision. All rights reserved.
+  <!-- Top Utilities Bar -->
+  <div class="top-nav">
+    <a href="savings-simulator.html" class="nav-btn" title="일일 저축 & 복리 시뮬레이터 열기" style="text-decoration: none;">
+      <i data-lucide="calculator"></i>
+      <span>저축 시뮬레이터</span>
+    </a>
+    <div class="nav-dropdown" id="curiosityDropdown">
+      <button class="nav-btn" id="curiosityTabBtn" title="호기심 메뉴 열기" aria-expanded="false">
+        <i data-lucide="compass"></i>
+        <span>호기심</span>
+        <i data-lucide="chevron-down" style="width: 13px; height: 13px;"></i>
+      </button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="todang-club-sponsor-flyer.html" class="nav-dropdown-item" role="menuitem">
+          <i data-lucide="file-text"></i>
+          <span>토당클럽(테미모) 찬조자 광고지</span>
+        </a>
       </div>
     </div>
+    <button class="nav-btn" id="themeToggleBtn" title="화면 테마 변경">
+      <i data-lucide="moon" id="themeIcon"></i>
+      <span id="themeText">다크</span>
+    </button>
+    <button class="nav-btn" id="editModalBtn" title="명함 정보 수정">
+      <i data-lucide="edit-3"></i>
+      <span>정보 수정</span>
+    </button>
+    <button class="nav-btn" id="flipQuickBtn" title="명함 뒤집기">
+      <i data-lucide="refresh-cw"></i>
+      <span>뒷면 보기</span>
+    </button>
   </div>
 
-  <!-- ========================================================================= -->
-  <!-- 2. PORTAL MAIN WORKSPACE (클린 상단 GNB: 메뉴추가/DB설정 버튼 완전 제거)     -->
-  <!-- ========================================================================= -->
-  <div id="screen-portal" class="hidden flex-1 flex flex-col min-h-screen">
-    <!-- TOP GNB -->
-    <header class="sticky top-0 z-40 bg-[#00236f] text-white border-b border-[#1e3a8a] shadow-sm">
-      <div class="max-w-[1800px] mx-auto px-4 h-14 flex items-center justify-between gap-3">
-        <!-- Brand -->
-        <div class="flex items-center gap-3 cursor-pointer" onclick="selectTheme('finance');">
-          <span class="bg-[#1e3a8a] border border-[#3b82f6]/40 text-[#90a8ff] px-2 py-0.5 rounded text-xs font-headline font-bold tracking-wider">CLP</span>
-          <span class="font-headline font-bold text-sm tracking-tight hidden sm:inline">Clinical Ledger Precision</span>
-          <span class="text-[11px] text-[#dae2fd] hidden xl:inline border-l border-white/20 pl-2.5">업무 통합 포털</span>
-        </div>
-
-        <!-- Dynamic Theme Tabs (GNB) -->
-        <nav id="gnb-theme-tabs" class="flex items-center gap-1 overflow-x-auto py-1">
-          <!-- Populated dynamically based on user role -->
-        </nav>
-
-        <!-- Clean Right Controls: User Profile, My Password Change & Logout ONLY -->
-        <div class="flex items-center gap-2.5 shrink-0">
-          <div class="flex items-center gap-2">
-            <div id="gnb-user-avatar" class="w-7 h-7 rounded-full bg-[#1e3a8a] border border-[#90a8ff]/40 flex items-center justify-center font-bold text-xs text-white">이</div>
-            <div class="hidden md:block text-left leading-tight">
-              <div class="flex items-center gap-1.5">
-                <span id="gnb-user-name" class="text-xs font-bold">이창환</span>
-                <span id="gnb-user-role-badge" class="text-[10px] px-1.5 py-0.2 rounded bg-[#1e3a8a] text-[#90a8ff] font-semibold">Manager</span>
-              </div>
-              <div id="gnb-user-dept" class="text-[10px] text-[#dae2fd]/75">병원사업부</div>
+  <!-- 3D Card Scene -->
+  <div class="card-scene" id="cardScene">
+    <div class="business-card" id="businessCard">
+      
+      <!-- CARD FRONT -->
+      <div class="card-face card-front">
+        <div>
+          <!-- Header (Avatar + Flip trigger) -->
+          <div class="card-header">
+            <div class="avatar-wrapper">
+              <div class="avatar-img" id="displayAvatarInitials">창환</div>
+              <div class="status-badge" title="상태: 연락 가능"></div>
             </div>
-            <button onclick="openMyPasswordModal();" class="text-[11px] text-[#dae2fd] hover:text-white px-2 py-1 rounded hover:bg-white/10 transition ml-1 border border-white/15">
-              비밀번호 변경
-            </button>
-            <button onclick="logoutPortal();" class="text-xs text-white/80 hover:text-white px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 transition font-semibold">
-              로그아웃
+            <button class="flip-btn-trigger" id="flipToBackBtn" title="뒷면 상세 소개 보기">
+              <i data-lucide="arrow-right-left"></i>
+              <span>뒷면 소개</span>
             </button>
           </div>
-        </div>
-      </div>
-    </header>
 
-    <!-- WORKSPACE BODY: SIDEBAR + CONTENT -->
-    <div class="max-w-[1800px] w-full mx-auto flex-1 flex flex-col lg:flex-row">
-      <!-- LNB SIDEBAR (하단 메뉴추가 버튼 제거, 클린 구성) -->
-      <aside class="w-full lg:w-64 shrink-0 bg-white border-b lg:border-b-0 lg:border-r border-[#e2e8f0] flex flex-col justify-between">
-        <div class="p-4 space-y-5">
-          <!-- Active Theme Box -->
-          <div class="p-3.5 rounded-lg bg-[#f2f3ff] border border-[#dae2fd]">
-            <div class="flex items-center justify-between">
-              <span class="text-[10px] font-bold text-[#1e3a8a] uppercase tracking-wider">선택된 업무 테마</span>
-              <span id="lnb-menu-count" class="text-[10px] font-bold px-1.5 py-0.2 bg-white text-[#00236f] rounded border border-[#cbd5e1]">3개 메뉴</span>
+          <!-- Identity & Title -->
+          <div class="identity">
+            <div class="name-row">
+              <h1 class="full-name" id="displayName">이창환</h1>
+              <span class="eng-name" id="displayEngName">Changhwan Lee</span>
             </div>
-            <div id="lnb-theme-title" class="text-sm font-bold text-[#00236f] mt-1">병원부 정산/재무</div>
-            <p id="lnb-theme-desc" class="text-[11px] text-[#444651] mt-1 leading-snug">병원 제약 공급망 정산 원장 대사 및 미결 금액 관리</p>
-          </div>
-
-          <!-- Dashboard Item -->
-          <div>
-            <div class="text-[11px] font-bold text-[#757682] px-2 mb-1.5 uppercase tracking-wider">메인 대시보드</div>
-            <div id="lnb-dashboard-slot"></div>
-          </div>
-
-          <!-- Submenus Tree -->
-          <div>
-            <div class="flex items-center justify-between text-[11px] font-bold text-[#757682] px-2 mb-1.5 uppercase tracking-wider">
-              <span>하위 세부메뉴</span>
+            <div class="job-title" id="displayJobTitle">
+              <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i>
+              <span id="jobTitleText">Software Engineer & Creator</span>
             </div>
-            <div id="lnb-submenus-slot" class="space-y-1"></div>
+            <p class="bio-text" id="displayBio">
+              기술을 통해 복잡한 문제를 단순하게 풀고, 사용자에게 영감을 주는 혁신적인 디지털 경험을 만들어갑니다.
+            </p>
+          </div>
+
+          <!-- Tags / Specialties -->
+          <div class="tags-container" id="tagsContainer">
+            <span class="tag">#FullStack</span>
+            <span class="tag">#AI_Engineering</span>
+            <span class="tag">#UI/UX</span>
+            <span class="tag">#ProblemSolver</span>
+          </div>
+
+          <!-- Quick Contacts -->
+          <div class="contact-list">
+            <a href="mailto:changhwan@example.com" class="contact-item" id="displayEmailLink">
+              <div class="contact-icon"><i data-lucide="mail"></i></div>
+              <span class="contact-val" id="displayEmail">changhwan@example.com</span>
+            </a>
+            <a href="tel:010-1234-5678" class="contact-item" id="displayPhoneLink">
+              <div class="contact-icon"><i data-lucide="phone"></i></div>
+              <span class="contact-val" id="displayPhone">010-1234-5678</span>
+            </a>
+            <div class="contact-item">
+              <div class="contact-icon"><i data-lucide="map-pin"></i></div>
+              <span class="contact-val" id="displayLocation">Seoul, Republic of Korea</span>
+            </div>
           </div>
         </div>
 
-        <!-- Clean Sidebar Footer -->
-        <div class="p-3 border-t border-[#e2e8f0] bg-[#faf8ff] text-[11px] text-[#757682] flex items-center justify-between">
-          <span>Clinical Ledger v2.6</span>
-          <span id="lnb-user-email" class="num-font truncate max-w-[140px]">chuan@hospital.com</span>
-        </div>
-      </aside>
-
-      <!-- MAIN CONTENT VIEWPORT -->
-      <main class="flex-1 flex flex-col min-w-0 bg-[#faf8ff] p-4 sm:p-6 overflow-y-auto">
-        <!-- Breadcrumb & Top Bar -->
-        <div class="flex flex-wrap items-center justify-between gap-2 pb-4 mb-4 border-b border-[#e2e8f0]">
-          <div class="flex items-center gap-1.5 text-xs text-[#757682]">
-            <span class="cursor-pointer hover:text-[#00236f]" onclick="selectTheme('finance');">포털 홈</span>
-            <span>›</span>
-            <span id="crumb-theme" class="font-semibold text-[#1e3a8a]">병원부 정산/재무</span>
-            <span>›</span>
-            <span id="crumb-page" class="font-bold text-[#00236f]">미결 정산 총괄 대시보드</span>
-          </div>
-
-          <div id="viewport-actions" class="flex items-center gap-2"></div>
-        </div>
-
-        <!-- Dynamic Content Container -->
-        <div id="viewport-body" class="flex-1 flex flex-col"></div>
-      </main>
-    </div>
-  </div>
-
-  <!-- ========================================================================= -->
-  <!-- 3. MODAL: 내 비밀번호 변경 (본인 계정 보안 관리)                           -->
-  <!-- ========================================================================= -->
-  <div id="modal-my-password" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-2xl w-full max-w-md p-6 fade-in">
-      <div class="flex items-center justify-between pb-3 border-b border-[#e2e8f0] mb-4">
-        <div>
-          <span class="text-[10px] font-bold text-[#1e3a8a] uppercase tracking-wider">ACCOUNT SECURITY</span>
-          <h2 class="text-base font-bold font-headline text-[#00236f]">내 비밀번호 변경</h2>
-        </div>
-        <button onclick="closeMyPasswordModal();" class="text-gray-400 hover:text-gray-700 text-xl font-bold">&times;</button>
-      </div>
-      <form onsubmit="event.preventDefault(); handleUpdateMyPassword();" class="space-y-4">
-        <div>
-          <label class="block text-xs font-bold text-[#131b2e] mb-1">현재 로그인 계정</label>
-          <input type="text" id="mp-email" disabled class="w-full px-3 py-2 text-xs bg-slate-100 border border-[#cbd5e1] rounded text-[#444651] num-font">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-[#131b2e] mb-1">새 비밀번호 입력 *</label>
-          <input type="password" id="mp-new-pw" required minlength="4" placeholder="새로운 비밀번호 입력" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-[#131b2e] mb-1">새 비밀번호 확인 *</label>
-          <input type="password" id="mp-confirm-pw" required minlength="4" placeholder="새로운 비밀번호 재입력" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
-        </div>
-        <div class="flex justify-end gap-2 pt-3 border-t border-[#e2e8f0]">
-          <button type="button" onclick="closeMyPasswordModal();" class="px-4 py-1.5 border border-[#cbd5e1] text-xs font-semibold rounded">취소</button>
-          <button type="submit" class="px-4 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow">비밀번호 변경 저장</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ========================================================================= -->
-  <!-- 4. MODAL: BLOG WRITE & DETAIL                                             -->
-  <!-- ========================================================================= -->
-  <div id="modal-blog-write" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-2xl w-full max-w-xl p-6 fade-in">
-      <div class="flex items-center justify-between pb-3 border-b border-[#e2e8f0] mb-4">
-        <h2 class="text-base font-bold font-headline text-[#00236f]">새 업무 지식 / 공지사항 등록</h2>
-        <button onclick="closeBlogWriteModal();" class="text-gray-400 hover:text-gray-700 text-xl font-bold">&times;</button>
-      </div>
-      <form onsubmit="event.preventDefault(); saveBlogPost();" class="space-y-4">
-        <div class="grid grid-cols-3 gap-3">
-          <div class="col-span-2">
-            <label class="block text-xs font-bold text-[#131b2e] mb-1">제목 *</label>
-            <input type="text" id="bw-title" required placeholder="게시글 제목을 입력하세요" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-[#131b2e] mb-1">카테고리</label>
-            <select id="bw-category" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
-              <option value="공지">공지</option>
-              <option value="업무가이드">업무가이드</option>
-              <option value="정산리포트">정산리포트</option>
-              <option value="시스템개선">시스템개선</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-[#131b2e] mb-1">목록 요약 설명</label>
-          <input type="text" id="bw-summary" placeholder="목록에 표시될 1~2줄 요약" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-[#131b2e] mb-1">태그 (쉼표로 구분)</label>
-          <input type="text" id="bw-tags" value="병원부, 정산, 업무공유" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-[#131b2e] mb-1">본문 내용 *</label>
-          <textarea id="bw-content" rows="7" required placeholder="공유할 업무 지식이나 공지 내용을 입력해 주세요..." class="w-full p-3 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded leading-relaxed"></textarea>
-        </div>
-        <div class="flex justify-end gap-2 pt-3 border-t border-[#e2e8f0]">
-          <button type="button" onclick="closeBlogWriteModal();" class="px-4 py-1.5 border border-[#cbd5e1] text-xs font-semibold rounded">취소</button>
-          <button type="submit" class="px-5 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow">저장 및 게시</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div id="modal-blog-detail" onclick="if(event.target===this) closeBlogDetailModal();" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-2xl w-full max-w-3xl fade-in max-h-[88vh] flex flex-col overflow-hidden">
-      <div class="shrink-0 px-6 pt-5 pb-3 border-b border-[#e2e8f0]">
-        <div class="flex items-center justify-between pb-2.5 border-b border-[#f1f5f9] mb-2.5">
-          <div class="flex items-center gap-2">
-            <span id="bd-category" class="text-[10px] font-bold px-2.5 py-0.5 rounded bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]">공지</span>
-            <span id="bd-date" class="text-xs text-[#757682]">2026-11-13</span>
-          </div>
-          <button onclick="closeBlogDetailModal();" class="text-gray-400 hover:text-gray-700 text-xl font-bold leading-none">&times;</button>
-        </div>
-        <h2 id="bd-title" class="text-lg font-bold font-headline text-[#00236f] mb-1.5">제목</h2>
-        <div class="flex items-center justify-between text-xs text-[#757682]">
-          <span id="bd-author">작성자: 이창환</span>
-          <span id="bd-views">조회 100</span>
-        </div>
-      </div>
-      <div id="bd-scroll-body" class="flex-1 overflow-y-auto px-6 py-4">
-        <div id="bd-content" class="text-xs text-[#131b2e] leading-relaxed whitespace-pre-line bg-[#faf8ff] p-4 rounded-lg border border-[#e2e8f0]"></div>
-      </div>
-      <div class="shrink-0 flex justify-between items-center px-6 py-3.5 border-t border-[#e2e8f0] bg-white">
-        <button id="bd-delete-btn" class="text-xs text-[#dc2626] hover:underline font-semibold">게시글 삭제</button>
-        <button onclick="closeBlogDetailModal();" class="px-5 py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-lg shadow-sm transition">닫기</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========================================================================= -->
-  <!-- PORTAL ENGINE SCRIPT (SUPABASE REAL CONNECTION + INTERNAL ADMIN)          -->
-  <!-- ========================================================================= -->
-  <script>
-    // -------------------------------------------------------------------------
-    // 0. SUPABASE CREDENTIALS (제공해주신 실제 프로젝트 URL & Public Key 내장)
-    // -------------------------------------------------------------------------
-    const DEFAULT_SUPABASE_URL = 'https://cbarfruyknhfjvvhcmgu.supabase.co';
-    const DEFAULT_SUPABASE_KEY = 'sb_publishable_k-LLkVT3ducZNfkzF0tGvw_36TMYhhZ';
-
-    // -------------------------------------------------------------------------
-    // 1. DEFAULT ACCOUNTS & MENU STRUCTURE (내부관리 테마 분리)
-    // -------------------------------------------------------------------------
-    const INITIAL_USERS = [
-      {
-        id: 'usr-admin',
-        email: 'admin@hospital.com',
-        password: 'admin1234',
-        name: '내부관리자',
-        department: 'IT 인프라 / 내부관리팀',
-        role: 'admin',
-        status: 'active',
-        createdAt: '2026-11-01'
-      },
-      {
-        id: 'usr-chuan',
-        email: 'chuan@hospital.com',
-        password: 'password123',
-        name: '이창환',
-        department: '병원사업부 / 정산총괄',
-        role: 'finance_manager',
-        status: 'active',
-        createdAt: '2026-11-01'
-      },
-      {
-        id: 'usr-staff',
-        email: 'staff@hospital.com',
-        password: 'staff1234',
-        name: '김정산 주임',
-        department: '병원정산관리팀',
-        role: 'staff',
-        status: 'active',
-        createdAt: '2026-11-05'
-      }
-    ];
-
-    const DEFAULT_MENU_GROUPS = [
-      {
-        themeId: 'finance',
-        themeTitle: '🗂️ 개인업무',
-        themeDesc: '월간 개인업무 일정 달력 기록 및 병원부 정산 원장 관리',
-        adminOnly: false,
-        dashboard: {
-          id: 'work-schedule',
-          title: '개인업무 일정 캘린더',
-          type: 'iframe',
-          url: 'work-schedule.html'
-        },
-        subMenus: [
-          {
-            id: 'reconcile-ui',
-            title: '병원부 미결 통합 원장',
-            type: 'iframe',
-            url: 'reconcile_ui.html',
-            badge: '핵심원장',
-            badgeColor: 'blue',
-            role: 'all'
-          },
-          {
-            id: 'quarterly-pending-cleanup',
-            title: '병원부 미결 정리 (분기)',
-            type: 'iframe',
-            url: 'quarterly-pending-cleanup.html',
-            badge: '분기정리',
-            badgeColor: 'amber',
-            role: 'all'
-          },
-          {
-            id: 'email-classification',
-            title: 'E-Mail 분류',
-            type: 'iframe',
-            url: 'email-classification.html',
-            badge: '메일정리',
-            badgeColor: 'blue',
-            role: 'all'
-          },
-          {
-            id: 'email-classification-company',
-            title: 'E-mail 분류(회사)',
-            type: 'iframe',
-            url: 'email-classification-company.html',
-            badge: '회사메일',
-            badgeColor: 'green',
-            role: 'all'
-          },
-          {
-            id: 'geoyoung-payment-automation',
-            title: '지오영 지급집계표 자동화',
-            type: 'iframe',
-            url: 'geoyoung-payment-automation.html',
-            badge: '지급자동화',
-            badgeColor: 'green',
-            role: 'all'
-          }
-        ]
-      },
-      {
-        themeId: 'tools',
-        themeTitle: '📊 금융/자산',
-        themeDesc: '금일 주식시장·환율 동향, 주요 종목 지수, 5대 뉴스 및 수익 시뮬레이션',
-        adminOnly: false,
-        dashboard: {
-          id: 'financial-info',
-          title: '금융정보',
-          type: 'iframe',
-          url: 'financial-info.html'
-        },
-        subMenus: [
-          {
-            id: 'deposit-savings-sim',
-            title: '예/적금 시뮬레이터',
-            type: 'iframe',
-            url: 'deposit-savings-simulator.html',
-            badge: '시뮬레이터',
-            badgeColor: 'green',
-            role: 'all'
-          }
-        ]
-      },
-      {
-        themeId: 'knowledge',
-        themeTitle: '📖 블로그',
-        themeDesc: '사내 공지사항 및 업무 지식 블로그',
-        adminOnly: false,
-        dashboard: {
-          id: 'blog-main',
-          title: '업무 지식 블로그 & 공지',
-          type: 'builtin-blog'
-        },
-        subMenus: []
-      },
-      {
-        themeId: 'internal-admin',
-        themeTitle: '⚙️ 내부관리',
-        themeDesc: '업무 이메일/비밀번호 계정 관리, 메뉴 그룹화 및 Supabase 연동 관리 (내부관리자 전용)',
-        adminOnly: true, // 오직 admin 계정으로 로그인했을 때만 노출
-        dashboard: {
-          id: 'admin-users',
-          title: '업무 계정 및 비밀번호 관리',
-          type: 'builtin-admin-users'
-        },
-        subMenus: [
-          {
-            id: 'admin-menus',
-            title: '포털 메뉴 및 테마 그룹 관리',
-            type: 'builtin-admin-menus',
-            badge: '메뉴추가',
-            badgeColor: 'green',
-            role: 'admin'
-          },
-          {
-            id: 'admin-supabase',
-            title: 'Supabase 클라우드 연동 관리',
-            type: 'builtin-admin-supabase',
-            badge: 'DB연동',
-            badgeColor: 'blue',
-            role: 'admin'
-          },
-          {
-            id: 'sample-template-html',
-            title: '신규 코딩 템플릿 미리보기',
-            type: 'iframe',
-            url: 'template-page.html',
-            badge: '템플릿',
-            badgeColor: 'amber',
-            role: 'admin'
-          }
-        ]
-      }
-    ];
-
-    const DEFAULT_BLOG_POSTS = [
-      {
-        id: 'post-local-pc-sync-guide',
-        title: '로컬 개발 프로젝트를 다른 PC와 효과적으로 공유·동기화하는 방법',
-        category: '업무가이드',
-        author: '이창환 (총괄 매니저)',
-        date: '2026-11-20',
-        summary: '회사 PC와 집 PC 등 여러 컴퓨터를 오가며 개발할 때 GitHub 비공개 저장소를 활용한 표준 동기화 루틴과 .gitignore, 환경 변수(.env), 패키지 관리 주의사항을 정리했습니다.',
-        content: `로컬에서 작업한 프로젝트를 다른 PC와 효과적으로 공유하는 방법
-
-가장 효과적이고 안전한 방법은 GitHub(비공개 저장소)를 중앙 허브로 사용하는 것입니다.
-
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. 가장 추천하는 방법: GitHub(Git) 동기화 루틴
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-코드는 GitHub에 올리고, 두 PC(예: 회사 PC ↔ 집 PC)가 GitHub를 통해 주고받는 방식입니다.
-외부에 공개되면 안 되는 프로젝트라면 Private(비공개) 저장소로 생성하면 됩니다.
-
-[최초 1회 세팅]
-- PC A (원본 작업 PC): 프로젝트를 GitHub 저장소에 연결하고 첫 업로드(push)
-- PC B (다른 PC): 저장소를 통째로 내려받기(clone)
-  예) git clone https://github.com/계정명/저장소명.git
-
-[매일 반복하는 동기화 루틴 (핵심)]
-- 작업 끝낼 때 (PC A):
-  1) git add .
-  2) git commit -m "작업 내용 요약"
-  3) git push
-- 작업 시작할 때 (PC B):
-  1) git pull
-
-※ Tip: 작업이 아직 미완성인데 급히 PC를 옮겨야 한다면, 임시 브랜치(예: wip)를 만들어 커밋·푸시하고 다른 PC에서 이어서 작업하면 메인 코드를 건드리지 않고 안전하게 옮길 수 있습니다.
-
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-2. 다른 PC로 옮길 때 꼭 챙겨야 할 3가지
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-코드만 옮기면 실행이 안 되는 경우가 많으므로 아래 3가지를 함께 관리해야 합니다.
-
-1) .gitignore 설정 (필수)
-- node_modules/, .venv/, dist/, .env 등 용량이 크거나 보안이 필요한 파일은 Git에서 제외해야 합니다.
-
-2) 환경 변수(.env)와 대용량 테스트 파일 별도 공유
-- API 키나 비밀번호가 담긴 .env 파일은 보안상 GitHub에 올리지 않습니다.
-- 대신 키 이름만 적힌 .env.example만 GitHub에 올리고, 실제 .env 값이나 테스트용 원본 엑셀 파일 등은 구글 드라이브·개인 메모·비밀번호 관리자 등으로 별도 전달합니다.
-
-3) 패키지 설치 명령 실행
-- 다른 PC에서 git clone 또는 git pull을 받은 뒤, 라이브러리 설치 명령을 한 번 실행해 줍니다.
-- 예) Node.js → npm install / Python → pip install -r requirements.txt
-
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-3. 상황별 대안 요약
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- 두 PC를 오가며 계속 개발할 때
-  → GitHub Private 저장소 (push / pull) [가장 추천]
-- 딱 한 번만 다른 PC로 옮기면 될 때
-  → node_modules, .venv 폴더를 빼고 .zip으로 압축해 USB·드라이브로 전달
-- 오프라인(사내 폐쇄망 등) 환경일 때
-  → git bundle로 Git 이력까지 하나의 파일로 묶어 USB로 이동
-- OS나 프로그램 버전 차이까지 없애고 싶을 때
-  → Docker 또는 VS Code Dev Containers 사용
-
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-핵심 요약
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-코드와 변경 이력은 GitHub(push/pull)로, 비밀키(.env)와 원본 데이터(엑셀 등)는 구글 드라이브 등 별도 채널로 나누어 관리하는 것이 가장 깔끔하고 실수가 적습니다.`,
-        views: 1,
-        tags: ['Git', 'GitHub', 'PC동기화', '업무가이드']
-      },
-      {
-        id: 'post-deploy-workflow-guide',
-        title: '개발·배포 워크플로우 3가지 비교 (GitHub 직접 vs 로컬→GitHub vs 구글 드라이브→GitHub)',
-        category: '업무가이드',
-        author: '이창환 (총괄 매니저)',
-        date: '2026-11-20',
-        summary: 'GitHub 직접 작성, 로컬 개발 후 GitHub 배포, 구글 드라이브 경유 배포 등 3가지 개발·배포 방식의 장단점을 비교하고 가장 안전하고 효율적인 추천 워크플로우를 정리했습니다.',
-        content: `개발·배포 워크플로우 3가지 장단점 비교 및 추천 가이드
-
-프로젝트를 작성하고 GitHub에 배포할 때 자주 고민하는 3가지 방식의 장단점과 실무 추천 기준을 정리합니다.
-
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. 깃허브(GitHub)에서 직접 작성하고 배포
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-(GitHub 웹 편집기, github.dev, GitHub Codespaces 활용)
-
-[장점]
-- 별도 개발 환경 세팅 없이 브라우저만 있으면 어떤 PC에서든 바로 작업 가능
-- 수정 즉시 커밋 → 자동 배포(GitHub Pages, Vercel, Actions 등)까지 흐름이 단순함
-
-[단점]
-- 일반 웹 에디터에서는 코드 실행·테스트·디버깅이 불가능함 (실행하려면 Codespaces를 써야 하며 무료 사용량 제한 존재)
-- 인터넷 연결이 필수이고, 로컬 파일(테스트용 엑셀 등)이나 로컬 AI 코딩 툴 연동이 번거로움
-
-[추천도] △ (오타 수정, 문서 편집 등 가벼운 수정용)
-
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-2. 로컬(내 PC)에서 작성하고, 완료되면 깃허브에 올려 배포
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-(개발 업계의 표준 방식)
-
-[장점]
-- 개발·테스트 속도가 가장 빠름: 로컬 실행, 디버깅, 라이브러리 설치, 로컬 데이터 테스트가 자유로움
-- AI 코딩 툴(Antigravity, VS Code 등) 활용에 최적화되어 있음
-- Git의 핵심 기능(브랜치, 변경 이력 비교, 되돌리기)을 가장 안전하게 사용 가능
-- 테스트를 마친 검증된 코드만 GitHub에 올려 안전하게 배포 가능
-
-[단점]
-- 최초 1회 로컬 개발 환경 세팅(Git, 런타임 등)이 필요함
-- 푸시(push)하지 않은 상태에서 PC가 고장 나거나 다른 PC로 옮기면 작업물이 동기화되지 않음
-
-[추천도] ★ 가장 추천 (표준 워크플로우)
-
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-3. 구글 드라이브에서 작성하고, 완료되면 깃허브에 올려 배포
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-(구글 드라이브 동기화 폴더 안에 프로젝트 코드를 두고 작업하는 경우)
-
-[장점]
-- 자동 클라우드 백업 및 여러 PC 간 파일 공유가 편해 보임
-- 기획서·엑셀 등 비개발 문서와 한곳에 모아두기 쉬움
-
-[단점 — 실무에서 문제가 가장 많이 발생]
-- Git 저장소 손상 위험: .git 폴더 안의 수많은 내부 파일이 구글 드라이브 동기화와 충돌해 저장소가 깨지는 경우가 흔함
-- 심각한 속도 저하 및 용량 낭비: node_modules, .venv, 빌드 결과물 등 수만 개의 파일이 실시간 동기화되면서 PC가 느려지거나 동기화가 멈춤
-- 파일 잠금(Lock) 오류: 드라이브가 파일을 동기화하는 도중 빌드나 실행이 실패하는 문제가 자주 발생함
-
-[추천도] ✕ 비추천 (코드 작업 폴더로는 절대 사용 금지)
-
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-최종 추천 가이드
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. 기본은 무조건 [2번: 로컬 작성 → 깃허브 배포] 방식을 사용하세요.
-   - 단, "다 끝난 뒤 한 번에 올리기"보다 기능 하나가 끝날 때마다(또는 하루 작업 마감 시) 자주 commit & push 하는 습관을 들이면 백업과 다른 PC 동기화 문제까지 자연스럽게 해결됩니다.
-2. [1번: 깃허브 직접 작성]은 오타 수정, README 편집, 간단한 설정 변경 등 가벼운 작업에만 보조로 활용하세요.
-3. [3번: 구글 드라이브]는 코드 작업 폴더로 쓰지 마시고, 원본 엑셀·기획서·참고 자료 보관용으로만 분리해 사용하시는 것을 권장합니다.`,
-        views: 1,
-        tags: ['GitHub', '배포가이드', '워크플로우', '업무가이드']
-      },
-      {
-      "id": "post-vibe-73",
-      "title": "바이브 코딩을 위한 73가지 IT 용어",
-      "category": "업무가이드",
-      "author": "이창환 (총괄 매니저)",
-      "date": "2026-11-14",
-      "summary": "AI 모델 및 에이전트 활용부터 프론트엔드, 백엔드, 프롬프팅, 배포 운영까지 AI 협업 및 바이브 코딩(Vibe Coding)을 위해 꼭 알아야 할 73가지 핵심 IT 용어 총정리",
-      "content": "더 좋은 바이브 코딩을 위한 73가지 IT 용어 총정리\n\nAI 모델 및 에이전트 활용부터 프론트엔드, 백엔드, 프롬프팅, 배포 운영까지 AI 협업 및 바이브 코딩(Vibe Coding)을 위해 꼭 알아야 할 73가지 핵심 IT 용어 가이드입니다.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n1. AI 모델 & 도구 (01 ~ 13)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n01. 나노바나나 (Nano Banana)\n- 구글의 이미지 생성 모델로, 기존 이미지를 인식하고 변형하는 능력이 탁월하여 스티치 (Stitch) 의 핵심 엔진으로 쓰입니다.\n\n02. 베오 3 (Veo 3)\n- 텍스트 프롬프트를 기반으로 고품질의 동영상을 생성하는 구글 의 AI 모델입니다.\n\n03. 위스크 (Whisk)\n- 이미지와 짧은 프롬프트로 창의적인 이미지를 재생성하는 실험 적인 AI 도구입니다.\n\n04. 노트북 LM (NotebookLM)\n- PDF, 웹사이트 등 다양한 자료를 입력받아 요약하고 인사이트를 도출해 주는 AI 리서치 도구입니다.\n\n05. 멀티모달 (Multimodal)\n- 텍스트뿐만 아니라 이미지, 오디오, 비디오 등 다양한 형태의 정 보를 동시에 이해하고 처리하는 AI 의 능력입니다.\n\n06. MoE (Mixture of Experts)\n- 모든 문제를 하나의 거대 모델이 푸는 대신, 각 분야의 ' 전문가 ' 모델들을 구성하여 상황에 맞는 전문가만 활성화하는 효율적인 아키텍처입니다.\n\n07. 트랜스포머 (Transformer)\n- 문장 전체의 맥락을 동시에 파악하여 단어 간의 관계를 병렬로 계산하는 현대 LLM 의 핵심 신경망 구조입니다.\n\n08. 콘텍스트 윈도우 (Context Window)\n- AI 모델이 한 번의 대화에서 기억하고 처리할 수 있는 정보 (텍스 트, 코드 등) 의 양입니다. 제미나이 3 는 100 만 (1M) 토큰 이상을 지원합니다.\n\n09. 토큰 (Token)\n- AI 가 텍스트를 인식하는 기본 단위입니다. 영어는 약 4 글자, 한국 어는 2~3 글자가 1 토큰 정도에 해당합니다.\n\n10. CoT (Chain of Thought)\n- 복잡한 문제를 한 번에 답하지 않고, 단계별로 생각의 과정을 나 열하며 추론하여 정답률을 높이는 기법입니다.\n\n11. 환각 (Hallucination)\n- AI 가 사실이 아닌 정보를 그럴듯하게 지어내어 답변하는 현상입 니다.\n\n12. 인코더 (Encoder)\n- 텍스트, 이미지 등의 원본 데이터를 AI 가 이해할 수 있는 숫자 형 태 (벡터) 로 변환하는 장치입니다.\n\n13. 스티치 (Stitch)\n- 프롬프트나 스케치 이미지를 입력하면 UI 디자인과 프론트엔드 코드를 즉시 생성해 주는 도구입니다.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n2. AI 에이전트 & 개발 방법론 (14 ~ 35)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n14. 아티팩트 (Artifact)\n- 에이전트가 수행한 작업 내용 (계획, 코드 변경, 테스트 결과 등) 을 사용자가 검토하기 쉽게 구조화하여 보여 주는 리포트입니다.\n\n15. 작업 목록 (Task List)\n- 에이전트가 수행할 작업들을 순서대로 정리한 마크다운 문서로, 진행 상황을 체크하며 체계적으로 개발하게 돕습니다.\n\n16. 구현 계획 (Implementation Plan)\n- 작업을 시작하기 전, 에이전트가 어떻게 기능을 구현할지 기술적 명세와 함께 작성하여 사용자에게 컨펌받는 문서입니다.\n\n17. 워크스루 (Walkthrough)\n- 작업 완료 후 어떤 파일이 수정되었고 어떤 기능이 추가되었는지 요약하여 보여 주는 아티팩트입니다.\n\n18. 지식 (Knowledge)\n- 프로젝트의 중요한 정보나 패턴을 저장해 두고, 에이전트가 필요 할 때마다 꺼내 쓸 수 있게 하는 영구 기억 저장소입니다.\n\n19. 룰 (Rules)\n- 프로젝트 전반에 걸쳐 에이전트가 항상 따라야 하는 지침 (코딩 컨벤션, 기술 스택 등) 을 정의한 파일입니다.\n\n20. 워크플로 (Workflow)\n- 자주 반복되는 작업 절차 (예 : TDD 실행, 기능 검증) 를 미리 정의 해 두고 필요할 때 호출하여 사용하는 기능입니다.\n\n21. 스킬 (Skill)\n- 에이전트가 외부 도구를 사용하거나 특정 작업을 수행할 수 있도 록 정의한 기능 단위입니다.\n\n22. 에이전틱 AI (Agentic AI)\n- 스스로 계획을 세우고 도구를 사용하여 자율적으로 작업을 수행 하는 AI 입니다.\n\n23. 휴먼 인 더 루프 (Human in the Loop)\n- AI 가 작업을 수행하는 과정 중간중간에 사람이 개입하여 중요한 결정을 내리거나 결과를 검증하는 방식입니다.\n\n24. TDD (Test Driven Development)\n- 실제 코드를 짜기 전에 테스트 코드를 먼저 작성하고, 이를 통과 하도록 개발하는 ' 테스트 주도 개발 ' 방법론입니다.\n\n25. 레드 - 그린 - 리팩터 (Red-Green-Refactor)\n- TDD 의 사이클로, 실패하는 테스트 (Red) → 통과하는 코드 작성 (Green) → 코드 개선 (Refactor) 의 과정을 뜻합니다.\n\n26. 클린 아키텍처 (Clean Architecture)\n- 소프트웨어의 요소를 계층으로 나누어 관심사를 분리함으로써 유지보수성과 테스트 용이성을 높이는 설계 방식입니다.\n\n27. 엔티티 (Entity)\n- 클린 아키텍처에서 가장 핵심이 되는 업무 규칙과 비즈니스 객체 를 정의한 계층입니다.\n\n28. 유스케이스 (Use Case)\n- 애플리케이션의 특정한 비즈니스 행위 (예 : 주문하기, 로그인하 기) 를 캡슐화한 계층입니다.\n\n29. RAG (Retrieval-Augmented Generation)\n- AI 가 학습하지 않은 최신 정보나 내부 데이터를 외부에서 검색 (Retrieval) 하여 답변 생성에 참고하는 기술입니다.\n\n30. PRD (Product Requirements Document)\n- 개발할 제품의 목표, 기능 요구 사항, 기술 스택 등을 명확히 정 리한 문서로, AI 에게 작업을 지시할 때 기준이 됩니다.\n\n31. MVP (Minimum Viable Product)\n- 최소한의 핵심 기능만 갖춘 제품으로, 아이디어를 빠르게 검증하 기 위해 만듭니다.\n\n32. PoC (Proof of Concept)\n- 새로운 기술이나 아이디어가 실현 가능한지 검증하기 위해 작게 만들어 보는 개념 증명 프로젝트입니다.\n\n33. 에이전트 우선 아키텍처 (Agent-First Architecture)\n- 사람이 코드를 직접 짜는 것보다 AI 에이전트에게 작업을 시키는 것을 최우선으로 고려한 설계 사상입니다.\n\n34. 비결정적 (Non-Deterministic)\n- 같은 입력을 넣어도 AI 의 특성상 매번 조금씩 다른 결과가 나올 수 있는 성질을 의미합니다.\n\n35. 오케스트레이션 (Orchestration)\n- 여러 AI 에이전트가 협력하여 복잡한 작업을 나누어 처리하도록 조율하고 관리하는 것입니다.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n3. 프론트엔드 & 웹 개발 (36 ~ 45)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n36. Next.js\n- 리액트 기반의 웹 프레임워크로, 서버 사이드 렌더링 (SSR) 등 강 력한 기능을 제공하여 풀스택 개발에 많이 쓰입니다.\n\n37. 리액트 (React)\n- 사용자 인터페이스 (UI) 를 만들기 위한 자바스크립트 라이브러리 입니다.\n\n38. Tailwind CSS\n- 클래스 이름만으로 스타일을 빠르게 적용할 수 있는 유틸리티 퍼 스트 CSS 프레임워크입니다.\n\n39. Shadcn UI\n- 재사용 가능한 UI 컴포넌트 모음으로, 코드를 복사해서 내 프로 젝트에 맞게 커스터마이징해 사용합니다.\n\n40. 서버 컴포넌트 (Server Components)\n- 서버에서 렌더링되어 클라이언트로 전송되는 컴포넌트로, 데이 터 보안과 성능 최적화에 유리합니다.\n\n41. 클라이언트 컴포넌트 (Client Components)\n- 브라우저에서 실행되며 사용자와의 상호 작용 (클릭 등) 을 처리 하는 컴포넌트입니다.\n\n42. 라우트 (Route)\n- 웹사이트의 주소 (URL) 경로를 의미하며, 사용자가 특정 주소로 접속했을 때 어떤 페이지를 보여 줄지 결정합니다.\n\n43. 미들웨어 (Middleware)\n- 요청이 완료되기 전에 실행되는 코드로, 주로 로그인 여부 확인 이나 리다이렉트 처리에 사용됩니다.\n\n44. 오픈그래프 (Open Graph)\n- 링크를 공유했을 때 미리보기 이미지, 제목, 설명 등이 표시되도 록 하는 메타 데이터 표준입니다.\n\n45. SEO (Search Engine Optimization)\n- 검색 엔진 최적화로, 구글이나 네이버 검색 결과 상단에 내 사이 트가 나오도록 구조를 개선하는 작업입니다.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n4. 백엔드 & 데이터베이스 (46 ~ 58)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n46. 수파베이스 (Supabase)\n- 오픈 소스 백엔드 서비스 (BaaS) 로, 데이터베이스, 인증, 스토리 지 등을 손쉽게 구축할 수 있게 해 줍니다.\n\n47. SQL (Structured Query Language)\n- 데이터베이스에 데이터를 저장, 수정, 삭제, 조회하기 위해 사용 하는 표준 언어입니다.\n\n48. 테이블 (Table)\n- 데이터를 행 (Row) 과 열 (Column) 로 구성된 표 형태로 저장하는 구조입니다.\n\n49. 기본키 (Primary Key)\n- 테이블 내에서 각 데이터를 유일하게 식별할 수 있는 고유한 값 (ID) 입니다.\n\n50. 외래키 (Foreign Key)\n- 다른 테이블의 데이터를 참조하기 위해 사용하는 키입니다.\n\n51. RLS (Row Level Security)\n- 데이터베이스의 각 행 (Row) 마다 접근 권한을 다르게 설정하여 보안을 강화하는 기능입니다.\n\n52. 마이그레이션 (Migration)\n- 데이터베이스의 구조 (스키마) 를 변경하거나 관리하는 작업 또는 그 파일을 의미합니다.\n\n53. 시드 데이터 (Seed Data)\n- 개발 초기나 테스트를 위해 데이터베이스에 미리 넣어 두는 더미 데이터입니다.\n\n54. 벡터 데이터베이스 (Vector Database)\n- 텍스트 등의 의미를 담은 숫자 벡터를 저장하고 검색하는 데 최 적화된 데이터베이스입니다.\n\n55. 임베딩 (Embedding)\n- 사람이 쓰는 언어를 AI 가 이해하고 비교할 수 있도록 숫자 벡터 로 변환하는 과정입니다.\n\n56. 스토리지 (Storage)\n- 이미지, 동영상 등 대용량 파일을 저장하는 클라우드 저장소입니 다.\n\n57. 버킷 (Bucket)\n- 스토리지 내에서 파일을 담는 최상위 컨테이너 (폴더와 유사) 입 니다.\n\n58. CRUD (Create, Read, Update, Delete)\n- 데이터 처리의 기본 기능인 생성 (Create), 읽기 (Read), 수정 (Update), 삭제 (Delete) 를 통칭합니다.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n5. 프롬프팅 & 프로토콜 (59 ~ 65)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n59. 프롬프팅 (Prompting)\n- AI 에게 원하는 결과를 얻기 위해 지시어나 질문을 입력하는 행위 입니다.\n\n60. TCREI 프레임워크 (Task, Context, Reference, Evaluate, Iterate)\n- Task(작업), Context(배경), Reference(참조), Evaluate(평가), Iterate(반복) 의 5 단계로 구성된 효과적인 프롬프팅 기법입니다.\n\n61. 페르소나 (Persona)\n- AI 에게 ' 너는 시니어 개발자야 ' 와 같이 특정 역할을 부여하여 답 변의 품질을 높이는 기법입니다.\n\n62. 퓨샷 프롬프팅 (Few-Shot Prompting)\n- AI 에게 몇 가지 예시를 함께 제공하여 원하는 출력 형식을 유도 하는 방법입니다.\n\n63. 시스템 프롬프트 (System Prompt)\n- AI 의 전반적인 행동 지침이나 성격을 정의하는 최상위 명령어입 니다.\n\n64. 생각하는 모델 (Thinking Model)\n- 답변을 내기 전에 내부적으로 추론 과정을 거쳐 더 논리적이고 정확한 답을 내는 AI 모델입니다.\n\n65. MCP (Model Context Protocol)\n- AI 모델이 외부 데이터나 도구 (DB, GitHub 등) 와 안전하게 연결 되기 위한 표준 프로토콜입니다.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n6. 네트워크 & 배포 운영 (66 ~ 73)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n66. API (Application Programming Interface)\n- 서로 다른 소프트웨어끼리 소통하기 위한 연결 고리입니다.\n\n67. REST API (Representational State Transfer API)\n- 웹에서 데이터를 주고받기 위해 널리 쓰이는 표준 아키텍처 스타 일입니다.\n\n68. HTTP 상태 코드 (HTTP Status Code)\n- 웹 요청의 성공 (200), 실패 (404, 500) 등의 결과를 알려 주는 3 자 리 숫자입니다.\n\n69. JSON (JavaScript Object Notation)\n- 데이터를 저장하거나 전송할 때 많이 쓰는 경량의 텍스트 데이터 형식입니다.\n\n70. 크론잡 (CronJob)\n- 특정 시간이나 주기마다 명령어가 자동으로 실행되도록 예약하 는 기능입니다.\n\n71. 배포 (Deploy)\n- 개발한 프로그램을 실제 사용자들이 쓸 수 있도록 서버에 올리는 작업입니다.\n\n72. 버셀 (Vercel)\n- Next.js 로 만든 웹사이트를 쉽고 빠르게 배포할 수 있게 해 주는 클라우드 플랫폼입니다.\n\n73. 환경 변수 (Environment Variable)\n- API 키나 비밀번호처럼 코드에 직접 적으면 위험한 정보를 별도 로 관리하는 변수입니다.\n",
-      "views": 256,
-      "tags": [
-            "바이브코딩",
-            "AI용어",
-            "업무가이드",
-            "IT용어사전"
-      ]
-},
-      {
-        id: 'post-101',
-        title: '2026년 하반기 병원부 미결 정산 마감 일정 및 원장 대사 안내',
-        category: '공지',
-        author: '이창환 (총괄 매니저)',
-        date: '2026-11-10',
-        summary: '하반기 제약 공급망 정산 원장 대사(reconcile_ui) 및 미결 금액 확정을 위한 마감 기한과 체크리스트를 안내합니다.',
-        content: "1. 정산 마감 일정 안내\n병원부 미결 통합 관리 시스템을 통한 하반기 정산 마감이 진행됩니다.\n- 1차 원장 업로드 마감: 2026년 11월 25일 18:00\n- 차액 소명 및 최종 확정: 2026년 11월 30일 15:00\n\n2. 핵심 체크리스트\n- 좌측 메뉴 [병원부 미결 통합 원장]에서 당월 엑셀 파일을 업로드하여 자동 대사를 수행하세요.\n- 미결 잔액이 남은 거래선은 [월별 미결 차액 소명 관리] 메뉴에서 사유를 기입해 주시기 바랍니다.",
-        views: 158,
-        tags: ['정산마감', '병원부', '공지사항']
-      },
-      {
-        id: 'post-102',
-        title: '[내부관리 안내] 임직원 업무 이메일 계정 발급 및 비밀번호 관리 규정',
-        category: '업무가이드',
-        author: '내부관리자',
-        date: '2026-11-12',
-        summary: '신규 입사자 업무 이메일/비밀번호 부여 및 메뉴 추가 관리는 내부관리자(admin@hospital.com) 계정의 [⚙️ 내부관리] 테마에서 수행합니다.',
-        content: "보안 및 내부관리 정책 안내\n\n1. 업무 이메일 및 비밀번호 관리\n- 신규 계정 생성, 부서 배정, 권한(Admin / Manager / Staff) 변경 및 비밀번호 초기화는 [⚙️ 내부관리 > 업무 계정 및 비밀번호 관리] 메뉴에서 통합 운영됩니다.\n- 일반 사용자는 우측 상단의 [비밀번호 변경] 버튼을 통해 본인의 비밀번호를 언제든 변경할 수 있습니다.\n\n2. 포털 메뉴 및 테마 그룹 관리\n- 상단 헤더의 불필요한 설정 버튼을 모두 제거하고, 내부관리자 전용 메뉴인 [⚙️ 내부관리 > 포털 메뉴 및 테마 그룹 관리]로 일원화하였습니다.",
-        views: 112,
-        tags: ['계정관리', '비밀번호', '내부관리']
-      },
-      {
-        id: 'post-103',
-        title: '적금 수익 시뮬레이터 v2.0 통합 및 자금 운용 팁',
-        category: '정산리포트',
-        author: '이창환 (총괄 매니저)',
-        date: '2026-11-13',
-        summary: '단리/복리 및 비과세 조건별 만기 수령액을 계산하는 시뮬레이터가 [금융/자산 도구] 테마에 통합되었습니다.',
-        content: "금융/자산 도구 테마의 [적금/수익 정밀 시뮬레이터]를 통해 월 적립액, 금리, 과세 유형별 수익을 시뮬레이션할 수 있습니다.\n- 새 탭에서 열기 및 전체화면 모드를 모두 지원합니다.",
-        views: 84,
-        tags: ['금융도구', '시뮬레이터', '자금운용']
-      }
-    ];
-
-    // -------------------------------------------------------------------------
-    // 2. STATE & SUPABASE INITIALIZATION
-    // -------------------------------------------------------------------------
-    let supabaseClient = null;
-    let supabaseConnected = false;
-    let currentUser = null;
-    let portalUsers = [];
-    let menuGroups = [];
-    let blogPosts = [];
-    let activeThemeId = 'finance';
-    let activeViewId = 'finance-dash';
-    let blogFilterCategory = '전체';
-
-    async function initApp() {
-      // 1. Initialize Supabase with provided credentials
-      const sbUrl = localStorage.getItem('clp_sb_url') || DEFAULT_SUPABASE_URL;
-      const sbKey = localStorage.getItem('clp_sb_key') || DEFAULT_SUPABASE_KEY;
-
-      if (sbUrl && sbKey && window.supabase) {
-        try {
-          supabaseClient = window.supabase.createClient(sbUrl, sbKey);
-          supabaseConnected = true;
-        } catch (e) {
-          console.warn('Supabase client init warning:', e);
-          supabaseConnected = false;
-        }
-      }
-
-      // 2. Load Users (LocalStorage + Supabase sync)
-      const savedUsers = localStorage.getItem('clp_portal_users_v3');
-      if (savedUsers) {
-        try {
-          portalUsers = JSON.parse(savedUsers);
-        } catch {
-          portalUsers = JSON.parse(JSON.stringify(INITIAL_USERS));
-        }
-      } else {
-        portalUsers = JSON.parse(JSON.stringify(INITIAL_USERS));
-        localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
-      }
-
-      // Try syncing users from Supabase table `portal_users` if exists
-      if (supabaseClient) {
-        try {
-          const { data, error } = await supabaseClient.from('portal_users').select('*').order('created_at', { ascending: true });
-          if (!error && data && data.length > 0) {
-            portalUsers = data.map(u => ({
-              id: u.id,
-              email: u.email,
-              password: u.password_hash || 'password123',
-              name: u.full_name,
-              department: u.department || '병원사업부',
-              role: u.role || 'staff',
-              status: u.status || 'active',
-              createdAt: (u.created_at || '').substring(0, 10)
-            }));
-            localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
-          }
-        } catch (e) {}
-      }
-
-      // Version Cache Invalidation
-      const APP_BUILD_ID = 'v2.9.15';
-      const storedBuild = localStorage.getItem('clp_build_id');
-      if (storedBuild !== APP_BUILD_ID) {
-        localStorage.removeItem('clp_menu_groups_v3');
-        localStorage.removeItem('clp_blog_posts_v3');
-        localStorage.setItem('clp_build_id', APP_BUILD_ID);
-      }
-
-      function normalizeGroup(g) {
-        return {
-          themeId: g.themeId || g.id,
-          themeTitle: g.themeTitle || g.title || '업무 메뉴',
-          themeDesc: g.themeDesc || g.description || '',
-          adminOnly: Boolean(g.adminOnly),
-          dashboard: g.dashboard || { id: 'dash', title: '대시보드', type: 'builtin-template' },
-          subMenus: Array.isArray(g.subMenus) ? g.subMenus : []
-        };
-      }
-
-      // 3. Load Menu Groups from portal-spec.json (Single Source of Truth) or LocalStorage
-      menuGroups = DEFAULT_MENU_GROUPS.map(normalizeGroup);
-      try {
-        const specResp = await fetch('portal-spec.json?v=' + Date.now());
-        if (specResp.ok) {
-          const specData = await specResp.json();
-          if (specData && specData.themes && Array.isArray(specData.themes)) {
-            menuGroups = specData.themes.map(normalizeGroup);
-            localStorage.setItem('clp_menu_groups_v3', JSON.stringify(menuGroups));
-          }
-        }
-      } catch (e) {
-        console.warn('portal-spec.json load fallback:', e);
-      }
-
-      // 4. Load Blog Posts & Sync with Supabase
-      const savedPosts = localStorage.getItem('clp_blog_posts_v3');
-      if (savedPosts) {
-        try {
-          blogPosts = JSON.parse(savedPosts);
-        } catch {
-          blogPosts = JSON.parse(JSON.stringify(DEFAULT_BLOG_POSTS));
-        }
-      } else {
-        blogPosts = JSON.parse(JSON.stringify(DEFAULT_BLOG_POSTS));
-        localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
-      }
-
-      await syncBlogPostsFromSupabase(true);
-
-      // 5. Restore Session
-      const savedSession = localStorage.getItem('clp_session_user_v3');
-      if (savedSession) {
-        try {
-          currentUser = JSON.parse(savedSession);
-          enterPortal();
-        } catch {
-          showLoginScreen();
-        }
-      } else {
-        showLoginScreen();
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 3. LOGIN & AUTHENTICATION (이메일 / 비밀번호 검증)
-    // -------------------------------------------------------------------------
-    async function handleFormLogin() {
-      const email = document.getElementById('input-email').value.trim().toLowerCase();
-      const pw = document.getElementById('input-password').value;
-      const errBox = document.getElementById('login-error');
-      errBox.classList.add('hidden');
-
-      // 1. Check in managed portalUsers list
-      let found = portalUsers.find(u => u.email.toLowerCase() === email);
-
-      // 2. If not found or password mismatch locally, sync latest from Supabase portal_users / Auth (cross-device support)
-      if (supabaseClient && (!found || found.password !== pw)) {
-        try {
-          const { data: sbRow, error: sbErr } = await supabaseClient
-            .from('portal_users')
-            .select('*')
-            .eq('email', email)
-            .maybeSingle();
-
-          if (!sbErr && sbRow) {
-            const syncedUser = {
-              id: sbRow.id,
-              email: sbRow.email,
-              password: sbRow.password_hash || 'password123',
-              name: sbRow.full_name,
-              department: sbRow.department || '병원사업부',
-              role: sbRow.role || 'staff',
-              status: sbRow.status || 'active',
-              createdAt: (sbRow.created_at || '').substring(0, 10)
-            };
-            const idx = portalUsers.findIndex(u => u.email.toLowerCase() === email);
-            if (idx >= 0) portalUsers[idx] = syncedUser;
-            else portalUsers.push(syncedUser);
-            localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
-            found = syncedUser;
-          }
-        } catch (e) {}
-      }
-
-      if (found) {
-        if (found.status === 'locked') {
-          errBox.innerText = '잠금(비활성화) 처리된 계정입니다. 내부관리자에게 문의하세요.';
-          errBox.classList.remove('hidden');
-          return;
-        }
-
-        if (found.password !== pw) {
-          // Try Supabase Auth in case password was updated directly via Supabase Auth
-          if (supabaseClient) {
-            try {
-              const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pw });
-              if (!error && data?.user) {
-                found.password = pw;
-                localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
-                loginSuccess(found);
-                return;
-              }
-            } catch (e) {}
-          }
-          errBox.innerText = '비밀번호가 일치하지 않습니다. 다시 확인해 주세요.';
-          errBox.classList.remove('hidden');
-          return;
-        }
-
-        // Also attempt Supabase Auth sign-in silently if configured
-        if (supabaseClient) {
-          try {
-            await supabaseClient.auth.signInWithPassword({ email, password: pw });
-          } catch (e) {}
-        }
-
-        loginSuccess(found);
-        return;
-      }
-
-      // 3. If not in local list, check Supabase Auth directly
-      if (supabaseClient) {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pw });
-        if (!error && data?.user) {
-          const sbUser = {
-            id: data.user.id,
-            email: data.user.email,
-            password: pw,
-            name: data.user.user_metadata?.full_name || email.split('@')[0],
-            department: data.user.user_metadata?.department || '병원사업부',
-            role: data.user.user_metadata?.role || 'staff',
-            status: 'active',
-            createdAt: new Date().toISOString().substring(0, 10)
-          };
-          portalUsers.push(sbUser);
-          localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
-          loginSuccess(sbUser);
-          return;
-        }
-      }
-
-      errBox.innerText = '등록되지 않은 업무 이메일이거나 비밀번호가 올바르지 않습니다.';
-      errBox.classList.remove('hidden');
-    }
-
-    function loginSuccess(userObj) {
-      const rememberCheck = document.getElementById('remember-email');
-      if (rememberCheck && rememberCheck.checked) {
-        localStorage.setItem('clp_remembered_email', userObj.email);
-      } else {
-        localStorage.removeItem('clp_remembered_email');
-      }
-
-      currentUser = {
-        id: userObj.id,
-        email: userObj.email,
-        name: userObj.name,
-        dept: userObj.department,
-        role: userObj.role
-      };
-      localStorage.setItem('clp_session_user_v3', JSON.stringify(currentUser));
-      activeThemeId = 'finance';
-      enterPortal();
-    }
-
-    function logoutPortal() {
-      if (supabaseClient) {
-        try { supabaseClient.auth.signOut(); } catch (e) {}
-      }
-      localStorage.removeItem('clp_session_user_v3');
-      currentUser = null;
-      showLoginScreen();
-    }
-
-    function showLoginScreen() {
-      document.getElementById('screen-portal').classList.add('hidden');
-      document.getElementById('screen-login').classList.remove('hidden');
-      const emailInput = document.getElementById('input-email');
-      const pwInput = document.getElementById('input-password');
-      const rememberCheck = document.getElementById('remember-email');
-      const remembered = localStorage.getItem('clp_remembered_email');
-
-      if (emailInput) emailInput.value = remembered || '';
-      if (rememberCheck) rememberCheck.checked = Boolean(remembered);
-      if (pwInput) pwInput.value = '';
-      const errBox = document.getElementById('login-error');
-      if (errBox) errBox.classList.add('hidden');
-    }
-
-    function enterPortal() {
-      document.getElementById('screen-login').classList.add('hidden');
-      document.getElementById('screen-portal').classList.remove('hidden');
-
-      document.getElementById('gnb-user-name').innerText = currentUser.name;
-      document.getElementById('gnb-user-dept').innerText = currentUser.dept;
-      document.getElementById('gnb-user-avatar').innerText = currentUser.name.charAt(0);
-      document.getElementById('lnb-user-email').innerText = currentUser.email;
-
-      const roleBadge = document.getElementById('gnb-user-role-badge');
-      if (currentUser.role === 'admin') {
-        roleBadge.innerText = '내부관리자';
-        roleBadge.className = 'text-[10px] px-1.5 py-0.2 rounded bg-[#eff6ff] text-[#2563eb] font-bold';
-      } else if (currentUser.role === 'finance_manager') {
-        roleBadge.innerText = '총괄매니저';
-        roleBadge.className = 'text-[10px] px-1.5 py-0.2 rounded bg-[#ecfdf5] text-[#059669] font-bold';
-      } else {
-        roleBadge.innerText = '일반임직원';
-        roleBadge.className = 'text-[10px] px-1.5 py-0.2 rounded bg-white/15 text-[#dae2fd] font-semibold';
-      }
-
-      renderGNB();
-      selectTheme(activeThemeId);
-    }
-
-    // -------------------------------------------------------------------------
-    // 4. MY PASSWORD CHANGE MODAL (본인 비밀번호 변경)
-    // -------------------------------------------------------------------------
-    function openMyPasswordModal() {
-      document.getElementById('mp-email').value = `${currentUser.name} (${currentUser.email})`;
-      document.getElementById('mp-new-pw').value = '';
-      document.getElementById('mp-confirm-pw').value = '';
-      document.getElementById('modal-my-password').classList.remove('hidden');
-    }
-
-    function closeMyPasswordModal() {
-      document.getElementById('modal-my-password').classList.add('hidden');
-    }
-
-    async function handleUpdateMyPassword() {
-      const newPw = document.getElementById('mp-new-pw').value;
-      const confirmPw = document.getElementById('mp-confirm-pw').value;
-
-      if (newPw !== confirmPw) {
-        alert('새 비밀번호와 확인 비밀번호가 일치하지 않습니다.');
-        return;
-      }
-
-      const idx = portalUsers.findIndex(u => u.email.toLowerCase() === currentUser.email.toLowerCase());
-      if (idx > -1) {
-        portalUsers[idx].password = newPw;
-        localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
-      }
-
-      if (supabaseClient) {
-        try {
-          await supabaseClient.auth.updateUser({ password: newPw });
-          await supabaseClient.from('portal_users').update({ password_hash: newPw }).eq('email', currentUser.email);
-        } catch (e) {}
-      }
-
-      closeMyPasswordModal();
-      alert('비밀번호가 성공적으로 변경되었습니다. 다음 로그인부터 새 비밀번호가 적용됩니다.');
-    }
-
-    // -------------------------------------------------------------------------
-    // 5. NAVIGATION (GNB & LNB) RENDERING — 내부관리 계정 분리 적용
-    // -------------------------------------------------------------------------
-    function getVisibleMenuGroups() {
-      return menuGroups.filter(g => !g.adminOnly || currentUser.role === 'admin');
-    }
-
-    function renderGNB() {
-      const nav = document.getElementById('gnb-theme-tabs');
-      nav.innerHTML = '';
-
-      const visibleGroups = getVisibleMenuGroups();
-      visibleGroups.forEach(group => {
-        const tId = group.themeId || group.id;
-        const tTitle = group.themeTitle || group.title || '업무 메뉴';
-        const isActive = tId === activeThemeId;
-        const isInternalAdmin = tId === 'internal-admin';
-        const btn = document.createElement('button');
-        btn.className = `px-3.5 py-1.5 rounded-md text-xs font-bold whitespace-nowrap transition cursor-pointer ${
-          isActive
-            ? isInternalAdmin
-              ? 'bg-[#dc2626] text-white shadow-inner border border-red-400'
-              : 'bg-[#1e3a8a] text-white shadow-inner border border-[#3b82f6]/50'
-            : isInternalAdmin
-            ? 'text-amber-300 hover:bg-white/10 hover:text-amber-200 border border-amber-400/30'
-            : 'text-white/80 hover:bg-white/10 hover:text-white'
-        }`;
-        btn.innerText = tTitle;
-        btn.onclick = () => selectTheme(tId);
-        nav.appendChild(btn);
-      });
-    }
-
-    function selectTheme(themeId) {
-      const visibleGroups = getVisibleMenuGroups();
-      const group = visibleGroups.find(g => (g.themeId || g.id) === themeId) || visibleGroups[0];
-      activeThemeId = group.themeId || group.id;
-      renderGNB();
-      renderLNB();
-      openView(group.dashboard.id);
-    }
-
-    function renderLNB() {
-      const visibleGroups = getVisibleMenuGroups();
-      const group = visibleGroups.find(g => (g.themeId || g.id) === activeThemeId) || visibleGroups[0];
-      document.getElementById('lnb-theme-title').innerText = group.themeTitle || group.title || '업무 메뉴';
-      document.getElementById('lnb-theme-desc').innerText = group.themeDesc || group.description || '';
-      document.getElementById('lnb-menu-count').innerText = `${(group.subMenus || []).length + 1}개 메뉴`;
-
-      // Dashboard Button
-      const dashSlot = document.getElementById('lnb-dashboard-slot');
-      const isDashActive = activeViewId === group.dashboard.id;
-      dashSlot.innerHTML = `
-        <button onclick="openView('${group.dashboard.id}');"
-          class="w-full text-left px-3 py-2 rounded-md text-xs font-bold flex items-center justify-between transition cursor-pointer ${
-            isDashActive ? 'bg-[#00236f] text-white shadow-sm' : 'text-[#131b2e] hover:bg-[#eaedff]'
-          }">
-          <span class="truncate">📊 ${group.dashboard.title}</span>
-        </button>
-      `;
-
-      // Submenus List
-      const subSlot = document.getElementById('lnb-submenus-slot');
-      subSlot.innerHTML = '';
-
-      group.subMenus.forEach(sub => {
-        const isLocked = sub.role === 'admin' && currentUser.role !== 'admin';
-        const isActive = activeViewId === sub.id;
-
-        const btn = document.createElement('button');
-        btn.className = `w-full text-left px-3 py-2 rounded-md text-xs font-medium flex items-center justify-between transition ${
-          isActive
-            ? 'bg-[#00236f] text-white font-bold shadow-sm'
-            : isLocked
-            ? 'bg-slate-50 text-slate-400 cursor-not-allowed border border-dashed border-slate-200'
-            : 'text-[#334155] hover:bg-[#eaedff] hover:text-[#00236f] cursor-pointer'
-        }`;
-
-        if (isLocked) {
-          btn.innerHTML = `
-            <span class="truncate">🔒 ${sub.title}</span>
-            <span class="text-[10px] px-1.5 py-0.2 rounded bg-red-50 text-red-600 font-bold">Admin</span>
-          `;
-          btn.onclick = () => alert('이 메뉴는 내부관리자(Admin) 전용입니다.');
-        } else {
-          const badgeClasses = isActive
-            ? 'bg-white/20 text-white'
-            : sub.badgeColor === 'green'
-            ? 'bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0]'
-            : sub.badgeColor === 'red'
-            ? 'bg-[#fef2f2] text-[#dc2626] border border-[#fecaca]'
-            : sub.badgeColor === 'amber'
-            ? 'bg-[#fffbeb] text-[#d97706] border border-[#fde68a]'
-            : 'bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]';
-
-          btn.innerHTML = `
-            <span class="truncate">• ${sub.title}</span>
-            ${sub.badge ? `<span class="text-[10px] px-1.5 py-0.2 rounded font-bold shrink-0 ml-1 ${badgeClasses}">${sub.badge}</span>` : ''}
-          `;
-          btn.onclick = () => openView(sub.id);
-        }
-        subSlot.appendChild(btn);
-      });
-    }
-
-    function openView(viewId) {
-      activeViewId = viewId;
-      renderLNB();
-      renderViewport(viewId);
-    }
-
-    // -------------------------------------------------------------------------
-    // 6. MAIN VIEWPORT RENDERING (ALL DASHBOARDS & INTERNAL ADMIN VIEWS)
-    // -------------------------------------------------------------------------
-    function renderViewport(viewId) {
-      const visibleGroups = getVisibleMenuGroups();
-      const group = visibleGroups.find(g => (g.themeId || g.id) === activeThemeId) || visibleGroups[0];
-      let currentItem = group.dashboard.id === viewId
-        ? group.dashboard
-        : (group.subMenus || []).find(s => s.id === viewId) || group.dashboard;
-
-      document.getElementById('crumb-theme').innerText = group.themeTitle || group.title || '업무 메뉴';
-      document.getElementById('crumb-page').innerText = currentItem.title || '대시보드';
-
-      const actionsSlot = document.getElementById('viewport-actions');
-      const body = document.getElementById('viewport-body');
-      actionsSlot.innerHTML = '';
-
-      // A. Iframe External / Internal HTML Integration
-      if (currentItem.type === 'iframe') {
-        actionsSlot.innerHTML = `
-          <a href="${currentItem.url}" target="_blank" rel="noopener"
-            class="px-3 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow flex items-center gap-1.5 transition">
-            <span>↗ 독립 전체화면(새 탭)으로 열기</span>
-          </a>
-        `;
-        body.innerHTML = `
-          <div class="flex-1 bg-white rounded-xl border border-[#cbd5e1] shadow-sm overflow-hidden flex flex-col min-h-[760px] fade-in">
-            <iframe src="${currentItem.url}" class="w-full flex-1 border-0 min-h-[760px]"></iframe>
-          </div>
-        `;
-        return;
-      }
-
-      // B. [내부관리 1] 업무 계정 및 비밀번호 관리 (Account & Password Management)
-      if (currentItem.type === 'builtin-admin-users') {
-        renderAdminUsersView(body, actionsSlot);
-        return;
-      }
-
-      // C. [내부관리 2] 포털 메뉴 및 테마 그룹 관리 (Menu & Theme Group Management)
-      if (currentItem.type === 'builtin-admin-menus') {
-        renderAdminMenusView(body, actionsSlot);
-        return;
-      }
-
-      // D. [내부관리 3] Supabase 클라우드 DB 연동 관리
-      if (currentItem.type === 'builtin-admin-supabase') {
-        renderAdminSupabaseView(body, actionsSlot);
-        return;
-      }
-
-      // E. Built-in Finance Dashboard
-      if (currentItem.type === 'builtin-finance-dash') {
-        actionsSlot.innerHTML = `
-          <button onclick="openView('reconcile-ui');" class="px-3.5 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
-            📑 병원부 미결 원장 대사 바로가기 →
+        <!-- Action Buttons -->
+        <div class="action-grid">
+          <button class="btn btn-primary" id="saveContactBtn">
+            <i data-lucide="user-plus"></i>
+            <span>연락처 저장</span>
           </button>
-        `;
-        body.innerHTML = `
-          <div class="space-y-6 fade-in">
-            <!-- Hero Welcome -->
-            <div class="bg-gradient-to-r from-[#00236f] via-[#1e3a8a] to-[#2563eb] rounded-xl text-white p-6 shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div>
-                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-white/15 text-[#dae2fd]">Clinical Ledger Precision v2.6</span>
-                <h1 class="text-xl sm:text-2xl font-bold font-headline mt-2">병원부 미결 정산 총괄 대시보드</h1>
-                <p class="text-xs text-[#dae2fd] mt-1">기준월 2026년 11월 | 주요 수탁 병원 예정금액 대비 실집행 원장 대사 및 미결 현황</p>
-              </div>
-              <div class="flex gap-2">
-                <button onclick="openView('reconcile-ui');" class="px-4 py-2 bg-white text-[#00236f] text-xs font-bold rounded-md shadow hover:bg-[#eaedff] transition cursor-pointer">
-                  원장 대사 엔진 실행
-                </button>
-              </div>
-            </div>
+          <button class="btn btn-secondary" id="shareCardBtn">
+            <i data-lucide="share-2"></i>
+            <span>명함 공유</span>
+          </button>
+        </div>
+      </div>
 
-            <!-- KPI Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div class="bg-white p-5 rounded-lg border border-[#cbd5e1] border-l-4 border-l-[#00236f] shadow-sm">
-                <div class="text-xs text-[#757682] font-semibold">하반기 총 정산 예정금</div>
-                <div class="text-xl font-bold num-font text-[#00236f] mt-1.5">₩ 1,482,900,000</div>
-                <div class="text-[11px] text-[#059669] font-semibold mt-1">↑ 전월 대비 8.4% 증가</div>
-              </div>
-              <div class="bg-white p-5 rounded-lg border border-[#cbd5e1] border-l-4 border-l-[#059669] shadow-sm">
-                <div class="text-xs text-[#757682] font-semibold">집행 확정액 (완결)</div>
-                <div class="text-xl font-bold num-font text-[#059669] mt-1.5">₩ 1,439,700,000</div>
-                <div class="text-[11px] text-[#757682] mt-1">정산 완결률 97.1% (324건)</div>
-              </div>
-              <div class="bg-white p-5 rounded-lg border border-[#cbd5e1] border-l-4 border-l-[#dc2626] shadow-sm">
-                <div class="text-xs text-[#757682] font-semibold">미결 잔액 (대사 대기)</div>
-                <div class="text-xl font-bold num-font text-[#dc2626] mt-1.5">₩ 43,200,000</div>
-                <div class="text-[11px] text-[#dc2626] font-semibold mt-1">2개 주요 병원 소명 필요</div>
-              </div>
-              <div class="bg-white p-5 rounded-lg border border-[#cbd5e1] border-l-4 border-l-[#2563eb] shadow-sm">
-                <div class="text-xs text-[#757682] font-semibold">사내 지식 블로그 / 공지</div>
-                <div class="text-xl font-bold num-font text-[#1e3a8a] mt-1.5">${blogPosts.length} 건</div>
-                <div class="text-[11px] text-[#2563eb] font-semibold mt-1 cursor-pointer hover:underline" onclick="selectTheme('knowledge');">공지사항 바로가기 →</div>
-              </div>
-            </div>
-
-            <!-- High Density Ledger Table -->
-            <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-sm overflow-hidden">
-              <div class="p-4 bg-[#f2f3ff] border-b border-[#cbd5e1] flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <h2 class="text-sm font-bold font-headline text-[#00236f]">주요 병원별 11월 정산 대사 요약 원장</h2>
-                  <p class="text-[11px] text-[#757682]">Stitch Clinical Ledger Precision 고밀도 수치 정렬 적용</p>
-                </div>
-                <button onclick="openView('reconcile-ui');" class="text-xs font-bold text-[#1e3a8a] hover:underline">전체 원장 대사 열기 →</button>
-              </div>
-              <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr class="bg-slate-50 border-b border-[#cbd5e1] text-[#1e3a8a] font-bold uppercase text-[11px]">
-                      <th class="py-2.5 px-4">기관코드</th>
-                      <th class="py-2.5 px-4">병원명</th>
-                      <th class="py-2.5 px-4 text-right">예정금액</th>
-                      <th class="py-2.5 px-4 text-right">집행금액</th>
-                      <th class="py-2.5 px-4 text-right">미결차액</th>
-                      <th class="py-2.5 px-4 text-center">정산상태</th>
-                      <th class="py-2.5 px-4 text-center">원장작업</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-[#e2e8f0]">
-                    <tr class="hover:bg-[#faf8ff] h-9">
-                      <td class="px-4 num-font font-bold text-[#1e3a8a]">H01</td>
-                      <td class="px-4 font-bold">서울대학교병원</td>
-                      <td class="px-4 text-right num-font">₩ 320,000,000</td>
-                      <td class="px-4 text-right num-font font-bold text-[#00236f]">₩ 320,000,000</td>
-                      <td class="px-4 text-right num-font font-bold text-[#059669]">₩ 0</td>
-                      <td class="px-4 text-center"><span class="px-2 py-0.5 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] text-[10px] font-bold">완결</span></td>
-                      <td class="px-4 text-center"><button onclick="openView('reconcile-ui');" class="text-[#1e3a8a] font-bold hover:underline">상세</button></td>
-                    </tr>
-                    <tr class="hover:bg-[#faf8ff] h-9">
-                      <td class="px-4 num-font font-bold text-[#1e3a8a]">H02</td>
-                      <td class="px-4 font-bold">세브란스병원</td>
-                      <td class="px-4 text-right num-font">₩ 285,000,000</td>
-                      <td class="px-4 text-right num-font font-bold text-[#00236f]">₩ 260,000,000</td>
-                      <td class="px-4 text-right num-font font-bold text-[#dc2626]">₩ 25,000,000</td>
-                      <td class="px-4 text-center"><span class="px-2 py-0.5 rounded bg-[#fef2f2] text-[#dc2626] border border-[#fecaca] text-[10px] font-bold">미결잔액</span></td>
-                      <td class="px-4 text-center"><button onclick="openView('reconcile-ui');" class="text-[#1e3a8a] font-bold hover:underline">대사처리</button></td>
-                    </tr>
-                    <tr class="hover:bg-[#faf8ff] h-9">
-                      <td class="px-4 num-font font-bold text-[#1e3a8a]">H03</td>
-                      <td class="px-4 font-bold">서울아산병원</td>
-                      <td class="px-4 text-right num-font">₩ 410,000,000</td>
-                      <td class="px-4 text-right num-font font-bold text-[#00236f]">₩ 410,000,000</td>
-                      <td class="px-4 text-right num-font font-bold text-[#059669]">₩ 0</td>
-                      <td class="px-4 text-center"><span class="px-2 py-0.5 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] text-[10px] font-bold">완결</span></td>
-                      <td class="px-4 text-center"><button onclick="openView('reconcile-ui');" class="text-[#1e3a8a] font-bold hover:underline">상세</button></td>
-                    </tr>
-                    <tr class="hover:bg-[#faf8ff] h-9">
-                      <td class="px-4 num-font font-bold text-[#1e3a8a]">H04</td>
-                      <td class="px-4 font-bold">삼성서울병원</td>
-                      <td class="px-4 text-right num-font">₩ 345,000,000</td>
-                      <td class="px-4 text-right num-font font-bold text-[#00236f]">₩ 326,800,000</td>
-                      <td class="px-4 text-right num-font font-bold text-[#d97706]">₩ 18,200,000</td>
-                      <td class="px-4 text-center"><span class="px-2 py-0.5 rounded bg-[#fffbeb] text-[#d97706] border border-[#fde68a] text-[10px] font-bold">수정됨</span></td>
-                      <td class="px-4 text-center"><button onclick="openView('variance-audit');" class="text-[#1e3a8a] font-bold hover:underline">차액소명</button></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      // F. Built-in Variance Submenu
-      if (currentItem.type === 'builtin-variance') {
-        body.innerHTML = `
-          <div class="space-y-5 fade-in">
-            <div class="bg-white rounded-xl border border-[#cbd5e1] p-5 shadow-sm flex justify-between items-center">
-              <div>
-                <span class="text-[11px] font-bold text-[#d97706]">DISCREPANCY & VARIANCE AUDIT</span>
-                <h1 class="text-lg font-bold font-headline text-[#00236f]">월별 미결 차액 소명 관리</h1>
-                <p class="text-xs text-[#444651] mt-0.5">약정 할인율, 반품 검수 지연으로 발생한 병원별 미결 차액 추적</p>
-              </div>
-              <button onclick="openView('reconcile-ui');" class="px-3 py-1.5 bg-[#00236f] text-white text-xs font-bold rounded">원장 대사로 이동</button>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="bg-white p-5 rounded-xl border border-[#fecaca] bg-[#fef2f2]/40 space-y-2">
-                <div class="flex justify-between items-center">
-                  <span class="font-bold text-sm text-[#00236f]">세브란스병원 (H02)</span>
-                  <span class="px-2 py-0.5 rounded bg-[#fef2f2] text-[#dc2626] text-[10px] font-bold border border-[#fecaca]">소명 진행 중</span>
-                </div>
-                <div class="text-xl font-bold num-font text-[#dc2626]">₩ 25,000,000 차액</div>
-                <p class="text-xs text-[#444651]">사유: 10월 납품분 단가 변경 소급 적용 승인 대기 중 (담당자: 이창환)</p>
-              </div>
-              <div class="bg-white p-5 rounded-xl border border-[#fde68a] bg-[#fffbeb]/40 space-y-2">
-                <div class="flex justify-between items-center">
-                  <span class="font-bold text-sm text-[#00236f]">삼성서울병원 (H04)</span>
-                  <span class="px-2 py-0.5 rounded bg-[#fffbeb] text-[#d97706] text-[10px] font-bold border border-[#fde68a]">검토 완료</span>
-                </div>
-                <div class="text-xl font-bold num-font text-[#d97706]">₩ 18,200,000 차액</div>
-                <p class="text-xs text-[#444651]">사유: 분기 약정 할인율 3.2% 사후 정산 차감분 반영 예정</p>
-              </div>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      // G. Built-in Tools Dashboard
-      if (currentItem.type === 'builtin-tools-dash') {
-        body.innerHTML = `
-          <div class="space-y-5 fade-in">
-            <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <span class="text-[11px] font-bold text-[#059669]">FINANCIAL SIMULATION SUITE</span>
-                <h1 class="text-xl font-bold font-headline text-[#00236f]">금융 시뮬레이션 및 자산 운용 도구</h1>
-                <p class="text-xs text-[#444651] mt-1">적금 만기 수령액(단리/복리), 비과세 한도 계산 및 여유 자금 운용 시뮬레이터</p>
-              </div>
-              <button onclick="openView('savings-sim');" class="px-4 py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
-                🧮 적금 시뮬레이터 바로 열기 →
+      <!-- CARD BACK -->
+      <div class="card-face card-back">
+        <div class="back-content">
+          <div>
+            <!-- Header for back -->
+            <div class="card-header">
+              <h2 class="back-title">
+                <i data-lucide="briefcase" style="width: 20px; height: 20px; color: var(--primary-light);"></i>
+                이력 및 활동
+              </h2>
+              <button class="flip-btn-trigger" id="flipToFrontBtn" title="앞면으로 돌아가기">
+                <i data-lucide="arrow-right-left"></i>
+                <span>앞면 보기</span>
               </button>
             </div>
-            <div class="bg-white p-6 rounded-xl border border-[#cbd5e1] space-y-3">
-              <h3 class="font-bold text-sm text-[#00236f]">적금/수익 정밀 시뮬레이터 (savings-simulator.html)</h3>
-              <p class="text-xs text-[#444651] leading-relaxed">
-                월 적립금, 거치 기간, 금리 방식(단리/월복리) 및 세금 우대 조건(일반과세 15.4%, 세금우대 9.5%, 비과세 0%)을 조합하여 세후 실수령액과 월별 이자 적립 추이를 차트로 즉시 확인합니다.
-              </p>
-              <div class="pt-2">
-                <button onclick="openView('savings-sim');" class="px-4 py-2 bg-[#f2f3ff] hover:bg-[#1e3a8a] hover:text-white text-[#1e3a8a] text-xs font-bold rounded transition">
-                  시뮬레이터 실행하기
-                </button>
+
+            <!-- Career / Milestone Timeline -->
+            <div class="timeline" id="timelineList">
+              <div class="timeline-item">
+                <span class="timeline-date">2024 - PRESENT</span>
+                <span class="timeline-role">Tech Lead / AI Service Architect</span>
+                <p class="timeline-desc">차세대 웹 & 생성형 AI 솔루션 아키텍처 설계 및 프로덕트 개발 총괄</p>
+              </div>
+              <div class="timeline-item">
+                <span class="timeline-date">2021 - 2023</span>
+                <span class="timeline-role">Senior Full-Stack Developer</span>
+                <p class="timeline-desc">고성능 클라우드 웹 애플리케이션 및 디자인 시스템 구축</p>
+              </div>
+              <div class="timeline-item">
+                <span class="timeline-date">PASSION</span>
+                <span class="timeline-role">Open Source & Tech Community</span>
+                <p class="timeline-desc">오픈소스 컨트리뷰션 및 지속 가능한 개발 문화 탐구</p>
               </div>
             </div>
-          </div>
-        `;
-        return;
-      }
 
-      // H. Built-in Blog Hub
-      if (currentItem.type === 'builtin-blog') {
-        renderBlogHub(body, actionsSlot);
-        return;
-      }
-
-      // I. Generic Auto-generated Template
-      body.innerHTML = `
-        <div class="space-y-5 fade-in">
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm flex justify-between items-center">
-            <div>
-              <span class="text-[11px] font-bold text-[#1e3a8a]">CUSTOM WORKSPACE</span>
-              <h1 class="text-xl font-bold font-headline text-[#00236f] mt-0.5">${currentItem.title}</h1>
-              <p class="text-xs text-[#444651] mt-1">내부관리 메뉴 매니저를 통해 그룹화된 업무 대시보드 화면입니다.</p>
+            <!-- QR Code Section -->
+            <div class="qr-card-section">
+              <div class="qr-box" id="qrcode"></div>
+              <p class="qr-desc">스마트폰 카메라로 스캔하여 명함 열기</p>
             </div>
-            <span class="px-3 py-1 rounded bg-[#eff6ff] text-[#2563eb] text-xs font-bold border border-[#bfdbfe]">활성 메뉴</span>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-white p-5 rounded-lg border border-[#cbd5e1]">
-              <div class="text-xs text-[#757682]">데이터 처리 건수</div>
-              <div class="text-2xl font-bold num-font text-[#00236f] mt-1">1,240 건</div>
-            </div>
-            <div class="bg-white p-5 rounded-lg border border-[#cbd5e1]">
-              <div class="text-xs text-[#757682]">동기화 상태</div>
-              <div class="text-2xl font-bold num-font text-[#059669] mt-1">100% 정상</div>
-            </div>
-            <div class="bg-white p-5 rounded-lg border border-[#cbd5e1]">
-              <div class="text-xs text-[#757682]">접근 권한 등급</div>
-              <div class="text-2xl font-bold num-font text-[#1e3a8a] mt-1">${currentUser.role.toUpperCase()}</div>
+
+          <!-- Social Links -->
+          <div>
+            <div class="social-row">
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="social-btn" title="GitHub">
+                <i data-lucide="github"></i>
+              </a>
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-btn" title="LinkedIn">
+                <i data-lucide="linkedin"></i>
+              </a>
+              <a href="https://velog.io" target="_blank" rel="noopener noreferrer" class="social-btn" title="Tech Blog">
+                <i data-lucide="book-open"></i>
+              </a>
+              <a href="mailto:changhwan@example.com" class="social-btn" title="Send Email">
+                <i data-lucide="send"></i>
+              </a>
             </div>
           </div>
         </div>
-      `;
-    }
+      </div>
 
-    // -------------------------------------------------------------------------
-    // 7. [내부관리 1] 업무 계정 및 비밀번호 관리 화면
-    // -------------------------------------------------------------------------
-    function renderAdminUsersView(container, actionsSlot) {
-      container.innerHTML = `
-        <div class="space-y-6 fade-in">
-          <!-- Header -->
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <span class="text-[11px] font-bold text-[#dc2626] uppercase tracking-wider">INTERNAL ADMIN • ACCOUNT & PASSWORD CONTROL</span>
-              <h1 class="text-xl font-bold font-headline text-[#00236f] mt-0.5">업무 이메일 및 비밀번호 계정 관리</h1>
-              <p class="text-xs text-[#444651] mt-1">포털 접속 권한을 가진 임직원 이메일 계정 발급, 비밀번호 재설정, 권한(Admin/Manager/Staff) 및 계정 잠금을 통합 관리합니다.</p>
-            </div>
-            <span class="px-3 py-1 rounded bg-[#fef2f2] text-[#dc2626] border border-[#fecaca] text-xs font-bold shrink-0">
-              🔒 내부관리자 전용
-            </span>
-          </div>
+    </div>
+  </div>
 
-          <!-- Create New Account Form -->
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm">
-            <h2 class="text-sm font-bold font-headline text-[#00236f] mb-4 pb-2 border-b border-[#e2e8f0]">
-              ➕ 신규 업무 이메일 계정 발급
-            </h2>
-            <form onsubmit="event.preventDefault(); handleAdminCreateUser();" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
-              <div class="lg:col-span-1">
-                <label class="block text-xs font-bold text-[#131b2e] mb-1">성명 *</label>
-                <input type="text" id="au-name" required placeholder="예: 박재무 과장" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
-              </div>
-              <div class="lg:col-span-2">
-                <label class="block text-xs font-bold text-[#131b2e] mb-1">업무용 이메일 (로그인 ID) *</label>
-                <input type="email" id="au-email" required placeholder="park@hospital.com" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded num-font">
-              </div>
-              <div class="lg:col-span-1">
-                <label class="block text-xs font-bold text-[#131b2e] mb-1">초기 비밀번호 *</label>
-                <input type="text" id="au-password" required value="welcome123" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded num-font">
-              </div>
-              <div class="lg:col-span-1">
-                <label class="block text-xs font-bold text-[#131b2e] mb-1">소속 부서 & 권한</label>
-                <select id="au-role" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
-                  <option value="finance_manager">정산총괄 (Manager)</option>
-                  <option value="staff">일반임직원 (Staff)</option>
-                  <option value="admin">내부관리자 (Admin)</option>
-                </select>
-              </div>
-              <div class="lg:col-span-1">
-                <button type="submit" class="w-full py-2 px-3 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
-                  + 계정 즉시 발급
-                </button>
-              </div>
-            </form>
-          </div>
+  <p class="footer-credit">© 2026 Digital Business Card • Tap card or use buttons to interact</p>
 
-          <!-- User Account List Table -->
-          <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-sm overflow-hidden">
-            <div class="p-4 bg-[#f2f3ff] border-b border-[#cbd5e1] flex items-center justify-between">
-              <span class="font-bold text-xs text-[#00236f]">등록된 전체 업무 계정 목록 (${portalUsers.length}명)</span>
-              <span class="text-[11px] text-[#059669] font-semibold">✓ Supabase Auth & 로컬 하이브리드 동기화</span>
-            </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr class="bg-slate-50 border-b border-[#cbd5e1] text-[#1e3a8a] font-bold">
-                    <th class="py-2.5 px-4">성명 / 부서</th>
-                    <th class="py-2.5 px-4">업무 이메일 (ID)</th>
-                    <th class="py-2.5 px-4">설정된 비밀번호</th>
-                    <th class="py-2.5 px-4 text-center">계정 권한</th>
-                    <th class="py-2.5 px-4 text-center">상태</th>
-                    <th class="py-2.5 px-4 text-center">비밀번호 재설정 / 제어</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-[#e2e8f0]">
-                  ${portalUsers.map((u, idx) => `
-                    <tr class="hover:bg-[#faf8ff]">
-                      <td class="py-3 px-4">
-                        <div class="font-bold text-[#131b2e]">${u.name}</div>
-                        <div class="text-[11px] text-[#757682]">${u.department}</div>
-                      </td>
-                      <td class="py-3 px-4 num-font font-semibold text-[#00236f]">${u.email}</td>
-                      <td class="py-3 px-4">
-                        <div class="flex items-center gap-1.5">
-                          <code class="px-2 py-0.5 rounded bg-slate-100 text-[#131b2e] num-font text-[11px]">${u.password}</code>
-                        </div>
-                      </td>
-                      <td class="py-3 px-4 text-center">
-                        <select onchange="handleAdminChangeUserRole(${idx}, this.value);"
-                          class="px-2 py-1 rounded border border-[#cbd5e1] text-[11px] font-bold bg-white">
-                          <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>내부관리자 (Admin)</option>
-                          <option value="finance_manager" ${u.role === 'finance_manager' ? 'selected' : ''}>정산총괄 (Manager)</option>
-                          <option value="staff" ${u.role === 'staff' ? 'selected' : ''}>일반임직원 (Staff)</option>
-                        </select>
-                      </td>
-                      <td class="py-3 px-4 text-center">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
-                          u.status === 'active'
-                            ? 'bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0]'
-                            : 'bg-[#fef2f2] text-[#dc2626] border border-[#fecaca]'
-                        }">
-                          ${u.status === 'active' ? '정상(Active)' : '잠김(Locked)'}
-                        </span>
-                      </td>
-                      <td class="py-3 px-4 text-center space-x-1.5">
-                        <button onclick="handleAdminResetPassword(${idx});"
-                          class="px-2 py-1 rounded bg-[#eff6ff] hover:bg-[#dbeafe] text-[#2563eb] font-bold text-[11px] border border-[#bfdbfe]">
-                          비밀번호 변경
-                        </button>
-                        <button onclick="handleAdminToggleStatus(${idx});"
-                          class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-[#444651] font-semibold text-[11px]">
-                          ${u.status === 'active' ? '잠금' : '잠금해제'}
-                        </button>
-                        ${u.email !== 'admin@hospital.com' ? `
-                          <button onclick="handleAdminDeleteUser(${idx});"
-                            class="px-2 py-1 rounded bg-[#fef2f2] hover:bg-red-100 text-[#dc2626] font-semibold text-[11px]">
-                            삭제
-                          </button>
-                        ` : ''}
-                      </td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      `;
-    }
+  <!-- Toast Notification -->
+  <div class="toast" id="toastMessage">
+    <i data-lucide="check-circle-2"></i>
+    <span id="toastText">링크가 클립보드에 복사되었습니다!</span>
+  </div>
 
-    async function handleAdminCreateUser() {
-      const name = document.getElementById('au-name').value.trim();
-      const email = document.getElementById('au-email').value.trim().toLowerCase();
-      const password = document.getElementById('au-password').value.trim();
-      const role = document.getElementById('au-role').value;
+  <!-- Information Edit Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">내 명함 정보 수정하기</h3>
+        <button class="close-modal-btn" id="closeModalBtn">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
 
-      if (!name || !email || !password) return;
-      if (portalUsers.some(u => u.email.toLowerCase() === email)) {
-        alert('이미 등록된 업무 이메일입니다.');
-        return;
-      }
+      <div class="form-group">
+        <label>한글 이름</label>
+        <input type="text" class="form-control" id="inputName" value="이창환">
+      </div>
+      <div class="form-group">
+        <label>영문 이름</label>
+        <input type="text" class="form-control" id="inputEngName" value="Changhwan Lee">
+      </div>
+      <div class="form-group">
+        <label>직함 / 한 줄 역할</label>
+        <input type="text" class="form-control" id="inputJobTitle" value="Software Engineer & Creator">
+      </div>
+      <div class="form-group">
+        <label>자기소개 요약</label>
+        <textarea class="form-control" id="inputBio" rows="3">기술을 통해 복잡한 문제를 단순하게 풀고, 사용자에게 영감을 주는 혁신적인 디지털 경험을 만들어갑니다.</textarea>
+      </div>
+      <div class="form-group">
+        <label>이메일</label>
+        <input type="email" class="form-control" id="inputEmail" value="changhwan@example.com">
+      </div>
+      <div class="form-group">
+        <label>전화번호</label>
+        <input type="tel" class="form-control" id="inputPhone" value="010-1234-5678">
+      </div>
+      <div class="form-group">
+        <label>위치 / 지역</label>
+        <input type="text" class="form-control" id="inputLocation" value="Seoul, Republic of Korea">
+      </div>
+      <div class="form-group">
+        <label>키워드 태그 (쉼표로 구분)</label>
+        <input type="text" class="form-control" id="inputTags" value="FullStack, AI_Engineering, UI/UX, ProblemSolver">
+      </div>
 
-      const department = role === 'admin' ? '내부관리팀' : role === 'finance_manager' ? '병원사업부 / 정산' : '일반업무팀';
-      const newUser = {
-        id: 'usr-' + Date.now(),
-        email,
-        password,
-        name,
-        department,
-        role,
-        status: 'active',
-        createdAt: new Date().toISOString().substring(0, 10)
-      };
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button class="btn btn-primary" id="saveInfoBtn" style="flex: 1;">저장 및 적용</button>
+        <button class="btn btn-secondary" id="resetInfoBtn">초기화</button>
+      </div>
+    </div>
+  </div>
 
-      // Sync with Supabase Auth & portal_users table
-      if (supabaseClient) {
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Default Profile Data
+    const defaultData = {
+      name: "이창환",
+      engName: "Changhwan Lee",
+      jobTitle: "Software Engineer & Creator",
+      bio: "기술을 통해 복잡한 문제를 단순하게 풀고, 사용자에게 영감을 주는 혁신적인 디지털 경험을 만들어갑니다.",
+      email: "changhwan@example.com",
+      phone: "010-1234-5678",
+      location: "Seoul, Republic of Korea",
+      tags: ["FullStack", "AI_Engineering", "UI/UX", "ProblemSolver"]
+    };
+
+    // Load Profile Data from LocalStorage or default
+    function getStoredData() {
+      const stored = localStorage.getItem("user_biz_card_data");
+      if (stored) {
         try {
-          await supabaseClient.auth.signUp({
-            email,
-            password,
-            options: { data: { full_name: name, role, department } }
-          });
-          await supabaseClient.from('portal_users').insert([{
-            email,
-            password_hash: password,
-            full_name: name,
-            department,
-            role,
-            status: 'active'
-          }]);
+          return JSON.parse(stored);
         } catch (e) {
-          console.warn('Supabase user sync fallback:', e);
+          return defaultData;
         }
       }
-
-      portalUsers.push(newUser);
-      localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
-      renderViewport(activeViewId);
-      alert(`[${name} (${email})] 업무 계정이 생성되었습니다.`);
+      return defaultData;
     }
 
-    async function handleAdminResetPassword(idx) {
-      const user = portalUsers[idx];
-      const newPw = prompt(`[${user.name} (${user.email})] 계정의 새 비밀번호를 입력하세요:`, user.password);
-      if (!newPw || !newPw.trim()) return;
+    function applyDataToUI(data) {
+      document.getElementById('displayName').innerText = data.name;
+      document.getElementById('displayEngName').innerText = data.engName;
+      document.getElementById('jobTitleText').innerText = data.jobTitle;
+      document.getElementById('displayBio').innerText = data.bio;
+      document.getElementById('displayEmail').innerText = data.email;
+      document.getElementById('displayEmailLink').href = `mailto:${data.email}`;
+      document.getElementById('displayPhone').innerText = data.phone;
+      document.getElementById('displayPhoneLink').href = `tel:${data.phone.replace(/[^0-9+]/g, '')}`;
+      document.getElementById('displayLocation').innerText = data.location;
+      
+      // Avatar Initials (e.g., '창환' or first letters)
+      const initials = data.name.length >= 2 ? data.name.slice(-2) : data.name;
+      document.getElementById('displayAvatarInitials').innerText = initials;
 
-      portalUsers[idx].password = newPw.trim();
-      localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
+      // Tags
+      const tagsContainer = document.getElementById('tagsContainer');
+      tagsContainer.innerHTML = '';
+      data.tags.forEach(t => {
+        const span = document.createElement('span');
+        span.className = 'tag';
+        span.innerText = '#' + t.trim();
+        tagsContainer.appendChild(span);
+      });
 
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('portal_users').update({ password_hash: newPw.trim() }).eq('email', user.email);
-        } catch (e) {}
-      }
-
-      renderViewport(activeViewId);
-      alert('비밀번호가 변경되었습니다.');
+      // Update Form Inputs
+      document.getElementById('inputName').value = data.name;
+      document.getElementById('inputEngName').value = data.engName;
+      document.getElementById('inputJobTitle').value = data.jobTitle;
+      document.getElementById('inputBio').value = data.bio;
+      document.getElementById('inputEmail').value = data.email;
+      document.getElementById('inputPhone').value = data.phone;
+      document.getElementById('inputLocation').value = data.location;
+      document.getElementById('inputTags').value = data.tags.join(', ');
     }
 
-    async function handleAdminChangeUserRole(idx, newRole) {
-      portalUsers[idx].role = newRole;
-      localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('portal_users').update({ role: newRole }).eq('email', portalUsers[idx].email);
-        } catch (e) {}
-      }
-      renderViewport(activeViewId);
+    let currentProfile = getStoredData();
+    applyDataToUI(currentProfile);
+
+    // 3D Card Flip Logic
+    const businessCard = document.getElementById('businessCard');
+    const flipQuickBtn = document.getElementById('flipQuickBtn');
+    const flipToBackBtn = document.getElementById('flipToBackBtn');
+    const flipToFrontBtn = document.getElementById('flipToFrontBtn');
+
+    function toggleFlip() {
+      businessCard.classList.toggle('is-flipped');
+      const isFlipped = businessCard.classList.contains('is-flipped');
+      flipQuickBtn.querySelector('span').innerText = isFlipped ? '앞면 보기' : '뒷면 보기';
     }
 
-    async function handleAdminToggleStatus(idx) {
-      const target = portalUsers[idx];
-      if (target.email === 'admin@hospital.com') {
-        alert('기본 내부관리자 계정은 잠글 수 없습니다.');
-        return;
-      }
-      target.status = target.status === 'active' ? 'locked' : 'active';
-      localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('portal_users').update({ status: target.status }).eq('email', target.email);
-        } catch (e) {}
-      }
-      renderViewport(activeViewId);
-    }
+    flipQuickBtn.addEventListener('click', toggleFlip);
+    flipToBackBtn.addEventListener('click', toggleFlip);
+    flipToFrontBtn.addEventListener('click', toggleFlip);
 
-    async function handleAdminDeleteUser(idx) {
-      const target = portalUsers[idx];
-      if (!confirm(`[${target.name} (${target.email})] 계정을 정말 삭제하시겠습니까?`)) return;
-      portalUsers.splice(idx, 1);
-      localStorage.setItem('clp_portal_users_v3', JSON.stringify(portalUsers));
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('portal_users').delete().eq('email', target.email);
-        } catch (e) {}
-      }
-      renderViewport(activeViewId);
-    }
+    // Mouse Tilt 3D Effect for Card
+    const cardScene = document.getElementById('cardScene');
+    let isHovered = false;
 
-    // -------------------------------------------------------------------------
-    // 8. [내부관리 2] 포털 메뉴 및 테마 그룹 관리 화면 (기존 상단 모달을 내부관리 메뉴로 이전)
-    // -------------------------------------------------------------------------
-    function renderAdminMenusView(container, actionsSlot) {
-      const nonAdminGroups = menuGroups;
-      container.innerHTML = `
-        <div class="space-y-6 fade-in">
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <span class="text-[11px] font-bold text-[#059669] uppercase tracking-wider">INTERNAL ADMIN • MENU & THEME GROUP BUILDER</span>
-              <h1 class="text-xl font-bold font-headline text-[#00236f] mt-0.5">포털 메뉴 및 테마 그룹 관리</h1>
-              <p class="text-xs text-[#444651] mt-1">상단 업무 테마 및 좌측 하위메뉴를 신규 추가하거나 불필요한 메뉴를 삭제합니다.</p>
-            </div>
-            <button onclick="resetDefaultMenus();" class="px-3 py-1.5 border border-[#cbd5e1] bg-white hover:bg-red-50 text-[#dc2626] text-xs font-bold rounded">
-              초기 기본 메뉴로 복원
-            </button>
-          </div>
+    cardScene.addEventListener('mouseenter', () => { isHovered = true; });
+    cardScene.addEventListener('mouseleave', () => {
+      isHovered = false;
+      const isFlipped = businessCard.classList.contains('is-flipped');
+      businessCard.style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
+    });
 
-          <!-- Add Menu Form -->
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm">
-            <h2 class="text-sm font-bold font-headline text-[#00236f] mb-4 pb-2 border-b border-[#e2e8f0]">
-              ➕ 신규 하위메뉴 또는 업무 테마 추가
-            </h2>
-            <form onsubmit="event.preventDefault(); handleAdminAddMenu();" class="space-y-4">
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label class="block text-xs font-bold text-[#131b2e] mb-1">소속될 대상 테마 그룹</label>
-                  <select id="mm-theme-select" onchange="toggleNewThemeInputs();" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
-                    ${nonAdminGroups.map(g => `<option value="${g.themeId}">${g.themeTitle}</option>`).join('')}
-                    <option value="__new__">+ 새로운 상단 업무 테마 만들기</option>
-                  </select>
-                </div>
-                <div id="mm-new-theme-box" class="hidden">
-                  <label class="block text-xs font-bold text-[#2563eb] mb-1">신규 업무 테마명 입력 *</label>
-                  <input type="text" id="mm-new-theme-title" placeholder="예: 인사/총무 관리" class="w-full px-3 py-2 text-xs bg-white border border-[#2563eb] rounded">
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-[#131b2e] mb-1">신규 하위메뉴 제목 *</label>
-                  <input type="text" id="mm-menu-title" required placeholder="예: 분기별 약품 재고 실사" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
-                </div>
-              </div>
+    cardScene.addEventListener('mousemove', (e) => {
+      if (!isHovered) return;
+      const rect = cardScene.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
 
-              <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                <div>
-                  <label class="block text-xs font-bold text-[#131b2e] mb-1">화면 연결 방식</label>
-                  <select id="mm-menu-type" onchange="toggleMenuUrlInput();" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
-                    <option value="iframe">HTML 파일 / 외부 URL 연결</option>
-                    <option value="template">표준 대시보드 자동 생성</option>
-                  </select>
-                </div>
-                <div id="mm-url-box" class="sm:col-span-2">
-                  <label class="block text-xs font-bold text-[#131b2e] mb-1">연결할 HTML 파일명 또는 URL *</label>
-                  <input type="text" id="mm-menu-url" value="template-page.html" placeholder="예: template-page.html" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded num-font">
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-[#131b2e] mb-1">배지 텍스트</label>
-                  <input type="text" id="mm-menu-badge" value="신규" class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded">
-                </div>
-              </div>
+      const rotateX = -(y / rect.height) * 16;
+      const rotateY = (x / rect.width) * 16;
 
-              <div class="flex justify-end pt-2">
-                <button type="submit" class="px-5 py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
-                  + 포털 메뉴 트리에 즉시 반영
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <!-- Current Menu Structure Tree -->
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm">
-            <h2 class="text-sm font-bold font-headline text-[#00236f] mb-4">현재 포털 테마 및 하위메뉴 구성 현황</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              ${menuGroups.map(g => `
-                <div class="p-4 rounded-lg border border-[#e2e8f0] bg-[#faf8ff]">
-                  <div class="flex items-center justify-between mb-2">
-                    <span class="font-bold text-xs text-[#00236f]">${g.themeTitle}</span>
-                    <span class="text-[10px] px-2 py-0.5 rounded bg-white border border-[#cbd5e1] text-[#444651]">대시보드: ${g.dashboard.title}</span>
-                  </div>
-                  <div class="space-y-1.5 pl-3 border-l-2 border-[#cbd5e1]">
-                    ${g.subMenus.map(s => `
-                      <div class="flex items-center justify-between text-xs bg-white px-2.5 py-1.5 rounded border border-[#e2e8f0]">
-                        <span>• ${s.title} <code class="text-[10px] text-[#757682]">${s.url ? '(' + s.url + ')' : '(내장화면)'}</code></span>
-                        ${g.themeId !== 'internal-admin' ? `
-                          <button onclick="deleteSubMenu('${g.themeId}', '${s.id}');" class="text-[11px] text-[#dc2626] hover:underline font-semibold">삭제</button>
-                        ` : '<span class="text-[10px] text-[#757682]">시스템 고정</span>'}
-                      </div>
-                    `).join('')}
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function toggleNewThemeInputs() {
-      const val = document.getElementById('mm-theme-select').value;
-      const box = document.getElementById('mm-new-theme-box');
-      if (val === '__new__') box.classList.remove('hidden');
-      else box.classList.add('hidden');
-    }
-
-    function toggleMenuUrlInput() {
-      const type = document.getElementById('mm-menu-type').value;
-      const box = document.getElementById('mm-url-box');
-      if (type === 'iframe') box.classList.remove('hidden');
-      else box.classList.add('hidden');
-    }
-
-    function handleAdminAddMenu() {
-      const targetTheme = document.getElementById('mm-theme-select').value;
-      const newThemeTitle = document.getElementById('mm-new-theme-title').value.trim();
-      const menuTitle = document.getElementById('mm-menu-title').value.trim();
-      const menuType = document.getElementById('mm-menu-type').value;
-      const menuUrl = document.getElementById('mm-menu-url').value.trim() || 'template-page.html';
-      const menuBadge = document.getElementById('mm-menu-badge').value.trim() || '신규';
-
-      if (!menuTitle) return;
-
-      const newSubItem = {
-        id: 'menu-' + Date.now(),
-        title: menuTitle,
-        type: menuType === 'iframe' ? 'iframe' : 'builtin-template',
-        url: menuType === 'iframe' ? menuUrl : '',
-        badge: menuBadge,
-        badgeColor: 'green',
-        role: 'all'
-      };
-
-      if (targetTheme === '__new__') {
-        if (!newThemeTitle) {
-          alert('신규 업무 테마 이름을 입력해주세요.');
-          return;
-        }
-        const newThemeId = 'theme-' + Date.now();
-        // Insert before internal-admin
-        const adminIdx = menuGroups.findIndex(g => g.themeId === 'internal-admin');
-        const newGroupObj = {
-          themeId: newThemeId,
-          themeTitle: '📁 ' + newThemeTitle,
-          themeDesc: `${newThemeTitle} 통합 대시보드 및 하위메뉴 그룹`,
-          adminOnly: false,
-          dashboard: {
-            id: 'dash-' + Date.now(),
-            title: `${newThemeTitle} 메인 대시보드`,
-            type: 'builtin-template'
-          },
-          subMenus: [newSubItem]
-        };
-        if (adminIdx > -1) menuGroups.splice(adminIdx, 0, newGroupObj);
-        else menuGroups.push(newGroupObj);
+      const isFlipped = businessCard.classList.contains('is-flipped');
+      if (isFlipped) {
+        businessCard.style.transform = `rotateY(${180 + rotateY}deg) rotateX(${rotateX}deg)`;
       } else {
-        const grp = menuGroups.find(g => g.themeId === targetTheme);
-        if (grp) grp.subMenus.push(newSubItem);
+        businessCard.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
       }
+    });
 
-      localStorage.setItem('clp_menu_groups_v3', JSON.stringify(menuGroups));
-      renderGNB();
-      renderLNB();
-      renderViewport(activeViewId);
-      alert(`[${menuTitle}] 메뉴가 추가되었습니다.`);
-    }
+    // Theme Toggle (Dark / Light)
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeText = document.getElementById('themeText');
 
-    function deleteSubMenu(themeId, subId) {
-      const grp = menuGroups.find(g => g.themeId === themeId);
-      if (!grp) return;
-      grp.subMenus = grp.subMenus.filter(s => s.id !== subId);
-      localStorage.setItem('clp_menu_groups_v3', JSON.stringify(menuGroups));
-      renderGNB();
-      renderLNB();
-      renderViewport(activeViewId);
-    }
-
-    function resetDefaultMenus() {
-      if (!confirm('메뉴 구성을 초기 기본 상태로 복원하시겠습니까?')) return;
-      menuGroups = JSON.parse(JSON.stringify(DEFAULT_MENU_GROUPS));
-      localStorage.setItem('clp_menu_groups_v3', JSON.stringify(menuGroups));
-      renderGNB();
-      renderLNB();
-      renderViewport(activeViewId);
-    }
-
-    // -------------------------------------------------------------------------
-    // 9. [내부관리 3] SUPABASE 클라우드 연동 관리 화면
-    // -------------------------------------------------------------------------
-    function renderAdminSupabaseView(container, actionsSlot) {
-      const currentUrl = localStorage.getItem('clp_sb_url') || DEFAULT_SUPABASE_URL;
-      const currentKey = localStorage.getItem('clp_sb_key') || DEFAULT_SUPABASE_KEY;
-
-      container.innerHTML = `
-        <div class="space-y-6 fade-in">
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <span class="text-[11px] font-bold text-[#2563eb] uppercase tracking-wider">INTERNAL ADMIN • SUPABASE CLOUD CONNECTION</span>
-              <h1 class="text-xl font-bold font-headline text-[#00236f] mt-0.5">Supabase 클라우드 DB 연동 관리</h1>
-              <p class="text-xs text-[#444651] mt-1">제공해주신 Supabase Project URL 및 Publishable Public Key가 기본 탑재되어 있습니다.</p>
-            </div>
-            <span class="px-3 py-1 rounded bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] text-xs font-bold">
-              ● Supabase 연결 활성화됨
-            </span>
-          </div>
-
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm space-y-4">
-            <h2 class="text-sm font-bold font-headline text-[#00236f] pb-2 border-b border-[#e2e8f0]">연동된 Supabase 프로젝트 자격증명</h2>
-            <form onsubmit="event.preventDefault(); saveAdminSupabaseConfig();" class="space-y-4">
-              <div>
-                <label class="block text-xs font-bold text-[#131b2e] mb-1">Supabase Project URL</label>
-                <input type="url" id="admin-sb-url" value="${currentUrl}" required class="w-full px-3.5 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded num-font">
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-[#131b2e] mb-1">Supabase Anon Public Key</label>
-                <input type="text" id="admin-sb-key" value="${currentKey}" required class="w-full px-3.5 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded num-font">
-              </div>
-              <div class="flex justify-end gap-2">
-                <button type="submit" class="px-5 py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
-                  연동 설정 업데이트
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-6 shadow-sm space-y-3">
-            <h2 class="text-sm font-bold font-headline text-[#00236f]">Supabase SQL Editor 초기 테이블 생성 스크립트</h2>
-            <p class="text-xs text-[#444651]">
-              Supabase 대시보드의 <strong>SQL Editor</strong>에 아래 쿼리를 실행해 두시면, 포털 계정(<code>portal_users</code>)과 블로그 게시글(<code>blog_posts</code>)이 클라우드 DB에 영구 보관됩니다.
-            </p>
-            <pre class="p-4 rounded-lg bg-[#0f172a] text-[#dae2fd] text-[11px] num-font overflow-x-auto leading-relaxed">create table if not exists public.portal_users (
-  id uuid default gen_random_uuid() primary key,
-  email text unique not null,
-  password_hash text not null,
-  full_name text not null,
-  department text default '병원사업부',
-  role text default 'finance_manager',
-  status text default 'active',
-  created_at timestamp with time zone default now()
-);
-alter table public.portal_users enable row level security;
-create policy "Allow all portal_users" on public.portal_users for all using (true);</pre>
-          </div>
-        </div>
-      `;
-    }
-
-    function saveAdminSupabaseConfig() {
-      const url = document.getElementById('admin-sb-url').value.trim();
-      const key = document.getElementById('admin-sb-key').value.trim();
-      localStorage.setItem('clp_sb_url', url);
-      localStorage.setItem('clp_sb_key', key);
-      if (window.supabase) {
-        supabaseClient = window.supabase.createClient(url, key);
+    let isLight = localStorage.getItem("biz_card_theme") === "light";
+    function applyTheme() {
+      if (isLight) {
+        document.body.setAttribute('data-theme', 'light');
+        themeIcon.setAttribute('data-lucide', 'sun');
+        themeText.innerText = '라이트';
+      } else {
+        document.body.removeAttribute('data-theme');
+        themeIcon.setAttribute('data-lucide', 'moon');
+        themeText.innerText = '다크';
       }
-      alert('Supabase 클라우드 연동 정보가 저장되었습니다.');
+      lucide.createIcons();
+    }
+    applyTheme();
+
+    themeToggleBtn.addEventListener('click', () => {
+      isLight = !isLight;
+      localStorage.setItem("biz_card_theme", isLight ? "light" : "dark");
+      applyTheme();
+    });
+
+    // Toast Notification helper
+    const toast = document.getElementById('toastMessage');
+    const toastText = document.getElementById('toastText');
+    let toastTimer;
+    function showToast(msg) {
+      toastText.innerText = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
     }
 
-    // -------------------------------------------------------------------------
-    // 10. BLOG MODULE FUNCTIONS (SUPABASE CLOUD SYNC)
-    // -------------------------------------------------------------------------
-    async function syncBlogPostsFromSupabase(autoSeed = false) {
-      if (!supabaseClient) return false;
-      try {
-        const { data, error } = await supabaseClient
-          .from('blog_posts')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (!error && Array.isArray(data)) {
-          const existingSlugs = new Set(data.map(p => p.slug || p.id));
-          const missingDefaults = DEFAULT_BLOG_POSTS.filter(p => !existingSlugs.has(p.id));
-
-          if (autoSeed && missingDefaults.length > 0) {
-            const seedRows = missingDefaults.map(p => ({
-              title: p.title,
-              slug: p.id,
-              category: p.category || '공지',
-              author_name: p.author || '관리자',
-              summary: p.summary || p.title,
-              content: p.content || '',
-              tags: p.tags || ['업무공유'],
-              view_count: p.views || 1,
-              is_published: true
-            }));
-            await supabaseClient.from('blog_posts').upsert(seedRows, { onConflict: 'slug' });
-            const retry = await supabaseClient
-              .from('blog_posts')
-              .select('*')
-              .order('created_at', { ascending: false });
-            if (!retry.error && Array.isArray(retry.data) && retry.data.length > 0) {
-              const retrySlugs = new Set(retry.data.map(p => p.slug || p.id));
-              const stillMissing = DEFAULT_BLOG_POSTS.filter(p => !retrySlugs.has(p.id));
-              blogPosts = [...stillMissing, ...retry.data.map(mapDbPost)];
-              localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
-              return true;
-            }
-          } else if (data.length > 0) {
-            blogPosts = [...missingDefaults, ...data.map(mapDbPost)];
-            localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
-            return true;
-          }
-        }
-      } catch (e) {
-        console.warn('Supabase blog sync warning:', e);
-      }
-      return false;
-    }
-
-    function mapDbPost(p) {
-      return {
-        id: p.id,
-        slug: p.slug || p.id,
-        title: p.title,
-        category: p.category || '공지',
-        author: p.author_name || '관리자',
-        date: (p.created_at || '').substring(0, 10),
-        summary: p.summary || p.title,
-        content: p.content || '',
-        views: p.view_count || 1,
-        tags: p.tags || ['업무공유']
-      };
-    }
-
-    async function refreshBlogFromCloud() {
-      const ok = await syncBlogPostsFromSupabase(false);
-      renderViewport(activeViewId);
-      if (ok) {
-        alert('Supabase 클라우드 블로그와 최신 동기화가 완료되었습니다.');
-      }
-    }
-
-    function renderBlogHub(container, actionsSlot) {
-      actionsSlot.innerHTML = `
-        <div class="flex items-center gap-2">
-          <button onclick="refreshBlogFromCloud();" class="px-3 py-1.5 bg-white hover:bg-[#f1f5f9] text-[#00236f] border border-[#cbd5e1] text-xs font-bold rounded shadow-sm cursor-pointer">
-            🔄 DB 동기화
-          </button>
-          <button onclick="openBlogWriteModal();" class="px-3.5 py-1.5 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded shadow cursor-pointer">
-            ✍️ 새 글 작성하기
-          </button>
-        </div>
-      `;
-
-      const categories = ['전체', '공지', '업무가이드', '정산리포트', '시스템개선'];
-      const filtered = blogFilterCategory === '전체'
-        ? blogPosts
-        : blogPosts.filter(p => p.category === blogFilterCategory);
-
-      container.innerHTML = `
-        <div class="space-y-5 fade-in">
-          <div class="bg-white rounded-xl border border-[#cbd5e1] p-5 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <div>
-              <span class="text-[11px] font-bold text-[#1e3a8a]">KNOWLEDGE & BLOG ARCHIVE</span>
-              <h1 class="text-xl font-bold font-headline text-[#00236f]">업무 지식 블로그 & 사내 공지사항</h1>
-              <p class="text-xs text-[#444651] mt-0.5">정산 마감 공지, 원장 대사 매뉴얼 및 업무 노하우를 기록하고 공유합니다.</p>
-            </div>
-            <div class="flex gap-1.5 flex-wrap">
-              ${categories.map(cat => `
-                <button onclick="blogFilterCategory='${cat}'; renderViewport(activeViewId);"
-                  class="px-3 py-1 rounded-md text-xs font-bold transition cursor-pointer ${
-                    blogFilterCategory === cat ? 'bg-[#1e3a8a] text-white' : 'bg-[#f2f3ff] text-[#444651] hover:bg-[#eaedff]'
-                  }">${cat}</button>
-              `).join('')}
-            </div>
-          </div>
-
-          <div class="space-y-3">
-            ${filtered.map(post => `
-              <div onclick="openBlogDetailModal('${post.id}');"
-                class="bg-white rounded-xl border border-[#cbd5e1] p-5 shadow-sm hover:border-[#1e3a8a] transition cursor-pointer">
-                <div class="flex items-center justify-between text-xs text-[#757682] mb-1.5">
-                  <div class="flex items-center gap-2">
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]">${post.category}</span>
-                    <span>${post.date}</span>
-                    <span>• ${post.author}</span>
-                  </div>
-                  <span class="num-font">조회 ${post.views}</span>
-                </div>
-                <h2 class="text-base font-bold font-headline text-[#00236f] hover:underline">${post.title}</h2>
-                <p class="text-xs text-[#444651] mt-1.5 line-clamp-2">${post.summary}</p>
-                <div class="flex items-center gap-1.5 mt-3 pt-2.5 border-t border-[#f1f5f9]">
-                  ${(post.tags || []).map(t => `<span class="text-[10px] px-2 py-0.5 rounded-full bg-[#f8fafc] border border-[#e2e8f0] text-[#475569]">#${t}</span>`).join('')}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    function openBlogWriteModal() {
-      document.getElementById('bw-title').value = '';
-      document.getElementById('bw-summary').value = '';
-      document.getElementById('bw-content').value = '';
-      document.getElementById('modal-blog-write').classList.remove('hidden');
-    }
-
-    function closeBlogWriteModal() {
-      document.getElementById('modal-blog-write').classList.add('hidden');
-    }
-
-    async function saveBlogPost() {
-      const title = document.getElementById('bw-title').value.trim();
-      const category = document.getElementById('bw-category').value;
-      const summary = document.getElementById('bw-summary').value.trim() || title;
-      const tags = document.getElementById('bw-tags').value.split(',').map(t => t.trim()).filter(Boolean);
-      const content = document.getElementById('bw-content').value.trim();
-
-      const slugId = 'post-' + Date.now();
-      let newPost = {
-        id: slugId,
-        slug: slugId,
-        title,
-        category,
-        author: `${currentUser.name}`,
-        date: new Date().toISOString().substring(0, 10),
-        summary,
-        content,
-        views: 1,
-        tags: tags.length > 0 ? tags : ['업무공유']
+    // Share Card (Web Share API or Clipboard Copy)
+    const shareCardBtn = document.getElementById('shareCardBtn');
+    shareCardBtn.addEventListener('click', async () => {
+      const shareData = {
+        title: `${currentProfile.name} | 디지털 명함`,
+        text: `${currentProfile.name} (${currentProfile.jobTitle}) - 웹 명함입니다.`,
+        url: window.location.href
       };
 
-      if (supabaseClient) {
+      if (navigator.share && window.isSecureContext) {
         try {
-          const { data, error } = await supabaseClient.from('blog_posts').insert([{
-            title,
-            slug: slugId,
-            category,
-            author_name: currentUser.name,
-            summary,
-            content,
-            tags: newPost.tags,
-            view_count: 1,
-            is_published: true
-          }]).select().single();
-          if (!error && data) {
-            newPost = mapDbPost(data);
+          await navigator.share(shareData);
+          showToast('명함이 공유되었습니다!');
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            copyCurrentUrl();
           }
-        } catch (e) {
-          console.warn('Supabase blog insert warning:', e);
         }
+      } else {
+        copyCurrentUrl();
       }
+    });
 
-      blogPosts.unshift(newPost);
-      localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
-      closeBlogWriteModal();
-      renderViewport(activeViewId);
+    function copyCurrentUrl() {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        showToast('명함 주소가 클립보드에 복사되었습니다!');
+      }).catch(() => {
+        showToast('주소 복사에 실패했습니다.');
+      });
     }
 
-    async function openBlogDetailModal(postId) {
-      const post = blogPosts.find(p => p.id === postId);
-      if (!post) return;
-      post.views += 1;
-      localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
+    // Download vCard (.vcf)
+    const saveContactBtn = document.getElementById('saveContactBtn');
+    saveContactBtn.addEventListener('click', () => {
+      const vcard = 
+`BEGIN:VCARD
+VERSION:3.0
+N:${currentProfile.name};;;;
+FN:${currentProfile.name}
+TITLE:${currentProfile.jobTitle}
+EMAIL;TYPE=PREF,INTERNET:${currentProfile.email}
+TEL;TYPE=CELL:${currentProfile.phone}
+ADR;TYPE=HOME:;;${currentProfile.location};;;;
+NOTE:${currentProfile.bio}
+URL:${window.location.href}
+END:VCARD`;
 
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('blog_posts').update({ view_count: post.views }).eq('id', post.id);
-        } catch (e) {}
+      const blob = new Blob([vcard], { type: "text/vcard;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${currentProfile.name}_연락처.vcf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast('연락처 파일(.vcf)이 다운로드되었습니다.');
+    });
+
+    // Dynamic QR Code Generation
+    const qrcodeContainer = document.getElementById("qrcode");
+    new QRCode(qrcodeContainer, {
+      text: window.location.href,
+      width: 84,
+      height: 84,
+      colorDark : "#0f172a",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.M
+    });
+
+    // Modal Interaction
+    const editModal = document.getElementById('editModal');
+    const editModalBtn = document.getElementById('editModalBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const saveInfoBtn = document.getElementById('saveInfoBtn');
+    const resetInfoBtn = document.getElementById('resetInfoBtn');
+
+    editModalBtn.addEventListener('click', () => {
+      editModal.classList.add('active');
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+      editModal.classList.remove('active');
+    });
+
+    editModal.addEventListener('click', (e) => {
+      if (e.target === editModal) {
+        editModal.classList.remove('active');
       }
+    });
 
-      document.getElementById('bd-category').innerText = post.category;
-      document.getElementById('bd-date').innerText = post.date;
-      document.getElementById('bd-title').innerText = post.title;
-      document.getElementById('bd-author').innerText = `작성자: ${post.author}`;
-      document.getElementById('bd-views').innerText = `조회 ${post.views}`;
-      document.getElementById('bd-content').innerText = post.content;
-
-      const delBtn = document.getElementById('bd-delete-btn');
-      delBtn.onclick = async () => {
-        if (confirm('이 게시글을 삭제하시겠습니까?')) {
-          if (supabaseClient) {
-            try {
-              await supabaseClient.from('blog_posts').delete().eq('id', postId);
-            } catch (e) {}
-          }
-          blogPosts = blogPosts.filter(p => p.id !== postId);
-          localStorage.setItem('clp_blog_posts_v3', JSON.stringify(blogPosts));
-          closeBlogDetailModal();
-          renderViewport(activeViewId);
-        }
+    saveInfoBtn.addEventListener('click', () => {
+      const updatedData = {
+        name: document.getElementById('inputName').value.trim() || defaultData.name,
+        engName: document.getElementById('inputEngName').value.trim() || defaultData.engName,
+        jobTitle: document.getElementById('inputJobTitle').value.trim() || defaultData.jobTitle,
+        bio: document.getElementById('inputBio').value.trim() || defaultData.bio,
+        email: document.getElementById('inputEmail').value.trim() || defaultData.email,
+        phone: document.getElementById('inputPhone').value.trim() || defaultData.phone,
+        location: document.getElementById('inputLocation').value.trim() || defaultData.location,
+        tags: document.getElementById('inputTags').value.split(',').map(s => s.trim()).filter(Boolean)
       };
 
-      document.getElementById('modal-blog-detail').classList.remove('hidden');
-      const scrollBody = document.getElementById('bd-scroll-body');
-      if (scrollBody) scrollBody.scrollTop = 0;
-      if (activeViewId === 'blog-main') renderViewport(activeViewId);
-    }
+      currentProfile = updatedData;
+      localStorage.setItem("user_biz_card_data", JSON.stringify(updatedData));
+      applyDataToUI(updatedData);
+      editModal.classList.remove('active');
+      showToast('명함 정보가 성공적으로 저장되었습니다!');
+    });
 
-    function closeBlogDetailModal() {
-      document.getElementById('modal-blog-detail').classList.add('hidden');
-    }
+    resetInfoBtn.addEventListener('click', () => {
+      if (confirm('기본 정보로 초기화하시겠습니까?')) {
+        currentProfile = defaultData;
+        localStorage.removeItem("user_biz_card_data");
+        applyDataToUI(defaultData);
+        editModal.classList.remove('active');
+        showToast('기본 정보로 초기화되었습니다.');
+      }
+    });
 
-    // Start Portal
-    window.addEventListener('DOMContentLoaded', initApp);
+    // "호기심" 탭 드롭다운 토글
+    const curiosityDropdown = document.getElementById('curiosityDropdown');
+    const curiosityTabBtn = document.getElementById('curiosityTabBtn');
+    if (curiosityDropdown && curiosityTabBtn) {
+      curiosityTabBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = curiosityDropdown.classList.toggle('open');
+        curiosityTabBtn.setAttribute('aria-expanded', String(isOpen));
+      });
+      document.addEventListener('click', (e) => {
+        if (!curiosityDropdown.contains(e.target)) {
+          curiosityDropdown.classList.remove('open');
+          curiosityTabBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
   </script>
 </body>
 </html>
