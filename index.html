@@ -320,7 +320,7 @@
 
             <div class="flex justify-end pt-1">
               <button type="button" onclick="openPortalTool('finance', 'work-schedule');" class="inline-flex items-center gap-1 font-label text-label-md text-light-primary hover:underline cursor-pointer">
-                <span>개인업무 일정 캘린더 전체 열기</span>
+                <span>개인일정 캘린더 전체 열기</span>
                 <span class="material-symbols-outlined text-[15px]" aria-hidden="true">arrow_forward</span>
               </button>
             </div>
@@ -595,7 +595,7 @@
         adminOnly: false,
         dashboard: {
           id: 'work-schedule',
-          title: '개인업무 일정 캘린더',
+          title: '개인일정 캘린더',
           type: 'iframe',
           url: 'work-schedule.html'
         },
@@ -1352,6 +1352,7 @@
         activeThemeId = 'sage-home';
         homeContainer.classList.remove('hidden');
         themeWorkspace.classList.add('hidden');
+        if (typeof window.renderSageSchedules === 'function') window.renderSageSchedules();
         renderSageToolsHub();
         renderGNB();
         return;
@@ -1550,69 +1551,176 @@
         });
       });
 
-      // 2. Schedule Checklist with localStorage
-      const DEFAULT_SCHEDULES = [
-        { title: '주간 프로덕트 스프린트 점검', time: '09:30', desc: '업무 · 데일리 스탠드업', done: true },
-        { title: '결제 API 스키마 문서 정리', time: '11:00', desc: '업무 · Notion 문서 업데이트', done: false },
-        { title: 'CLI 스니펫 동기화 프로토타입', time: '14:00', desc: '개인코딩 · 딥워크 2시간 블록', done: false },
-        { title: '디자인 시스템 토큰 PR 리뷰', time: '16:30', desc: '업무 · GitHub 코드 리뷰', done: false }
-      ];
-      let schedules = [];
-      try {
-        schedules = JSON.parse(localStorage.getItem('sage_schedule_v1') || 'null') || DEFAULT_SCHEDULES;
-      } catch {
-        schedules = DEFAULT_SCHEDULES;
-      }
-
+      // 2. Schedule Checklist synced with 개인일정 캘린더 (clp_work_schedules_v1 + Supabase work_schedules)
+      const WORK_SCHEDULE_KEY = 'clp_work_schedules_v1';
+      const DONE_MAP_KEY = 'sage_schedule_done_v1';
       const scheduleList = document.getElementById('schedule-list');
       const scheduleCounter = document.getElementById('schedule-counter');
 
-      function saveAndRenderSchedules() {
-        localStorage.setItem('sage_schedule_v1', JSON.stringify(schedules));
-        scheduleList.innerHTML = '';
-        schedules.forEach((item, idx) => {
-          const li = document.createElement('li');
-          li.className = `searchable-item flex items-start gap-gutter-sm p-gutter-sm rounded border border-light-outline-variant transition-colors duration-state-change ${
-            item.done ? 'bg-light-surface-container-low' : 'bg-light-surface-container-lowest hover:border-light-primary'
-          }`;
-          li.innerHTML = `
-            <input type="checkbox" ${item.done ? 'checked' : ''} data-idx="${idx}" class="schedule-check mt-0.5 rounded-sm border-light-outline text-light-primary focus:ring-light-primary cursor-pointer">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center justify-between gap-gutter-xs">
-                <span class="schedule-title font-title text-title-md ${item.done ? 'text-light-on-surface-variant line-through' : 'text-light-on-surface'}"></span>
-                <span class="font-code text-code-sm ${item.done ? 'text-light-on-surface-variant' : 'text-light-primary'} tabular-nums shrink-0">${item.time || '오늘'}</span>
-              </div>
-              <p class="font-body text-body-sm text-light-on-surface-variant">${item.desc || '빠른 추가 일정'}</p>
-            </div>
-          `;
-          li.querySelector('.schedule-title').textContent = item.title;
-          scheduleList.appendChild(li);
-        });
-        const doneCount = schedules.filter(s => s.done).length;
-        scheduleCounter.textContent = `${doneCount}/${schedules.length} 완료`;
+      function getTodayDateKey() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       }
 
-      saveAndRenderSchedules();
+      function loadWorkSchedulesMap() {
+        try {
+          return JSON.parse(localStorage.getItem(WORK_SCHEDULE_KEY) || '{}') || {};
+        } catch {
+          return {};
+        }
+      }
+
+      function saveWorkSchedulesMap(map) {
+        localStorage.setItem(WORK_SCHEDULE_KEY, JSON.stringify(map));
+      }
+
+      function loadDoneMap() {
+        try {
+          return JSON.parse(localStorage.getItem(DONE_MAP_KEY) || '{}') || {};
+        } catch {
+          return {};
+        }
+      }
+
+      function saveDoneMap(map) {
+        localStorage.setItem(DONE_MAP_KEY, JSON.stringify(map));
+      }
+
+      function renderSageSchedules() {
+        const todayKey = getTodayDateKey();
+        const allMap = loadWorkSchedulesMap();
+        const doneMap = loadDoneMap();
+        const todayItems = (allMap[todayKey] || []).slice().sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
+        scheduleList.innerHTML = '';
+        if (todayItems.length === 0) {
+          scheduleList.innerHTML = `
+            <li class="p-gutter-md rounded bg-light-surface-container-low border border-dashed border-light-outline-variant text-center font-body text-body-sm text-light-on-surface-variant">
+              오늘(${todayKey}) 등록된 일정이 없습니다.<br>아래에서 빠르게 추가하거나 캘린더에서 일정을 등록해보세요.
+            </li>
+          `;
+          scheduleCounter.textContent = '0/0 완료';
+          return;
+        }
+
+        let doneCount = 0;
+        todayItems.forEach((item) => {
+          const isDone = Boolean(doneMap[item.id]);
+          if (isDone) doneCount++;
+          const li = document.createElement('li');
+          li.className = `searchable-item flex items-start gap-gutter-sm p-gutter-sm rounded border border-light-outline-variant transition-colors duration-state-change ${
+            isDone ? 'bg-light-surface-container-low' : 'bg-light-surface-container-lowest hover:border-light-primary'
+          }`;
+          li.innerHTML = `
+            <input type="checkbox" ${isDone ? 'checked' : ''} data-sch-id="${item.id}" class="schedule-check mt-0.5 rounded-sm border-light-outline text-light-primary focus:ring-light-primary cursor-pointer">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-gutter-xs">
+                <span class="schedule-title font-title text-title-md ${isDone ? 'text-light-on-surface-variant line-through' : 'text-light-on-surface'}"></span>
+                <span class="font-code text-code-sm ${isDone ? 'text-light-on-surface-variant' : 'text-light-primary'} tabular-nums shrink-0">${item.time || '09:00'}</span>
+              </div>
+              <p class="schedule-type font-body text-body-sm text-light-on-surface-variant"></p>
+            </div>
+          `;
+          li.querySelector('.schedule-title').textContent = item.memo || '';
+          li.querySelector('.schedule-type').textContent = `${item.type || '개인일정'} · ${todayKey}`;
+          scheduleList.appendChild(li);
+        });
+        scheduleCounter.textContent = `${doneCount}/${todayItems.length} 완료`;
+      }
+
+      window.renderSageSchedules = renderSageSchedules;
+
+      async function syncTodayWorkSchedulesFromSupabase() {
+        if (!supabaseClient) return;
+        try {
+          const { data, error } = await supabaseClient
+            .from('work_schedules')
+            .select('*')
+            .order('schedule_date', { ascending: true })
+            .order('work_time', { ascending: true });
+          if (error || !Array.isArray(data)) return;
+          const nextMap = {};
+          data.forEach(row => {
+            const dStr = row.schedule_date;
+            if (!nextMap[dStr]) nextMap[dStr] = [];
+            nextMap[dStr].push({
+              id: row.id,
+              type: row.work_type,
+              time: row.work_time,
+              memo: row.memo
+            });
+          });
+          saveWorkSchedulesMap(nextMap);
+          renderSageSchedules();
+        } catch (e) {
+          console.warn('Sage schedule sync fallback:', e);
+        }
+      }
+
+      renderSageSchedules();
+      syncTodayWorkSchedulesFromSupabase();
+
+      window.addEventListener('storage', (e) => {
+        if (e.key === WORK_SCHEDULE_KEY || e.key === DONE_MAP_KEY) {
+          renderSageSchedules();
+        }
+      });
 
       scheduleList.addEventListener('change', (e) => {
         if (e.target.classList.contains('schedule-check')) {
-          const idx = Number(e.target.getAttribute('data-idx'));
-          if (schedules[idx]) {
-            schedules[idx].done = e.target.checked;
-            saveAndRenderSchedules();
-          }
+          const schId = e.target.getAttribute('data-sch-id');
+          if (!schId) return;
+          const doneMap = loadDoneMap();
+          doneMap[schId] = e.target.checked;
+          saveDoneMap(doneMap);
+          renderSageSchedules();
         }
       });
 
       const addScheduleForm = document.getElementById('add-schedule-form');
       const newScheduleInput = document.getElementById('new-schedule-input');
-      addScheduleForm.addEventListener('submit', (e) => {
+      addScheduleForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const text = newScheduleInput.value.trim();
-        if (!text) return;
-        schedules.push({ title: text, time: '오늘', desc: '빠른 추가 일정', done: false });
+        const rawText = newScheduleInput.value.trim();
+        if (!rawText) return;
+
+        let workTime = '09:00';
+        let memo = rawText;
+        const m = rawText.match(/^(\d{1,2}:\d{2})\s+(.+)$/);
+        if (m) {
+          const [hh, mm] = m[1].split(':');
+          workTime = `${hh.padStart(2, '0')}:${mm}`;
+          memo = m[2].trim();
+        }
+
+        const todayKey = getTodayDateKey();
+        const allMap = loadWorkSchedulesMap();
+        if (!allMap[todayKey]) allMap[todayKey] = [];
+        let newId = 'sch_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+
+        if (supabaseClient) {
+          try {
+            const { data, error } = await supabaseClient
+              .from('work_schedules')
+              .insert([{
+                schedule_date: todayKey,
+                work_type: '개인일정',
+                work_time: workTime,
+                memo,
+                user_email: currentUser?.email || 'chuan@hospital.com'
+              }])
+              .select('id')
+              .single();
+            if (!error && data && data.id) newId = data.id;
+          } catch (err) {
+            console.warn('Supabase quick schedule insert fallback:', err);
+          }
+        }
+
+        allMap[todayKey].push({ id: newId, type: '개인일정', time: workTime, memo });
+        saveWorkSchedulesMap(allMap);
         newScheduleInput.value = '';
-        saveAndRenderSchedules();
+        renderSageSchedules();
       });
 
       // 3. Quick Idea Capture with localStorage

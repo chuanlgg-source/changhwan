@@ -3,29 +3,44 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>개인업무 일정 캘린더</title>
+  <title>개인일정 캘린더</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Noto+Sans+KR:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet">
   <style>
     body {
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: #faf8ff;
-      color: #131b2e;
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #F7FAF7;
+      color: #181C1B;
+      -webkit-font-smoothing: antialiased;
     }
-    .font-headline { font-family: 'Plus Jakarta Sans', 'Pretendard', sans-serif; }
-    .num-font { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    .material-symbols-outlined {
+      display: inline-block;
+      width: 1em;
+      height: 1em;
+      line-height: 1 !important;
+      box-sizing: content-box;
+      overflow: hidden;
+      white-space: nowrap;
+      direction: ltr;
+      vertical-align: middle;
+    }
+    .font-headline { font-family: 'Space Grotesk', 'Noto Sans KR', sans-serif; }
+    .num-font { font-family: 'Fira Code', monospace; font-variant-numeric: tabular-nums; }
     .cal-cell {
       min-height: 108px;
-      transition: background-color 0.15s ease, border-color 0.15s ease;
+      transition: background-color 120ms ease-out, border-color 120ms ease-out;
     }
     .cal-cell:hover {
-      background-color: #f2f3ff;
+      background-color: #F1F4F1;
     }
     .cal-cell.today {
-      background-color: #eff6ff;
-      box-shadow: inset 0 0 0 2px #1e3a8a;
+      background-color: #CFE9D8;
+      background-color: rgba(207, 233, 216, 0.35);
+      box-shadow: inset 0 0 0 2px #0F5238;
     }
     @media (max-width: 640px) {
       .cal-cell { min-height: 76px; }
@@ -35,48 +50,50 @@
 <body class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
 
   <!-- Header & Year/Month Controls -->
-  <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-4 border-b border-[#cbd5e1]">
+  <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-4 border-b border-[#BFC9C1]">
     <div>
       <div class="flex flex-wrap items-center gap-2 mb-1.5">
-        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#1e3a8a]/10 border border-[#1e3a8a]/20 text-[#00236f] text-[11px] font-bold">
-          <span>PERSONAL WORK SCHEDULE</span>
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#CFE9D8] text-[#1F352A] text-[11px] font-bold">
+          <span class="material-symbols-outlined text-[13px]" aria-hidden="true">calendar_month</span>
+          <span>PERSONAL SCHEDULE</span>
         </div>
-        <span id="sync-status-badge" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#f1f5f9] border border-[#cbd5e1] text-[#475569] text-[11px] font-bold">
-          ⏳ 동기화 확인 중...
+        <span id="sync-status-badge" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#F1F4F1] border border-[#BFC9C1] text-[#404943] text-[11px] font-bold">
+          동기화 확인 중...
         </span>
         <button type="button" onclick="syncSchedulesFromSupabase(true)" title="클라우드와 수동 동기화"
-          class="px-2 py-0.5 rounded-full bg-white hover:bg-[#eff6ff] border border-[#cbd5e1] text-[11px] font-bold text-[#00236f] cursor-pointer transition">
-          🔄 새로고침
+          class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white hover:bg-[#F1F4F1] border border-[#BFC9C1] text-[11px] font-bold text-[#0F5238] cursor-pointer transition">
+          <span class="material-symbols-outlined text-[13px]" aria-hidden="true">refresh</span>
+          <span>새로고침</span>
         </button>
       </div>
-      <h1 class="text-2xl font-extrabold font-headline text-[#00236f] tracking-tight">
-        개인업무 일정 캘린더
+      <h1 class="text-2xl font-bold font-headline text-[#181C1B] tracking-tight">
+        개인일정 캘린더
       </h1>
-      <p class="text-xs text-[#444651] mt-0.5">
-        날짜를 클릭하면 팝업창에서 업무유형 · 시간 · 비고내용을 기록하고 관리할 수 있습니다.
+      <p class="text-xs text-[#404943] mt-0.5">
+        날짜를 클릭하면 팝업창에서 업무유형 · 시간 · 비고내용을 기록하고 통합 대시보드와 실시간 연동됩니다.
       </p>
     </div>
 
     <!-- Year & Month Selector -->
     <div class="flex flex-wrap items-center gap-2">
-      <button onclick="moveMonth(-1)" class="px-3 py-2 bg-white hover:bg-[#f1f5f9] border border-[#cbd5e1] rounded-lg text-xs font-bold text-[#00236f] shadow-sm cursor-pointer transition">
+      <button onclick="moveMonth(-1)" class="px-3 py-2 bg-white hover:bg-[#F1F4F1] border border-[#BFC9C1] rounded-lg text-xs font-bold text-[#181C1B] cursor-pointer transition">
         ◀ 이전달
       </button>
 
-      <div class="flex items-center gap-1.5 bg-white border border-[#cbd5e1] rounded-lg px-2.5 py-1.5 shadow-sm">
-        <select id="select-year" onchange="onYearMonthChange()" class="text-xs font-bold text-[#00236f] bg-transparent focus:outline-none cursor-pointer num-font">
+      <div class="flex items-center gap-1.5 bg-white border border-[#BFC9C1] rounded-lg px-2.5 py-1.5">
+        <select id="select-year" onchange="onYearMonthChange()" class="text-xs font-bold text-[#0F5238] bg-transparent focus:outline-none cursor-pointer num-font">
         </select>
-        <span class="text-xs text-[#64748b]">년</span>
-        <select id="select-month" onchange="onYearMonthChange()" class="text-xs font-bold text-[#00236f] bg-transparent focus:outline-none cursor-pointer num-font ml-1">
+        <span class="text-xs text-[#707973]">년</span>
+        <select id="select-month" onchange="onYearMonthChange()" class="text-xs font-bold text-[#0F5238] bg-transparent focus:outline-none cursor-pointer num-font ml-1">
         </select>
-        <span class="text-xs text-[#64748b]">월</span>
+        <span class="text-xs text-[#707973]">월</span>
       </div>
 
-      <button onclick="moveMonth(1)" class="px-3 py-2 bg-white hover:bg-[#f1f5f9] border border-[#cbd5e1] rounded-lg text-xs font-bold text-[#00236f] shadow-sm cursor-pointer transition">
+      <button onclick="moveMonth(1)" class="px-3 py-2 bg-white hover:bg-[#F1F4F1] border border-[#BFC9C1] rounded-lg text-xs font-bold text-[#181C1B] cursor-pointer transition">
         다음달 ▶
       </button>
 
-      <button onclick="goToday()" class="px-3 py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white rounded-lg text-xs font-bold shadow-sm cursor-pointer transition">
+      <button onclick="goToday()" class="px-3.5 py-2 bg-[#0F5238] hover:bg-[#2D6A4F] text-white rounded-lg text-xs font-bold cursor-pointer transition">
         오늘
       </button>
     </div>
@@ -84,53 +101,53 @@
 
   <!-- Month Summary Stats -->
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-    <div class="bg-white rounded-xl border border-[#cbd5e1] p-3.5 shadow-sm">
-      <div class="text-[11px] font-bold text-[#64748b]">선택 월 전체 일정</div>
-      <div id="stat-total" class="text-xl font-extrabold text-[#00236f] num-font mt-0.5">0건</div>
+    <div class="bg-white rounded-lg border border-[#BFC9C1] p-3.5">
+      <div class="text-[11px] font-bold text-[#707973]">선택 월 전체 일정</div>
+      <div id="stat-total" class="text-xl font-bold text-[#0F5238] num-font mt-0.5">0건</div>
     </div>
-    <div class="bg-white rounded-xl border border-[#cbd5e1] p-3.5 shadow-sm">
-      <div class="text-[11px] font-bold text-[#64748b]">일정 등록 일수</div>
-      <div id="stat-days" class="text-xl font-extrabold text-[#1e3a8a] num-font mt-0.5">0일</div>
+    <div class="bg-white rounded-lg border border-[#BFC9C1] p-3.5">
+      <div class="text-[11px] font-bold text-[#707973]">일정 등록 일수</div>
+      <div id="stat-days" class="text-xl font-bold text-[#2D6A4F] num-font mt-0.5">0일</div>
     </div>
-    <div class="bg-white rounded-xl border border-[#cbd5e1] p-3.5 shadow-sm">
-      <div class="text-[11px] font-bold text-[#64748b]">최다 업무유형</div>
-      <div id="stat-top-type" class="text-base font-extrabold text-[#059669] mt-1 truncate">-</div>
+    <div class="bg-white rounded-lg border border-[#BFC9C1] p-3.5">
+      <div class="text-[11px] font-bold text-[#707973]">최다 업무유형</div>
+      <div id="stat-top-type" class="text-base font-bold text-[#15803D] mt-1 truncate">-</div>
     </div>
-    <div class="bg-white rounded-xl border border-[#cbd5e1] p-3.5 shadow-sm flex items-center justify-between">
+    <div class="bg-white rounded-lg border border-[#BFC9C1] p-3.5 flex items-center justify-between gap-2">
       <div>
-        <div class="text-[11px] font-bold text-[#64748b]">오늘 날짜</div>
-        <div id="stat-today" class="text-sm font-bold text-[#131b2e] num-font mt-1">-</div>
+        <div class="text-[11px] font-bold text-[#707973]">오늘 날짜</div>
+        <div id="stat-today" class="text-sm font-bold text-[#181C1B] num-font mt-1">-</div>
       </div>
-      <button onclick="openDateModal(getTodayStr())" class="px-2.5 py-1.5 bg-[#eff6ff] hover:bg-[#dbeafe] text-[#00236f] rounded-md text-[11px] font-bold border border-[#bfdbfe] cursor-pointer transition">
+      <button onclick="openDateModal(getTodayStr())" class="px-2.5 py-1.5 bg-[#CFE9D8] hover:bg-[#BDE0C9] text-[#1F352A] rounded-lg text-[11px] font-bold border border-[#BFC9C1] cursor-pointer transition shrink-0">
         + 오늘 기록
       </button>
     </div>
   </div>
 
   <!-- Calendar Grid -->
-  <div class="bg-white rounded-xl border border-[#cbd5e1] shadow-sm overflow-hidden mb-6">
+  <div class="bg-white rounded-lg border border-[#BFC9C1] overflow-hidden mb-6">
     <!-- Weekday Headers -->
-    <div class="grid grid-cols-7 bg-[#f8fafc] border-b border-[#cbd5e1] text-center text-xs font-bold py-2.5">
-      <div class="text-[#dc2626]">일 (SUN)</div>
-      <div class="text-[#334155]">월 (MON)</div>
-      <div class="text-[#334155]">화 (TUE)</div>
-      <div class="text-[#334155]">수 (WED)</div>
-      <div class="text-[#334155]">목 (THU)</div>
-      <div class="text-[#334155]">금 (FRI)</div>
-      <div class="text-[#2563eb]">토 (SAT)</div>
+    <div class="grid grid-cols-7 bg-[#F1F4F1] border-b border-[#BFC9C1] text-center text-xs font-bold py-2.5">
+      <div class="text-[#BA1A1A]">일 (SUN)</div>
+      <div class="text-[#404943]">월 (MON)</div>
+      <div class="text-[#404943]">화 (TUE)</div>
+      <div class="text-[#404943]">수 (WED)</div>
+      <div class="text-[#404943]">목 (THU)</div>
+      <div class="text-[#404943]">금 (FRI)</div>
+      <div class="text-[#0F5238]">토 (SAT)</div>
     </div>
 
     <!-- Days Container -->
-    <div id="calendar-grid" class="grid grid-cols-7 divide-x divide-y divide-[#e2e8f0]">
+    <div id="calendar-grid" class="grid grid-cols-7 divide-x divide-y divide-[#BFC9C1]">
       <!-- Rendered by JS -->
     </div>
   </div>
 
   <!-- Monthly Schedule List -->
-  <section class="bg-white rounded-xl border border-[#cbd5e1] shadow-sm p-5">
+  <section class="bg-white rounded-lg border border-[#BFC9C1] p-5">
     <div class="flex items-center justify-between mb-3">
-      <h2 class="text-sm sm:text-base font-bold text-[#00236f]" id="monthly-list-title">월간 업무일정 목록</h2>
-      <span class="text-[11px] text-[#64748b]">항목을 클릭하면 해당 날짜 팝업에서 수정/삭제할 수 있습니다.</span>
+      <h2 class="text-sm sm:text-base font-bold font-headline text-[#181C1B]" id="monthly-list-title">월간 개인일정 목록</h2>
+      <span class="text-[11px] text-[#707973]">항목을 클릭하면 해당 날짜 팝업에서 수정/삭제할 수 있습니다.</span>
     </div>
     <div id="monthly-list-body" class="space-y-2">
       <!-- Rendered by JS -->
@@ -138,13 +155,13 @@
   </section>
 
   <!-- Date Detail & Schedule Modal -->
-  <div id="schedule-modal" class="hidden fixed inset-0 z-50 bg-[#0b1326]/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl border border-[#cbd5e1] shadow-2xl w-full max-w-lg overflow-hidden">
+  <div id="schedule-modal" class="hidden fixed inset-0 z-50 bg-[#181C1B]/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl border border-[#BFC9C1] shadow-xl w-full max-w-lg overflow-hidden">
       <!-- Modal Header -->
-      <div class="px-5 py-4 bg-[#00236f] text-white flex items-center justify-between">
+      <div class="px-5 py-4 bg-[#0F5238] text-white flex items-center justify-between">
         <div>
-          <div class="text-[11px] text-white/75 font-semibold">업무일정 기록 및 관리</div>
-          <h3 id="modal-date-title" class="text-lg font-extrabold num-font">2026-11-14</h3>
+          <div class="text-[11px] text-[#A8E7C5] font-semibold">개인일정 기록 및 관리</div>
+          <h3 id="modal-date-title" class="text-lg font-bold num-font">2026-11-27</h3>
         </div>
         <button onclick="closeModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-sm font-bold cursor-pointer transition">
           ✕
@@ -155,9 +172,9 @@
       <div class="p-5 max-h-[80vh] overflow-y-auto space-y-5">
         <!-- Existing Schedules for this Date -->
         <div>
-          <div class="text-xs font-bold text-[#475569] mb-2 flex items-center justify-between">
+          <div class="text-xs font-bold text-[#404943] mb-2 flex items-center justify-between">
             <span>등록된 일정</span>
-            <span id="modal-day-count" class="text-[11px] text-[#00236f] num-font">0건</span>
+            <span id="modal-day-count" class="text-[11px] text-[#0F5238] num-font">0건</span>
           </div>
           <div id="modal-day-list" class="space-y-2">
             <!-- Rendered by JS -->
@@ -165,15 +182,15 @@
         </div>
 
         <!-- Add / Edit Form -->
-        <form onsubmit="event.preventDefault(); saveSchedule();" class="pt-4 border-t border-[#e2e8f0] space-y-3.5">
-          <div class="text-xs font-bold text-[#00236f]" id="form-mode-title">+ 새 업무일정 추가</div>
+        <form onsubmit="event.preventDefault(); saveSchedule();" class="pt-4 border-t border-[#BFC9C1] space-y-3.5">
+          <div class="text-xs font-bold text-[#0F5238]" id="form-mode-title">+ 새 개인일정 추가</div>
           <input type="hidden" id="edit-schedule-id" value="">
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-[#131b2e] mb-1">업무유형 <span class="text-[#dc2626]">*</span></label>
+              <label class="block text-xs font-bold text-[#181C1B] mb-1">업무유형 <span class="text-[#BA1A1A]">*</span></label>
               <select id="input-type" required
-                class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white">
+                class="w-full px-3 py-2 text-xs bg-[#F1F4F1] border border-[#BFC9C1] rounded-lg focus:outline-none focus:border-[#0F5238] focus:ring-1 focus:ring-[#0F5238] focus:bg-white">
                 <option value="정산/대사">정산/대사</option>
                 <option value="외근/미팅">외근/미팅</option>
                 <option value="보고/회의">보고/회의</option>
@@ -183,16 +200,16 @@
               </select>
             </div>
             <div>
-              <label class="block text-xs font-bold text-[#131b2e] mb-1">시간 <span class="text-[#dc2626]">*</span></label>
+              <label class="block text-xs font-bold text-[#181C1B] mb-1">시간 <span class="text-[#BA1A1A]">*</span></label>
               <div class="flex items-center gap-1.5">
                 <input type="time" id="input-time" value="09:00" required
-                  class="flex-1 px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md num-font focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white">
+                  class="flex-1 px-3 py-2 text-xs bg-[#F1F4F1] border border-[#BFC9C1] rounded-lg num-font focus:outline-none focus:border-[#0F5238] focus:ring-1 focus:ring-[#0F5238] focus:bg-white">
                 <button type="button" onclick="document.getElementById('input-time').value='09:00'"
-                  class="px-2 py-2 text-[10px] font-bold bg-[#f1f5f9] hover:bg-[#e2e8f0] text-[#475569] rounded border border-[#cbd5e1] cursor-pointer">
+                  class="px-2 py-2 text-[10px] font-bold bg-[#F1F4F1] hover:bg-[#ECEFEC] text-[#404943] rounded-lg border border-[#BFC9C1] cursor-pointer">
                   09시
                 </button>
                 <button type="button" onclick="document.getElementById('input-time').value='14:00'"
-                  class="px-2 py-2 text-[10px] font-bold bg-[#f1f5f9] hover:bg-[#e2e8f0] text-[#475569] rounded border border-[#cbd5e1] cursor-pointer">
+                  class="px-2 py-2 text-[10px] font-bold bg-[#F1F4F1] hover:bg-[#ECEFEC] text-[#404943] rounded-lg border border-[#BFC9C1] cursor-pointer">
                   14시
                 </button>
               </div>
@@ -200,19 +217,19 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-[#131b2e] mb-1">비고내용 <span class="text-[#dc2626]">*</span></label>
-            <textarea id="input-memo" rows="3" required placeholder="업무 상세 내용, 방문처, 처리할 사항 등을 입력하세요..."
-              class="w-full px-3 py-2 text-xs bg-[#faf8ff] border border-[#cbd5e1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:bg-white resize-none"></textarea>
+            <label class="block text-xs font-bold text-[#181C1B] mb-1">비고내용 <span class="text-[#BA1A1A]">*</span></label>
+            <textarea id="input-memo" rows="3" required placeholder="일정 상세 내용, 방문처, 처리할 사항 등을 입력하세요..."
+              class="w-full px-3 py-2 text-xs bg-[#F1F4F1] border border-[#BFC9C1] rounded-lg focus:outline-none focus:border-[#0F5238] focus:ring-1 focus:ring-[#0F5238] focus:bg-white resize-none"></textarea>
           </div>
 
           <div class="flex items-center justify-end gap-2 pt-1">
-            <button type="button" id="btn-cancel-edit" onclick="resetForm()" class="hidden px-3 py-2 bg-[#f1f5f9] hover:bg-[#e2e8f0] text-[#475569] text-xs font-bold rounded-md cursor-pointer">
+            <button type="button" id="btn-cancel-edit" onclick="resetForm()" class="hidden px-3 py-2 bg-[#F1F4F1] hover:bg-[#ECEFEC] text-[#404943] border border-[#BFC9C1] text-xs font-bold rounded-lg cursor-pointer">
               수정 취소
             </button>
-            <button type="button" onclick="closeModal()" class="px-3.5 py-2 bg-white hover:bg-[#f8fafc] border border-[#cbd5e1] text-[#475569] text-xs font-bold rounded-md cursor-pointer">
+            <button type="button" onclick="closeModal()" class="px-3.5 py-2 bg-white hover:bg-[#F1F4F1] border border-[#BFC9C1] text-[#404943] text-xs font-bold rounded-lg cursor-pointer">
               닫기
             </button>
-            <button type="submit" id="btn-save-schedule" class="px-4 py-2 bg-[#00236f] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-md shadow cursor-pointer transition">
+            <button type="submit" id="btn-save-schedule" class="px-4 py-2 bg-[#0F5238] hover:bg-[#2D6A4F] text-white text-xs font-bold rounded-lg cursor-pointer transition">
               일정 저장
             </button>
           </div>
@@ -258,11 +275,11 @@
       const el = document.getElementById('sync-status-badge');
       if (!el) return;
       if (state === 'synced') {
-        el.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#ecfdf5] border border-[#a7f3d0] text-[#059669] text-[11px] font-bold';
+        el.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#CFE9D8] border border-[#BFC9C1] text-[#15803D] text-[11px] font-bold';
       } else if (state === 'warn') {
-        el.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#fef3c7] border border-[#fde68a] text-[#b45309] text-[11px] font-bold';
+        el.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#FFDBCA] border border-[#FFDBCA] text-[#783300] text-[11px] font-bold';
       } else {
-        el.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#f1f5f9] border border-[#cbd5e1] text-[#475569] text-[11px] font-bold';
+        el.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#F1F4F1] border border-[#BFC9C1] text-[#404943] text-[11px] font-bold';
       }
       el.innerText = text;
     }
@@ -338,12 +355,12 @@
     }
 
     const TYPE_BADGE_MAP = {
-      '정산/대사': 'bg-[#eff6ff] text-[#1e3a8a] border-[#bfdbfe]',
-      '외근/미팅': 'bg-[#ecfdf5] text-[#059669] border-[#a7f3d0]',
-      '보고/회의': 'bg-[#fef3c7] text-[#b45309] border-[#fde68a]',
+      '정산/대사': 'bg-[#CFE9D8] text-[#2D6A4F] border-[#BFC9C1]',
+      '외근/미팅': 'bg-[#CFE9D8] text-[#15803D] border-[#BFC9C1]',
+      '보고/회의': 'bg-[#FFDBCA] text-[#783300] border-[#FFDBCA]',
       '결재/행정': 'bg-[#f5f3ff] text-[#6d28d9] border-[#ddd6fe]',
       '개인일정': 'bg-[#fce7f3] text-[#be185d] border-[#fbcfe8]',
-      '기타': 'bg-[#f1f5f9] text-[#475569] border-[#cbd5e1]'
+      '기타': 'bg-[#F1F4F1] text-[#404943] border-[#BFC9C1]'
     };
 
     function getTodayStr() {
@@ -432,7 +449,7 @@
 
       // Leading empty cells
       for (let i = 0; i < firstDay; i++) {
-        html += `<div class="cal-cell bg-[#f8fafc]/60 p-2"></div>`;
+        html += `<div class="cal-cell bg-[#F1F4F1]/60 p-2"></div>`;
       }
 
       // Actual days
@@ -444,10 +461,10 @@
         const isToday = dateStr === todayStr;
 
         const dayNumColor = dayOfWeek === 0
-          ? 'text-[#dc2626]'
+          ? 'text-[#BA1A1A]'
           : dayOfWeek === 6
-            ? 'text-[#2563eb]'
-            : 'text-[#131b2e]';
+            ? 'text-[#0F5238]'
+            : 'text-[#181C1B]';
 
         const dayItems = (schedules[dateStr] || []).slice().sort((a, b) => a.time.localeCompare(b.time));
         const itemsHtml = dayItems.slice(0, 3).map(item => {
@@ -460,7 +477,7 @@
         }).join('');
 
         const moreHtml = dayItems.length > 3
-          ? `<div class="text-[10px] font-bold text-[#64748b] pl-1">+${dayItems.length - 3}건 더보기</div>`
+          ? `<div class="text-[10px] font-bold text-[#707973] pl-1">+${dayItems.length - 3}건 더보기</div>`
           : '';
 
         html += `
@@ -468,7 +485,7 @@
             class="cal-cell ${isToday ? 'today' : 'bg-white'} p-2 cursor-pointer flex flex-col justify-between group">
             <div class="flex items-center justify-between mb-1">
               <span class="text-xs font-extrabold num-font ${dayNumColor}">${day}</span>
-              <span class="opacity-0 group-hover:opacity-100 text-[10px] font-bold text-[#1e3a8a] bg-[#eff6ff] px-1.5 rounded transition">+</span>
+              <span class="opacity-0 group-hover:opacity-100 text-[10px] font-bold text-[#2D6A4F] bg-[#CFE9D8] px-1.5 rounded transition">+</span>
             </div>
             <div class="space-y-1 flex-1">
               ${itemsHtml}
@@ -483,7 +500,7 @@
       const remainder = totalCells % 7;
       if (remainder !== 0) {
         for (let i = 0; i < 7 - remainder; i++) {
-          html += `<div class="cal-cell bg-[#f8fafc]/60 p-2"></div>`;
+          html += `<div class="cal-cell bg-[#F1F4F1]/60 p-2"></div>`;
         }
       }
 
@@ -516,12 +533,12 @@
         if (c > maxCnt) { maxCnt = c; topType = `${t} (${c}건)`; }
       });
       document.getElementById('stat-top-type').innerText = topType;
-      document.getElementById('monthly-list-title').innerText = `${viewYear}년 ${viewMonth}월 업무일정 목록`;
+      document.getElementById('monthly-list-title').innerText = `${viewYear}년 ${viewMonth}월 개인일정 목록`;
 
       const listBody = document.getElementById('monthly-list-body');
       if (monthEntries.length === 0) {
         listBody.innerHTML = `
-          <div class="text-center py-8 text-xs text-[#64748b] bg-[#f8fafc] rounded-lg border border-dashed border-[#cbd5e1]">
+          <div class="text-center py-8 text-xs text-[#707973] bg-[#F1F4F1] rounded-lg border border-dashed border-[#BFC9C1]">
             ${viewYear}년 ${viewMonth}월에 등록된 업무일정이 없습니다. 위 달력에서 날짜를 클릭해 일정을 기록해보세요.
           </div>
         `;
@@ -532,14 +549,14 @@
         const badgeCls = TYPE_BADGE_MAP[entry.type] || TYPE_BADGE_MAP['기타'];
         return `
           <div onclick="openDateModal('${entry.dateStr}')"
-            class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border border-[#e2e8f0] hover:border-[#1e3a8a] hover:bg-[#faf8ff] cursor-pointer transition">
+            class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border border-[#BFC9C1] hover:border-[#2D6A4F] hover:bg-[#F7FAF7] cursor-pointer transition">
             <div class="flex items-center gap-3">
-              <span class="text-xs font-extrabold text-[#00236f] num-font shrink-0">${entry.dateStr}</span>
-              <span class="text-xs font-bold text-[#475569] num-font shrink-0">${entry.time}</span>
+              <span class="text-xs font-extrabold text-[#0F5238] num-font shrink-0">${entry.dateStr}</span>
+              <span class="text-xs font-bold text-[#404943] num-font shrink-0">${entry.time}</span>
               <span class="px-2 py-0.5 rounded border text-[10px] font-bold shrink-0 ${badgeCls}">${escapeHtml(entry.type)}</span>
-              <span class="text-xs text-[#131b2e] break-all">${escapeHtml(entry.memo)}</span>
+              <span class="text-xs text-[#181C1B] break-all">${escapeHtml(entry.memo)}</span>
             </div>
-            <span class="text-[11px] font-bold text-[#1e3a8a] shrink-0">상세/수정 →</span>
+            <span class="text-[11px] font-bold text-[#2D6A4F] shrink-0">상세/수정 →</span>
           </div>
         `;
       }).join('');
@@ -567,24 +584,24 @@
       const container = document.getElementById('modal-day-list');
 
       if (items.length === 0) {
-        container.innerHTML = `<div class="text-xs text-[#64748b] py-3 px-3 bg-[#f8fafc] rounded-md border border-[#e2e8f0]">아직 등록된 일정이 없습니다. 아래 양식에서 새 일정을 추가하세요.</div>`;
+        container.innerHTML = `<div class="text-xs text-[#707973] py-3 px-3 bg-[#F1F4F1] rounded-md border border-[#BFC9C1]">아직 등록된 일정이 없습니다. 아래 양식에서 새 일정을 추가하세요.</div>`;
         return;
       }
 
       container.innerHTML = items.map(item => {
         const badgeCls = TYPE_BADGE_MAP[item.type] || TYPE_BADGE_MAP['기타'];
         return `
-          <div class="p-3 rounded-lg border border-[#cbd5e1] bg-[#faf8ff] flex items-start justify-between gap-3">
+          <div class="p-3 rounded-lg border border-[#BFC9C1] bg-[#F7FAF7] flex items-start justify-between gap-3">
             <div class="space-y-1">
               <div class="flex items-center gap-2">
                 <span class="px-2 py-0.5 rounded border text-[10px] font-bold ${badgeCls}">${escapeHtml(item.type)}</span>
-                <span class="text-xs font-extrabold text-[#00236f] num-font">${item.time}</span>
+                <span class="text-xs font-extrabold text-[#0F5238] num-font">${item.time}</span>
               </div>
-              <p class="text-xs text-[#131b2e] whitespace-pre-wrap">${escapeHtml(item.memo)}</p>
+              <p class="text-xs text-[#181C1B] whitespace-pre-wrap">${escapeHtml(item.memo)}</p>
             </div>
             <div class="flex items-center gap-1 shrink-0">
-              <button type="button" onclick="editSchedule('${item.id}')" class="px-2 py-1 rounded bg-white hover:bg-[#eff6ff] border border-[#cbd5e1] text-[10px] font-bold text-[#1e3a8a] cursor-pointer">수정</button>
-              <button type="button" onclick="deleteSchedule('${item.id}')" class="px-2 py-1 rounded bg-white hover:bg-[#fef2f2] border border-[#fecaca] text-[10px] font-bold text-[#dc2626] cursor-pointer">삭제</button>
+              <button type="button" onclick="editSchedule('${item.id}')" class="px-2 py-1 rounded bg-white hover:bg-[#CFE9D8] border border-[#BFC9C1] text-[10px] font-bold text-[#2D6A4F] cursor-pointer">수정</button>
+              <button type="button" onclick="deleteSchedule('${item.id}')" class="px-2 py-1 rounded bg-white hover:bg-[#fef2f2] border border-[#fecaca] text-[10px] font-bold text-[#BA1A1A] cursor-pointer">삭제</button>
             </div>
           </div>
         `;
@@ -707,7 +724,7 @@
       document.getElementById('input-type').value = '정산/대사';
       document.getElementById('input-time').value = '09:00';
       document.getElementById('input-memo').value = '';
-      document.getElementById('form-mode-title').innerText = '+ 새 업무일정 추가';
+      document.getElementById('form-mode-title').innerText = '+ 새 개인일정 추가';
       document.getElementById('btn-save-schedule').innerText = '일정 저장';
       document.getElementById('btn-cancel-edit').classList.add('hidden');
     }

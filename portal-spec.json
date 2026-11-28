@@ -14,7 +14,7 @@
       "adminOnly": false,
       "dashboard": {
         "id": "work-schedule",
-        "title": "개인업무 일정 캘린더",
+        "title": "개인일정 캘린더",
         "type": "iframe",
         "url": "work-schedule.html"
       },
