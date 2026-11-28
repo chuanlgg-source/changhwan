@@ -1590,7 +1590,15 @@
         const todayKey = getTodayDateKey();
         const allMap = loadWorkSchedulesMap();
         const doneMap = loadDoneMap();
-        const todayItems = (allMap[todayKey] || []).slice().sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+        let gcalMap = {};
+        let linkMap = {};
+        try { gcalMap = JSON.parse(localStorage.getItem('clp_gcal_events_v1') || '{}') || {}; } catch {}
+        try { linkMap = JSON.parse(localStorage.getItem('clp_gcal_link_map_v1') || '{}') || {}; } catch {}
+
+        const localItems = (allMap[todayKey] || []).map(item => ({ ...item, source: 'local' }));
+        const linkedGcalIds = new Set(localItems.map(i => linkMap[i.id]).filter(Boolean));
+        const gcalItems = (gcalMap[todayKey] || []).filter(ev => !linkedGcalIds.has(ev.gcalId));
+        const todayItems = [...localItems, ...gcalItems].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 
         scheduleList.innerHTML = '';
         if (todayItems.length === 0) {
@@ -1622,7 +1630,8 @@
             </div>
           `;
           li.querySelector('.schedule-title').textContent = item.memo || '';
-          li.querySelector('.schedule-type').textContent = `${item.type || '개인일정'} · ${todayKey}`;
+          const sourceLabel = item.source === 'gcal' ? 'Google · ' : '';
+          li.querySelector('.schedule-type').textContent = `${sourceLabel}${item.type || '개인일정'} · ${todayKey}`;
           scheduleList.appendChild(li);
         });
         scheduleCounter.textContent = `${doneCount}/${todayItems.length} 완료`;

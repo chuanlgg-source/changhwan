@@ -6,6 +6,7 @@
   <title>개인일정 캘린더</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Noto+Sans+KR:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -64,6 +65,20 @@
           class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white hover:bg-[#F1F4F1] border border-[#BFC9C1] text-[11px] font-bold text-[#0F5238] cursor-pointer transition">
           <span class="material-symbols-outlined text-[13px]" aria-hidden="true">refresh</span>
           <span>새로고침</span>
+        </button>
+        <button type="button" id="btn-gcal-connect" onclick="handleGcalButtonClick()"
+          class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#CFE9D8] hover:bg-[#BDE0C9] border border-[#BFC9C1] text-[11px] font-bold text-[#1F352A] cursor-pointer transition">
+          <span class="material-symbols-outlined text-[13px]" aria-hidden="true">event_available</span>
+          <span id="gcal-btn-label">Google 캘린더 연결</span>
+        </button>
+        <button type="button" id="btn-gcal-disconnect" onclick="disconnectGoogleCalendar()"
+          class="hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white hover:bg-[#FFDAD6] border border-[#BFC9C1] text-[11px] font-bold text-[#BA1A1A] cursor-pointer transition">
+          <span>연결 해제</span>
+        </button>
+        <button type="button" onclick="openGcalConfigModal()" title="Google OAuth Client ID 설정"
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white hover:bg-[#F1F4F1] border border-[#BFC9C1] text-[11px] font-semibold text-[#404943] cursor-pointer transition">
+          <span class="material-symbols-outlined text-[13px]" aria-hidden="true">settings</span>
+          <span>Google 설정</span>
         </button>
       </div>
       <h1 class="text-2xl font-bold font-headline text-[#181C1B] tracking-tight">
@@ -238,12 +253,52 @@
     </div>
   </div>
 
+  <!-- Google Calendar OAuth 2.0 Config Modal -->
+  <div id="gcal-config-modal" class="hidden fixed inset-0 z-50 bg-[#181C1B]/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl border border-[#BFC9C1] shadow-xl w-full max-w-md overflow-hidden">
+      <div class="px-5 py-4 bg-[#0F5238] text-white flex items-center justify-between">
+        <div>
+          <div class="text-[11px] text-[#A8E7C5] font-semibold">GOOGLE CALENDAR OAUTH 2.0</div>
+          <h3 class="text-base font-bold font-headline">Google 캘린더 연동 설정</h3>
+        </div>
+        <button onclick="closeGcalConfigModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-sm font-bold cursor-pointer transition">✕</button>
+      </div>
+      <form onsubmit="event.preventDefault(); saveGcalClientId();" class="p-5 space-y-4">
+        <div class="p-3 rounded-lg bg-[#F1F4F1] border border-[#BFC9C1] text-[11px] text-[#404943] leading-relaxed space-y-1">
+          <p class="font-bold text-[#0F5238]">최초 1회 Google Cloud Console 설정 안내</p>
+          <p>1. Google Cloud Console → <strong>Google Calendar API</strong> 사용 설정</p>
+          <p>2. 사용자 인증 정보 → <strong>OAuth 2.0 클라이언트 ID (웹 애플리케이션)</strong> 생성</p>
+          <p>3. 승인된 자바스크립트 원본에 <code class="px-1 py-0.5 bg-white border border-[#BFC9C1] rounded num-font text-[#181C1B]">https://chuanlgg-source.github.io</code> 등록</p>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-[#181C1B] mb-1">Google OAuth Client ID *</label>
+          <input type="text" id="input-gcal-client-id" required placeholder="예: 1234567890-abcdefg.apps.googleusercontent.com"
+            class="w-full px-3 py-2 text-xs bg-[#F1F4F1] border border-[#BFC9C1] rounded-lg num-font focus:outline-none focus:border-[#0F5238] focus:ring-1 focus:ring-[#0F5238] focus:bg-white">
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-[#BFC9C1]">
+          <button type="button" onclick="closeGcalConfigModal()" class="px-3.5 py-2 bg-white hover:bg-[#F1F4F1] border border-[#BFC9C1] text-[#404943] text-xs font-bold rounded-lg cursor-pointer">취소</button>
+          <button type="submit" class="px-4 py-2 bg-[#0F5238] hover:bg-[#2D6A4F] text-white text-xs font-bold rounded-lg cursor-pointer transition">저장 후 연결</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     const STORAGE_KEY = 'clp_work_schedules_v1';
+    const GCAL_CLIENT_ID_KEY = 'clp_gcal_client_id';
+    const GCAL_TOKEN_KEY = 'clp_gcal_token';
+    const GCAL_EVENTS_KEY = 'clp_gcal_events_v1';
+    const GCAL_LINK_MAP_KEY = 'clp_gcal_link_map_v1';
+    const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
     const DEFAULT_SUPABASE_URL = 'https://cbarfruyknhfjvvhcmgu.supabase.co';
     const DEFAULT_SUPABASE_KEY = 'sb_publishable_k-LLkVT3ducZNfkzF0tGvw_36TMYhhZ';
     let supabaseClient = null;
     let schedules = {}; // { "YYYY-MM-DD": [ { id, type, time, memo } ] }
+    let gcalEventsByDate = {}; // { "YYYY-MM-DD": [ { id, gcalId, type, time, memo, source: 'gcal' } ] }
+    let gcalLinkMap = {}; // { [localId]: gcalEventId }
+    let gcalAccessToken = '';
+    let gcalTokenExpiresAt = 0;
+    let gcalTokenClient = null;
     let viewYear = new Date().getFullYear();
     let viewMonth = new Date().getMonth() + 1; // 1~12
     let selectedDateStr = '';
@@ -410,10 +465,246 @@
       document.getElementById('stat-today').innerText = getTodayStr();
     }
 
+    function loadGcalLocalState() {
+      try {
+        gcalEventsByDate = JSON.parse(localStorage.getItem(GCAL_EVENTS_KEY) || '{}') || {};
+      } catch {
+        gcalEventsByDate = {};
+      }
+      try {
+        gcalLinkMap = JSON.parse(localStorage.getItem(GCAL_LINK_MAP_KEY) || '{}') || {};
+      } catch {
+        gcalLinkMap = {};
+      }
+      try {
+        const tok = JSON.parse(sessionStorage.getItem(GCAL_TOKEN_KEY) || 'null');
+        if (tok && tok.token && tok.exp > Date.now() + 30000) {
+          gcalAccessToken = tok.token;
+          gcalTokenExpiresAt = tok.exp;
+        }
+      } catch {}
+    }
+
+    function isGcalConnected() {
+      return Boolean(gcalAccessToken && gcalTokenExpiresAt > Date.now() + 10000);
+    }
+
+    function updateGcalUI() {
+      const btn = document.getElementById('btn-gcal-connect');
+      const label = document.getElementById('gcal-btn-label');
+      const disconnectBtn = document.getElementById('btn-gcal-disconnect');
+      if (!btn || !label || !disconnectBtn) return;
+
+      if (isGcalConnected()) {
+        btn.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#0F5238] hover:bg-[#2D6A4F] border border-[#0F5238] text-[11px] font-bold text-white cursor-pointer transition';
+        label.textContent = 'Google 연결됨 · 동기화';
+        disconnectBtn.classList.remove('hidden');
+      } else {
+        btn.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#CFE9D8] hover:bg-[#BDE0C9] border border-[#BFC9C1] text-[11px] font-bold text-[#1F352A] cursor-pointer transition';
+        label.textContent = 'Google 캘린더 연결';
+        disconnectBtn.classList.add('hidden');
+      }
+    }
+
+    function openGcalConfigModal() {
+      const input = document.getElementById('input-gcal-client-id');
+      if (input) input.value = localStorage.getItem(GCAL_CLIENT_ID_KEY) || '';
+      document.getElementById('gcal-config-modal').classList.remove('hidden');
+    }
+
+    function closeGcalConfigModal() {
+      document.getElementById('gcal-config-modal').classList.add('hidden');
+    }
+
+    function saveGcalClientId() {
+      const clientId = (document.getElementById('input-gcal-client-id').value || '').trim();
+      if (!clientId) return;
+      localStorage.setItem(GCAL_CLIENT_ID_KEY, clientId);
+      closeGcalConfigModal();
+      connectGoogleCalendar(true);
+    }
+
+    function handleGcalButtonClick() {
+      if (isGcalConnected()) {
+        fetchGoogleCalendarMonthEvents(true);
+      } else {
+        connectGoogleCalendar(false);
+      }
+    }
+
+    function connectGoogleCalendar(forceConsent = false) {
+      const clientId = (localStorage.getItem(GCAL_CLIENT_ID_KEY) || '').trim();
+      if (!clientId) {
+        openGcalConfigModal();
+        return;
+      }
+      if (!window.google || !google.accounts || !google.accounts.oauth2) {
+        alert('Google 인증 스크립트를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
+        return;
+      }
+      gcalTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: GCAL_SCOPE,
+        callback: (resp) => {
+          if (resp && resp.access_token) {
+            gcalAccessToken = resp.access_token;
+            gcalTokenExpiresAt = Date.now() + (Number(resp.expires_in || 3600) * 1000);
+            sessionStorage.setItem(GCAL_TOKEN_KEY, JSON.stringify({ token: gcalAccessToken, exp: gcalTokenExpiresAt }));
+            updateGcalUI();
+            fetchGoogleCalendarMonthEvents(true);
+          } else if (resp && resp.error) {
+            alert('Google 캘린더 인증 실패: ' + resp.error);
+          }
+        }
+      });
+      gcalTokenClient.requestAccessToken({ prompt: forceConsent ? 'consent' : '' });
+    }
+
+    function disconnectGoogleCalendar() {
+      if (gcalAccessToken && window.google && google.accounts && google.accounts.oauth2) {
+        try { google.accounts.oauth2.revoke(gcalAccessToken); } catch {}
+      }
+      gcalAccessToken = '';
+      gcalTokenExpiresAt = 0;
+      gcalEventsByDate = {};
+      sessionStorage.removeItem(GCAL_TOKEN_KEY);
+      localStorage.removeItem(GCAL_EVENTS_KEY);
+      updateGcalUI();
+      renderCalendar();
+      if (!document.getElementById('schedule-modal').classList.contains('hidden')) {
+        renderModalDayList();
+      }
+    }
+
+    async function fetchGoogleCalendarMonthEvents(showError = false) {
+      if (!isGcalConnected()) return;
+      const startDate = new Date(viewYear, viewMonth - 1, 1, 0, 0, 0);
+      const endDate = new Date(viewYear, viewMonth, 0, 23, 59, 59);
+      const url = new URL('https://www.googleapis.com/calendar/v3/calendars/primary/events');
+      url.searchParams.set('singleEvents', 'true');
+      url.searchParams.set('orderBy', 'startTime');
+      url.searchParams.set('maxResults', '250');
+      url.searchParams.set('timeMin', startDate.toISOString());
+      url.searchParams.set('timeMax', endDate.toISOString());
+
+      try {
+        const resp = await fetch(url.toString(), {
+          headers: { Authorization: `Bearer ${gcalAccessToken}` }
+        });
+        if (resp.status === 401) {
+          gcalAccessToken = '';
+          gcalTokenExpiresAt = 0;
+          sessionStorage.removeItem(GCAL_TOKEN_KEY);
+          updateGcalUI();
+          if (showError) alert('Google 세션이 만료되었습니다. 다시 연결해 주세요.');
+          return;
+        }
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        const nextByDate = {};
+        (data.items || []).forEach(ev => {
+          if (ev.status === 'cancelled') return;
+          let dateStr = '';
+          let timeStr = '09:00';
+          if (ev.start?.dateTime) {
+            const dt = new Date(ev.start.dateTime);
+            dateStr = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+            timeStr = `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
+          } else if (ev.start?.date) {
+            dateStr = ev.start.date;
+            timeStr = '종일';
+          }
+          if (!dateStr) return;
+
+          const rawSummary = ev.summary || '(제목 없음)';
+          let parsedType = 'Google';
+          let parsedMemo = rawSummary;
+          const typeMatch = rawSummary.match(/^\[(정산\/대사|외근\/미팅|보고\/회의|결재\/행정|개인일정|기타)\]\s*(.+)$/);
+          if (typeMatch) {
+            parsedType = typeMatch[1];
+            parsedMemo = typeMatch[2];
+          }
+
+          if (!nextByDate[dateStr]) nextByDate[dateStr] = [];
+          nextByDate[dateStr].push({
+            id: 'gcal:' + ev.id,
+            gcalId: ev.id,
+            type: parsedType,
+            time: timeStr,
+            memo: parsedMemo,
+            source: 'gcal'
+          });
+        });
+
+        gcalEventsByDate = nextByDate;
+        localStorage.setItem(GCAL_EVENTS_KEY, JSON.stringify(gcalEventsByDate));
+        renderCalendar();
+        if (!document.getElementById('schedule-modal').classList.contains('hidden')) {
+          renderModalDayList();
+        }
+      } catch (err) {
+        console.warn('Google Calendar fetch error:', err);
+        if (showError) alert('Google 캘린더 일정을 불러오지 못했습니다.');
+      }
+    }
+
+    async function upsertGoogleCalendarEvent(existingGcalId, dateStr, type, time, memo) {
+      if (!isGcalConnected()) return null;
+      const startTime = /^\d{2}:\d{2}$/.test(time) ? time : '09:00';
+      const startDt = new Date(`${dateStr}T${startTime}:00+09:00`);
+      const endDt = new Date(startDt.getTime() + 60 * 60 * 1000);
+      const body = {
+        summary: `[${type}] ${memo}`,
+        description: `Sage Studio 개인일정 캘린더 (${type})`,
+        start: { dateTime: startDt.toISOString(), timeZone: 'Asia/Seoul' },
+        end: { dateTime: endDt.toISOString(), timeZone: 'Asia/Seoul' }
+      };
+
+      const endpoint = existingGcalId
+        ? `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(existingGcalId)}`
+        : 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
+      const method = existingGcalId ? 'PATCH' : 'POST';
+
+      const resp = await fetch(endpoint, {
+        method,
+        headers: {
+          Authorization: `Bearer ${gcalAccessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+      if (!resp.ok) throw new Error('Google Calendar API ' + resp.status);
+      const data = await resp.json();
+      return data.id || existingGcalId;
+    }
+
+    async function deleteGoogleCalendarEvent(gcalId) {
+      if (!isGcalConnected() || !gcalId) return;
+      const resp = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(gcalId)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${gcalAccessToken}` }
+      });
+      if (!resp.ok && resp.status !== 404 && resp.status !== 410) {
+        throw new Error('Google Calendar DELETE ' + resp.status);
+      }
+    }
+
+    function getCombinedDayItems(dateStr) {
+      const localItems = (schedules[dateStr] || []).map(item => ({
+        ...item,
+        gcalId: gcalLinkMap[item.id] || null,
+        source: 'local'
+      }));
+      const linkedGcalIds = new Set(localItems.map(i => i.gcalId).filter(Boolean));
+      const gcalItems = (gcalEventsByDate[dateStr] || []).filter(ev => !linkedGcalIds.has(ev.gcalId));
+      return [...localItems, ...gcalItems].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+    }
+
     function onYearMonthChange() {
       viewYear = parseInt(document.getElementById('select-year').value, 10);
       viewMonth = parseInt(document.getElementById('select-month').value, 10);
       renderCalendar();
+      if (isGcalConnected()) fetchGoogleCalendarMonthEvents(false);
     }
 
     function moveMonth(delta) {
@@ -428,6 +719,7 @@
       document.getElementById('select-year').value = viewYear;
       document.getElementById('select-month').value = viewMonth;
       renderCalendar();
+      if (isGcalConnected()) fetchGoogleCalendarMonthEvents(false);
     }
 
     function goToday() {
@@ -437,6 +729,7 @@
       document.getElementById('select-year').value = viewYear;
       document.getElementById('select-month').value = viewMonth;
       renderCalendar();
+      if (isGcalConnected()) fetchGoogleCalendarMonthEvents(false);
     }
 
     function renderCalendar() {
@@ -466,12 +759,15 @@
             ? 'text-[#0F5238]'
             : 'text-[#181C1B]';
 
-        const dayItems = (schedules[dateStr] || []).slice().sort((a, b) => a.time.localeCompare(b.time));
+        const dayItems = getCombinedDayItems(dateStr);
         const itemsHtml = dayItems.slice(0, 3).map(item => {
-          const badgeCls = TYPE_BADGE_MAP[item.type] || TYPE_BADGE_MAP['기타'];
+          const badgeCls = item.source === 'gcal'
+            ? 'bg-[#E6F4EA] text-[#0F5238] border-[#BFC9C1]'
+            : (TYPE_BADGE_MAP[item.type] || TYPE_BADGE_MAP['기타']);
+          const label = item.source === 'gcal' ? item.memo : item.type;
           return `
             <div class="px-1.5 py-0.5 rounded border text-[10px] leading-tight truncate ${badgeCls}" title="[${item.time}] ${item.type} - ${escapeHtml(item.memo)}">
-              <span class="font-bold num-font">${item.time}</span> <span class="font-semibold">${escapeHtml(item.type)}</span>
+              <span class="font-bold num-font">${item.time}</span> <span class="font-semibold">${escapeHtml(label)}</span>
             </div>
           `;
         }).join('');
@@ -514,10 +810,16 @@
       let daysWithEvents = 0;
       const typeCounts = {};
 
-      Object.keys(schedules).sort().forEach(dateStr => {
-        if (dateStr.startsWith(prefix) && schedules[dateStr].length > 0) {
+      const allDates = new Set([
+        ...Object.keys(schedules).filter(d => d.startsWith(prefix)),
+        ...Object.keys(gcalEventsByDate).filter(d => d.startsWith(prefix))
+      ]);
+
+      Array.from(allDates).sort().forEach(dateStr => {
+        const combined = getCombinedDayItems(dateStr);
+        if (combined.length > 0) {
           daysWithEvents++;
-          schedules[dateStr].slice().sort((a, b) => a.time.localeCompare(b.time)).forEach(item => {
+          combined.forEach(item => {
             monthEntries.push({ dateStr, ...item });
             typeCounts[item.type] = (typeCounts[item.type] || 0) + 1;
           });
@@ -539,21 +841,27 @@
       if (monthEntries.length === 0) {
         listBody.innerHTML = `
           <div class="text-center py-8 text-xs text-[#707973] bg-[#F1F4F1] rounded-lg border border-dashed border-[#BFC9C1]">
-            ${viewYear}년 ${viewMonth}월에 등록된 업무일정이 없습니다. 위 달력에서 날짜를 클릭해 일정을 기록해보세요.
+            ${viewYear}년 ${viewMonth}월에 등록된 개인일정이 없습니다. 위 달력에서 날짜를 클릭해 일정을 기록해보세요.
           </div>
         `;
         return;
       }
 
       listBody.innerHTML = monthEntries.map(entry => {
-        const badgeCls = TYPE_BADGE_MAP[entry.type] || TYPE_BADGE_MAP['기타'];
+        const badgeCls = entry.source === 'gcal'
+          ? 'bg-[#E6F4EA] text-[#0F5238] border-[#BFC9C1]'
+          : (TYPE_BADGE_MAP[entry.type] || TYPE_BADGE_MAP['기타']);
+        const gcalTag = (entry.source === 'gcal' || entry.gcalId)
+          ? `<span class="px-1.5 py-0.5 rounded bg-[#CFE9D8] text-[#1F352A] text-[10px] font-bold shrink-0">Google</span>`
+          : '';
         return `
           <div onclick="openDateModal('${entry.dateStr}')"
             class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border border-[#BFC9C1] hover:border-[#2D6A4F] hover:bg-[#F7FAF7] cursor-pointer transition">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2.5 flex-wrap">
               <span class="text-xs font-extrabold text-[#0F5238] num-font shrink-0">${entry.dateStr}</span>
               <span class="text-xs font-bold text-[#404943] num-font shrink-0">${entry.time}</span>
               <span class="px-2 py-0.5 rounded border text-[10px] font-bold shrink-0 ${badgeCls}">${escapeHtml(entry.type)}</span>
+              ${gcalTag}
               <span class="text-xs text-[#181C1B] break-all">${escapeHtml(entry.memo)}</span>
             </div>
             <span class="text-[11px] font-bold text-[#2D6A4F] shrink-0">상세/수정 →</span>
@@ -579,7 +887,7 @@
     }
 
     function renderModalDayList() {
-      const items = (schedules[selectedDateStr] || []).slice().sort((a, b) => a.time.localeCompare(b.time));
+      const items = getCombinedDayItems(selectedDateStr);
       document.getElementById('modal-day-count').innerText = `${items.length}건`;
       const container = document.getElementById('modal-day-list');
 
@@ -589,12 +897,18 @@
       }
 
       container.innerHTML = items.map(item => {
-        const badgeCls = TYPE_BADGE_MAP[item.type] || TYPE_BADGE_MAP['기타'];
+        const badgeCls = item.source === 'gcal'
+          ? 'bg-[#E6F4EA] text-[#0F5238] border-[#BFC9C1]'
+          : (TYPE_BADGE_MAP[item.type] || TYPE_BADGE_MAP['기타']);
+        const gcalTag = (item.source === 'gcal' || item.gcalId)
+          ? `<span class="px-1.5 py-0.5 rounded bg-[#CFE9D8] text-[#1F352A] text-[10px] font-bold">Google</span>`
+          : '';
         return `
           <div class="p-3 rounded-lg border border-[#BFC9C1] bg-[#F7FAF7] flex items-start justify-between gap-3">
             <div class="space-y-1">
               <div class="flex items-center gap-2">
                 <span class="px-2 py-0.5 rounded border text-[10px] font-bold ${badgeCls}">${escapeHtml(item.type)}</span>
+                ${gcalTag}
                 <span class="text-xs font-extrabold text-[#0F5238] num-font">${item.time}</span>
               </div>
               <p class="text-xs text-[#181C1B] whitespace-pre-wrap">${escapeHtml(item.memo)}</p>
@@ -618,6 +932,23 @@
 
       const saveBtn = document.getElementById('btn-save-schedule');
       if (saveBtn) saveBtn.disabled = true;
+
+      // Case 1: Editing a Google Calendar-originated event directly
+      if (editId && editId.startsWith('gcal:')) {
+        const gcalId = editId.slice(5);
+        try {
+          await upsertGoogleCalendarEvent(gcalId, selectedDateStr, type, time, memo);
+          await fetchGoogleCalendarMonthEvents(false);
+        } catch (err) {
+          console.warn('Google Calendar update error:', err);
+          alert('Google 캘린더 수정 중 오류가 발생했습니다.');
+        }
+        resetForm();
+        renderModalDayList();
+        renderCalendar();
+        if (saveBtn) saveBtn.disabled = false;
+        return;
+      }
 
       if (!schedules[selectedDateStr]) {
         schedules[selectedDateStr] = [];
@@ -664,8 +995,27 @@
         if (idx !== -1) {
           schedules[selectedDateStr][idx] = { id: finalId, type, time, memo };
         }
+        if (editId !== finalId && gcalLinkMap[editId]) {
+          gcalLinkMap[finalId] = gcalLinkMap[editId];
+          delete gcalLinkMap[editId];
+        }
       } else {
         schedules[selectedDateStr].push({ id: finalId, type, time, memo });
+      }
+
+      // Two-way sync to Google Calendar if connected
+      if (isGcalConnected()) {
+        try {
+          const existingGcalId = gcalLinkMap[finalId] || null;
+          const newGcalId = await upsertGoogleCalendarEvent(existingGcalId, selectedDateStr, type, time, memo);
+          if (newGcalId) {
+            gcalLinkMap[finalId] = newGcalId;
+            localStorage.setItem(GCAL_LINK_MAP_KEY, JSON.stringify(gcalLinkMap));
+          }
+          await fetchGoogleCalendarMonthEvents(false);
+        } catch (err) {
+          console.warn('Google Calendar push error:', err);
+        }
       }
 
       persistSchedules();
@@ -681,11 +1031,11 @@
     }
 
     function editSchedule(id) {
-      const item = (schedules[selectedDateStr] || []).find(s => s.id === id);
+      const item = getCombinedDayItems(selectedDateStr).find(s => s.id === id);
       if (!item) return;
       document.getElementById('edit-schedule-id').value = item.id;
-      document.getElementById('input-type').value = item.type;
-      document.getElementById('input-time').value = item.time;
+      document.getElementById('input-type').value = TYPE_BADGE_MAP[item.type] ? item.type : '개인일정';
+      document.getElementById('input-time').value = /^\d{2}:\d{2}$/.test(item.time) ? item.time : '09:00';
       document.getElementById('input-memo').value = item.memo;
       document.getElementById('form-mode-title').innerText = '✏️ 기존 일정 수정';
       document.getElementById('btn-save-schedule').innerText = '수정 저장';
@@ -693,7 +1043,22 @@
     }
 
     async function deleteSchedule(id) {
-      if (!confirm('이 업무일정을 삭제하시겠습니까?')) return;
+      if (!confirm('이 개인일정을 삭제하시겠습니까?')) return;
+
+      if (id.startsWith('gcal:')) {
+        const gcalId = id.slice(5);
+        try {
+          await deleteGoogleCalendarEvent(gcalId);
+          await fetchGoogleCalendarMonthEvents(false);
+        } catch (err) {
+          console.warn('Google Calendar delete error:', err);
+          alert('Google 캘린더 일정 삭제 중 오류가 발생했습니다.');
+        }
+        resetForm();
+        renderModalDayList();
+        renderCalendar();
+        return;
+      }
 
       if (supabaseClient && isUuid(id)) {
         try {
@@ -701,6 +1066,17 @@
           if (error) throw error;
         } catch (err) {
           console.warn('Supabase deleteSchedule error:', err);
+        }
+      }
+
+      if (isGcalConnected() && gcalLinkMap[id]) {
+        try {
+          await deleteGoogleCalendarEvent(gcalLinkMap[id]);
+          delete gcalLinkMap[id];
+          localStorage.setItem(GCAL_LINK_MAP_KEY, JSON.stringify(gcalLinkMap));
+          await fetchGoogleCalendarMonthEvents(false);
+        } catch (err) {
+          console.warn('Google Calendar linked delete error:', err);
         }
       }
 
@@ -741,9 +1117,12 @@
     window.addEventListener('DOMContentLoaded', () => {
       initSupabaseClient();
       loadSchedules();
+      loadGcalLocalState();
       initSelectors();
+      updateGcalUI();
       renderCalendar();
       syncSchedulesFromSupabase(false);
+      if (isGcalConnected()) fetchGoogleCalendarMonthEvents(false);
     });
   </script>
 </body>
