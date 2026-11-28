@@ -1682,8 +1682,10 @@
           const data = await resp.json();
           if (!data || !data.ok) return;
           const nextByDate = {};
+          const fetchedIds = new Set();
           (data.items || []).forEach(ev => {
             if (!ev.dateStr) return;
+            fetchedIds.add(ev.id);
             const rawSummary = ev.title || '(제목 없음)';
             let parsedType = 'Google';
             let parsedMemo = rawSummary;
@@ -1702,6 +1704,42 @@
               source: 'gcal'
             });
           });
+
+          // Prune portal-created items that were deleted in Google Calendar
+          const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-`;
+          let linkMap = {};
+          try { linkMap = JSON.parse(localStorage.getItem('clp_gcal_link_map_v1') || '{}') || {}; } catch {}
+          const allMap = loadWorkSchedulesMap();
+          let changed = false;
+          let linkChanged = false;
+          const deletedSupabaseIds = [];
+          Object.keys(allMap).forEach(dStr => {
+            if (!dStr.startsWith(monthPrefix)) return;
+            const kept = [];
+            (allMap[dStr] || []).forEach(item => {
+              const gId = linkMap[item.id];
+              if (gId && !fetchedIds.has(gId)) {
+                delete linkMap[item.id];
+                linkChanged = true;
+                changed = true;
+                if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(item.id || ''))) {
+                  deletedSupabaseIds.push(item.id);
+                }
+                return;
+              }
+              kept.push(item);
+            });
+            if (kept.length > 0) allMap[dStr] = kept;
+            else delete allMap[dStr];
+          });
+          if (linkChanged) localStorage.setItem('clp_gcal_link_map_v1', JSON.stringify(linkMap));
+          if (changed) {
+            saveWorkSchedulesMap(allMap);
+            if (supabaseClient && deletedSupabaseIds.length > 0) {
+              supabaseClient.from('work_schedules').delete().in('id', deletedSupabaseIds).then(() => {}).catch(() => {});
+            }
+          }
+
           localStorage.setItem('clp_gcal_events_v1', JSON.stringify(nextByDate));
           renderSageSchedules();
         } catch (e) {

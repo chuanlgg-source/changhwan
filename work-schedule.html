@@ -687,6 +687,7 @@ function doPost(e) {
         if (!data || !data.ok) throw new Error(data?.error || 'Bridge error');
 
         const nextByDate = {};
+        const fetchedGcalById = new Map();
         let totalFetched = 0;
         (data.items || []).forEach(ev => {
           const dateStr = ev.dateStr;
@@ -700,16 +701,64 @@ function doPost(e) {
             parsedType = typeMatch[1];
             parsedMemo = typeMatch[2];
           }
-          if (!nextByDate[dateStr]) nextByDate[dateStr] = [];
-          nextByDate[dateStr].push({
+          const gcalObj = {
             id: 'gcal:' + ev.id,
             gcalId: ev.id,
+            dateStr,
             type: parsedType,
             time: ev.timeStr || '09:00',
             memo: parsedMemo,
             source: 'gcal'
-          });
+          };
+          fetchedGcalById.set(ev.id, gcalObj);
+          if (!nextByDate[dateStr]) nextByDate[dateStr] = [];
+          nextByDate[dateStr].push(gcalObj);
         });
+
+        // Reconcile portal-created events linked to Google Calendar for the viewed month
+        const monthPrefix = `${viewYear}-${String(viewMonth).padStart(2, '0')}-`;
+        let schedulesChanged = false;
+        let linkMapChanged = false;
+        const deletedSupabaseIds = [];
+
+        Object.keys(schedules).forEach(dateStr => {
+          if (!dateStr.startsWith(monthPrefix)) return;
+          const kept = [];
+          (schedules[dateStr] || []).forEach(item => {
+            const linkedGcalId = gcalLinkMap[item.id];
+            if (!linkedGcalId) {
+              kept.push(item);
+              return;
+            }
+            if (!fetchedGcalById.has(linkedGcalId)) {
+              // Event was deleted in Google Calendar -> delete from portal & Supabase
+              delete gcalLinkMap[item.id];
+              linkMapChanged = true;
+              schedulesChanged = true;
+              if (isUuid(item.id)) deletedSupabaseIds.push(item.id);
+              return;
+            }
+            const gEv = fetchedGcalById.get(linkedGcalId);
+            if (gEv.memo !== item.memo || (gEv.time !== '종일' && gEv.time !== item.time)) {
+              item.memo = gEv.memo;
+              if (gEv.time !== '종일') item.time = gEv.time;
+              schedulesChanged = true;
+            }
+            kept.push(item);
+          });
+          if (kept.length > 0) schedules[dateStr] = kept;
+          else delete schedules[dateStr];
+        });
+
+        if (linkMapChanged) {
+          localStorage.setItem(GCAL_LINK_MAP_KEY, JSON.stringify(gcalLinkMap));
+        }
+        if (schedulesChanged) {
+          persistSchedules();
+          if (supabaseClient && deletedSupabaseIds.length > 0) {
+            supabaseClient.from('work_schedules').delete().in('id', deletedSupabaseIds).then(() => {}).catch(() => {});
+          }
+        }
 
         gcalEventsByDate = nextByDate;
         localStorage.setItem(GCAL_EVENTS_KEY, JSON.stringify(gcalEventsByDate));
