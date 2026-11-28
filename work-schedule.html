@@ -75,10 +75,10 @@
           class="hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white hover:bg-[#FFDAD6] border border-[#BFC9C1] text-[11px] font-bold text-[#BA1A1A] cursor-pointer transition">
           <span>연결 해제</span>
         </button>
-        <button type="button" onclick="openGcalConfigModal()" title="Google OAuth Client ID 설정"
-          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white hover:bg-[#F1F4F1] border border-[#BFC9C1] text-[11px] font-semibold text-[#404943] cursor-pointer transition">
-          <span class="material-symbols-outlined text-[13px]" aria-hidden="true">settings</span>
-          <span>Google 설정</span>
+        <button type="button" onclick="openGcalConfigModal()" title="Google OAuth Client ID 입력·수정·초기화"
+          class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white hover:bg-[#F1F4F1] border border-[#BFC9C1] text-[11px] font-bold text-[#404943] cursor-pointer transition">
+          <span class="material-symbols-outlined text-[13px]" aria-hidden="true">key</span>
+          <span>Client ID 설정</span>
         </button>
       </div>
       <h1 class="text-2xl font-bold font-headline text-[#181C1B] tracking-tight">
@@ -254,16 +254,16 @@
   </div>
 
   <!-- Google Calendar OAuth 2.0 Config Modal -->
-  <div id="gcal-config-modal" class="hidden fixed inset-0 z-50 bg-[#181C1B]/50 backdrop-blur-xs flex items-center justify-center p-4">
+  <div id="gcal-config-modal" onclick="if(event.target===this) closeGcalConfigModal();" class="hidden fixed inset-0 z-50 bg-[#181C1B]/50 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white rounded-xl border border-[#BFC9C1] shadow-xl w-full max-w-md overflow-hidden">
       <div class="px-5 py-4 bg-[#0F5238] text-white flex items-center justify-between">
         <div>
           <div class="text-[11px] text-[#A8E7C5] font-semibold">GOOGLE CALENDAR OAUTH 2.0</div>
           <h3 class="text-base font-bold font-headline">Google 캘린더 연동 설정</h3>
         </div>
-        <button onclick="closeGcalConfigModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-sm font-bold cursor-pointer transition">✕</button>
+        <button type="button" onclick="closeGcalConfigModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-sm font-bold cursor-pointer transition">✕</button>
       </div>
-      <form onsubmit="event.preventDefault(); saveGcalClientId();" class="p-5 space-y-4">
+      <form onsubmit="event.preventDefault(); saveGcalClientId(true);" class="p-5 space-y-4">
         <div class="p-3 rounded-lg bg-[#F1F4F1] border border-[#BFC9C1] text-[11px] text-[#404943] leading-relaxed space-y-1">
           <p class="font-bold text-[#0F5238]">최초 1회 Google Cloud Console 설정 안내</p>
           <p>1. Google Cloud Console → <strong>Google Calendar API</strong> 사용 설정</p>
@@ -271,12 +271,16 @@
           <p>3. 승인된 자바스크립트 원본에 <code class="px-1 py-0.5 bg-white border border-[#BFC9C1] rounded num-font text-[#181C1B]">https://chuanlgg-source.github.io</code> 등록</p>
         </div>
         <div>
-          <label class="block text-xs font-bold text-[#181C1B] mb-1">Google OAuth Client ID *</label>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-bold text-[#181C1B]">Google OAuth Client ID *</label>
+            <button type="button" onclick="resetGcalClientId()" class="text-[11px] font-bold text-[#BA1A1A] hover:underline cursor-pointer">키 초기화(삭제)</button>
+          </div>
           <input type="text" id="input-gcal-client-id" required placeholder="예: 1234567890-abcdefg.apps.googleusercontent.com"
             class="w-full px-3 py-2 text-xs bg-[#F1F4F1] border border-[#BFC9C1] rounded-lg num-font focus:outline-none focus:border-[#0F5238] focus:ring-1 focus:ring-[#0F5238] focus:bg-white">
         </div>
         <div class="flex items-center justify-end gap-2 pt-2 border-t border-[#BFC9C1]">
           <button type="button" onclick="closeGcalConfigModal()" class="px-3.5 py-2 bg-white hover:bg-[#F1F4F1] border border-[#BFC9C1] text-[#404943] text-xs font-bold rounded-lg cursor-pointer">취소</button>
+          <button type="button" onclick="saveGcalClientId(false)" class="px-3.5 py-2 bg-[#F1F4F1] hover:bg-[#ECEFEC] border border-[#BFC9C1] text-[#0F5238] text-xs font-bold rounded-lg cursor-pointer">저장만</button>
           <button type="submit" class="px-4 py-2 bg-[#0F5238] hover:bg-[#2D6A4F] text-white text-xs font-bold rounded-lg cursor-pointer transition">저장 후 연결</button>
         </div>
       </form>
@@ -508,7 +512,10 @@
 
     function openGcalConfigModal() {
       const input = document.getElementById('input-gcal-client-id');
-      if (input) input.value = localStorage.getItem(GCAL_CLIENT_ID_KEY) || '';
+      if (input) {
+        input.value = localStorage.getItem(GCAL_CLIENT_ID_KEY) || '';
+        setTimeout(() => input.focus(), 50);
+      }
       document.getElementById('gcal-config-modal').classList.remove('hidden');
     }
 
@@ -516,12 +523,27 @@
       document.getElementById('gcal-config-modal').classList.add('hidden');
     }
 
-    function saveGcalClientId() {
+    function resetGcalClientId() {
+      localStorage.removeItem(GCAL_CLIENT_ID_KEY);
+      sessionStorage.removeItem(GCAL_TOKEN_KEY);
+      gcalAccessToken = '';
+      gcalTokenExpiresAt = 0;
+      gcalTokenClient = null;
+      updateGcalUI();
+      const input = document.getElementById('input-gcal-client-id');
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    function saveGcalClientId(connectNow = true) {
       const clientId = (document.getElementById('input-gcal-client-id').value || '').trim();
       if (!clientId) return;
       localStorage.setItem(GCAL_CLIENT_ID_KEY, clientId);
+      gcalTokenClient = null;
       closeGcalConfigModal();
-      connectGoogleCalendar(true);
+      if (connectNow) connectGoogleCalendar(true);
     }
 
     function handleGcalButtonClick() {
